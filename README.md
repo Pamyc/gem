@@ -1,21 +1,20 @@
-![Express Logo](https://st.timeweb.com/cloud-static/apps-logo/express.svg)
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-# Express
+# Run and deploy your AI Studio app
 
-Пример приложения [Express](https://expressjs.com/), которое можно развернуть в **Timeweb Cloud Apps** без настройки.
+This contains everything you need to run your app locally.
 
-:tada: [Демо](https://timeweb-cloud-app-example-express-e1cb.twc1.net)
+View your app in AI Studio: https://ai.studio/apps/drive/1bibGgt9gu3HsojnqDjM0RHRGqyCJJtao
 
-:rocket: [Создать свой Apps](https://timeweb.cloud/my/apps/create)
+## Run Locally
 
-:books: [Документация Timeweb Cloud Apps](https://timeweb.cloud/docs/apps)
+**Prerequisites:**  Node.js
 
-## <a name="dev"></a>Локальный запуск проекта
 
-```bash
-# установка зависимостей
-npm install
-
-# запуск приложения
-npm run start
-```
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
