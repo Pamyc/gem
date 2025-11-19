@@ -1,8 +1,8 @@
 {
-  "main": "index.js",
+  "main": "index2.js",
   "scripts": {
     "build": "echo \"Build command\"",
-    "start": "node index.js"
+    "start": "node index2.js"
   },
   "dependencies": {
     "express": "^4.18.3"
