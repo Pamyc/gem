@@ -1,11 +1,21 @@
-<div align="center">
+![Express Logo](https://st.timeweb.com/cloud-static/apps-logo/express.svg)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# Express
 
-  <h1>Built with AI Studio</h2>
+Пример приложения [Express](https://expressjs.com/), которое можно развернуть в **Timeweb Cloud Apps** без настройки.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+:tada: [Демо](https://timeweb-cloud-app-example-express-e1cb.twc1.net)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+:rocket: [Создать свой Apps](https://timeweb.cloud/my/apps/create)
 
-</div>
+:books: [Документация Timeweb Cloud Apps](https://timeweb.cloud/docs/apps)
+
+## <a name="dev"></a>Локальный запуск проекта
+
+```bash
+# установка зависимостей
+npm install
+
+# запуск приложения
+npm run start
+```
