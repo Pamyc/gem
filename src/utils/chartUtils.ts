@@ -5,13 +5,13 @@ import * as echarts from 'echarts';
 export const detectColumnType = (value: any): 'number' | 'date' | 'string' => {
   if (!value) return 'string';
   const strVal = String(value).trim();
-  
+
   // Check for number (replace comma with dot just in case of RU locale)
   if (!isNaN(Number(strVal.replace(',', '.'))) && strVal !== '') return 'number';
-  
+
   // Simple date check (YYYY-MM-DD or DD.MM.YYYY)
   if (strVal.match(/^\d{4}-\d{2}-\d{2}$/) || strVal.match(/^\d{2}\.\d{2}\.\d{4}$/)) return 'date';
-  
+
   return 'string';
 };
 
@@ -46,7 +46,7 @@ export const processChartData = (
     for (const filter of config.filters) {
       const colIdx = headers.indexOf(filter.column);
       if (colIdx === -1) continue;
-      
+
       const cellValue = String(row[colIdx] || '').toLowerCase();
       const filterValue = filter.value.toLowerCase();
       const cellNum = parseFloat(cellValue);
@@ -78,7 +78,7 @@ export const processChartData = (
       groupedData.set(segVal, new Map());
     }
     const segmentMap = groupedData.get(segVal)!;
-    
+
     if (!segmentMap.has(xVal)) {
       segmentMap.set(xVal, []);
     }
@@ -145,7 +145,9 @@ export const processChartData = (
       itemStyle: { color: colors[colorIdx % colors.length] },
       lineStyle: { width: 3 },
       symbol: config.showLabels ? 'circle' : 'none',
-      label: { show: config.showLabels, position: 'top', formatter: (p: any) => p.value.toFixed(1) }
+      label: config.chartType === 'bar'
+        ? { show: true, position: 'top' }
+        : { show: config.showLabels, position: 'top', formatter: (p: any) => p.value.toFixed(1) }
     });
     colorIdx++;
   });
