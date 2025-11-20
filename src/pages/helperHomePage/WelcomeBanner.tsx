@@ -3,16 +3,20 @@ import { Sparkles } from 'lucide-react';
 
 const WelcomeBanner: React.FC = () => {
   return (
-    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
+    <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 rounded-3xl p-8 md:p-10 text-white shadow-xl shadow-violet-500/10 relative overflow-hidden border border-white/10">
       <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-10 w-40 h-40 bg-black opacity-10 rounded-full blur-2xl"></div>
+      
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-4">
-          <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">v2.1 Charts</span>
+          <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-md">
+            <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+          </div>
+          <span className="bg-black/20 px-3 py-1 rounded-full text-xs font-bold tracking-wider backdrop-blur-sm uppercase border border-white/10">v2.2 Updated</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Добро пожаловать!</h1>
-        <p className="text-lg text-indigo-100 max-w-2xl">
-          Интерфейс успешно обновлен. Теперь у вас есть доступ к разделу "Статистика" с интерактивными графиками ECharts.
+        <h1 className="text-3xl md:text-5xl font-bold mb-3 tracking-tight">Добро пожаловать!</h1>
+        <p className="text-lg text-violet-100 max-w-2xl leading-relaxed">
+          Интерфейс обновлен. Наслаждайтесь новой цветовой гаммой и улучшенной производительностью графиков.
         </p>
       </div>
     </div>

@@ -11,4 +11,5 @@ export interface MenuItem {
 export interface ChartProps {
   options: any;
   height?: string;
+  theme?: 'light' | 'dark';
 }

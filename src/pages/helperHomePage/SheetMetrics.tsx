@@ -9,11 +9,10 @@ interface SheetMetricsProps {
 const SheetMetrics: React.FC<SheetMetricsProps> = ({ selectedSheetKey }) => {
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
 
-  // Если ключ не выбран или данные еще грузятся
   if (!selectedSheetKey) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center h-full">
-         <p className="text-center text-gray-400 text-sm">Выберите таблицу для просмотра статистики</p>
+      <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center h-full text-center">
+         <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">Выберите таблицу для просмотра статистики</p>
       </div>
     );
   }
@@ -23,13 +22,13 @@ const SheetMetrics: React.FC<SheetMetricsProps> = ({ selectedSheetKey }) => {
 
   if (!data || !data.rows) {
      return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center h-full">
+        <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center h-full">
              {isLoading ? (
-                 <p className="text-center text-gray-400 text-sm">Загрузка метрик...</p>
+                 <p className="text-center text-gray-400 dark:text-gray-500 text-sm font-medium">Загрузка метрик...</p>
              ) : (
                  <div className="text-center text-gray-400 flex flex-col items-center gap-2">
-                    <AlertCircle size={24} className="text-gray-300" />
-                    <span className="text-sm">Нет данных</span>
+                    <AlertCircle size={24} className="text-gray-300 dark:text-gray-600" />
+                    <span className="text-sm font-medium">Нет данных</span>
                  </div>
              )}
         </div>
@@ -37,7 +36,6 @@ const SheetMetrics: React.FC<SheetMetricsProps> = ({ selectedSheetKey }) => {
   }
 
   const rowCount = data.rows.length;
-  // Количество столбцов считаем по заголовкам, если они есть, иначе по первой строке данных
   const colCount = data.headers && data.headers.length > 0 
         ? data.headers[0].length 
         : (rowCount > 0 ? data.rows[0].length : 0);
@@ -49,30 +47,33 @@ const SheetMetrics: React.FC<SheetMetricsProps> = ({ selectedSheetKey }) => {
       label: 'Строк', 
       value: rowCount.toLocaleString('ru-RU'), 
       icon: Rows, 
-      color: 'text-blue-600', 
-      bg: 'bg-blue-100' 
+      color: 'text-blue-600 dark:text-blue-400', 
+      bg: 'bg-blue-100 dark:bg-blue-500/10',
+      border: 'border-blue-100 dark:border-blue-500/20'
     },
     { 
       label: 'Столбцов', 
       value: colCount, 
       icon: Columns, 
-      color: 'text-purple-600', 
-      bg: 'bg-purple-100' 
+      color: 'text-fuchsia-600 dark:text-fuchsia-400', 
+      bg: 'bg-fuchsia-100 dark:bg-fuchsia-500/10',
+      border: 'border-fuchsia-100 dark:border-fuchsia-500/20'
     },
     { 
       label: 'Всего ячеек', 
       value: totalCells.toLocaleString('ru-RU'), 
       icon: Table2, 
-      color: 'text-emerald-600', 
-      bg: 'bg-emerald-100' 
+      color: 'text-emerald-600 dark:text-emerald-400', 
+      bg: 'bg-emerald-100 dark:bg-emerald-500/10',
+      border: 'border-emerald-100 dark:border-emerald-500/20'
     },
   ];
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center h-full">
-        <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-2">
-           <h3 className="text-gray-800 font-bold">Метрики таблицы</h3>
-           <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 max-w-[150px] truncate">
+    <div className="bg-white dark:bg-[#151923] p-8 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col justify-center h-full transition-colors">
+        <div className="mb-6 flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4">
+           <h3 className="text-gray-800 dark:text-white font-bold text-lg">Метрики</h3>
+           <span className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg border border-gray-200 dark:border-white/5 max-w-[150px] truncate">
              {config?.sheetName}
            </span>
         </div>
@@ -80,12 +81,12 @@ const SheetMetrics: React.FC<SheetMetricsProps> = ({ selectedSheetKey }) => {
             {metrics.map((m, i) => {
                 const Icon = m.icon;
                 return (
-                    <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow text-center group">
-                        <div className={`w-10 h-10 ${m.bg} rounded-full flex items-center justify-center mx-auto mb-2 ${m.color} group-hover:scale-110 transition-transform`}>
-                           <Icon size={20} />
+                    <div key={i} className={`bg-gray-50 dark:bg-[#0b0f19] p-5 rounded-2xl border ${m.border} hover:shadow-md transition-all text-center group`}>
+                        <div className={`w-12 h-12 ${m.bg} rounded-xl flex items-center justify-center mx-auto mb-3 ${m.color} group-hover:scale-110 transition-transform`}>
+                           <Icon size={22} />
                         </div>
-                        <h3 className="text-gray-500 text-xs font-medium mb-1 uppercase tracking-wide">{m.label}</h3>
-                        <p className="text-xl font-bold text-gray-800">{m.value}</p>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs font-bold mb-1 uppercase tracking-wider">{m.label}</h3>
+                        <p className="text-2xl font-black text-gray-800 dark:text-gray-100">{m.value}</p>
                     </div>
                 );
             })}

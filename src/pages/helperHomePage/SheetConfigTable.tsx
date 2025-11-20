@@ -27,7 +27,7 @@ const SheetConfigTable: React.FC = () => {
               href={url} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 hover:underline"
+              className="text-indigo-600 dark:text-violet-400 hover:text-indigo-800 dark:hover:text-violet-300 font-medium flex items-center gap-1.5 hover:underline transition-colors"
             >
               {sheetName}
               <ExternalLink size={14} />
@@ -37,21 +37,21 @@ const SheetConfigTable: React.FC = () => {
       }),
       columnHelper.accessor('key', {
         header: 'Ключ (Key)',
-        cell: (info) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{info.getValue()}</span>,
+        cell: (info) => <span className="font-mono text-xs bg-gray-100 dark:bg-white/10 dark:text-gray-300 px-2 py-1 rounded border border-gray-200 dark:border-white/5">{info.getValue()}</span>,
       }),
       columnHelper.accessor('range', {
         header: 'Диапазон',
-        cell: (info) => <span className="font-mono text-sm">{info.getValue()}</span>,
+        cell: (info) => <span className="font-mono text-sm text-gray-600 dark:text-gray-400">{info.getValue()}</span>,
       }),
       columnHelper.accessor('headerRows', {
         header: 'Уровни заголовков',
-        cell: (info) => <div className="text-center">{String(info.getValue())}</div>,
+        cell: (info) => <div className="text-center font-bold text-gray-700 dark:text-gray-300">{String(info.getValue())}</div>,
       }),
       columnHelper.accessor('spreadsheetId', {
         header: 'Spreadsheet ID',
         cell: (info) => (
           <span 
-            className="text-xs truncate max-w-[150px] block" 
+            className="text-xs font-mono text-gray-500 dark:text-gray-500 truncate max-w-[120px] block" 
             title={info.getValue()}
           >
             {info.getValue()}
@@ -73,23 +73,23 @@ const SheetConfigTable: React.FC = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-      <div className="flex items-center gap-3 mb-4 text-gray-800">
-        <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
-          <Table size={20} />
+    <div className="bg-white dark:bg-[#151923] p-8 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors">
+      <div className="flex items-center gap-3 mb-6 text-gray-800 dark:text-white">
+        <div className="bg-blue-100 dark:bg-blue-500/20 p-2.5 rounded-xl text-blue-700 dark:text-blue-300">
+          <Table size={22} />
         </div>
-        <h3 className="font-bold text-lg">Конфигурация таблиц</h3>
+        <h3 className="font-bold text-xl tracking-tight">Конфигурация таблиц</h3>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-[#0b0f19]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th 
                     key={header.id} 
-                    className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200"
+                    className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-white/10"
                   >
                     {header.isPlaceholder
                       ? null
@@ -102,11 +102,11 @@ const SheetConfigTable: React.FC = () => {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-[#151923] divide-y divide-gray-200 dark:divide-white/5">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">
+                  <td key={cell.id} className="px-6 py-4 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

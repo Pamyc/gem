@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, FileText, Settings, BarChart3 } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
@@ -11,6 +11,22 @@ import { DataProvider } from './contexts/DataContext';
 const App: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  
+  // Состояние темы (по умолчанию светлая)
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Эффект для применения класса dark к html тегу
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
 
   const menuItems: MenuItem[] = [
     { id: 'home', label: 'Главная', icon: LayoutDashboard },
@@ -27,9 +43,11 @@ const App: React.FC = () => {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         menuItems={menuItems}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
       >
         {activeTab === 'home' && <HomePage />}
-        {activeTab === 'stats' && <StatsPage />}
+        {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>

@@ -1,9 +1,13 @@
 import React from 'react';
 import DashboardCharts from './helperStatsPage/DashboardCharts';
 
-const StatsPage: React.FC = () => {
+interface StatsPageProps {
+  isDarkMode: boolean;
+}
+
+const StatsPage: React.FC<StatsPageProps> = ({ isDarkMode }) => {
   return (
-    <DashboardCharts />
+    <DashboardCharts isDarkMode={isDarkMode} />
   );
 };
 
