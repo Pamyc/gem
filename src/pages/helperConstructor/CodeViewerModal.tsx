@@ -1,19 +1,21 @@
 import React from 'react';
 import { X, Copy, Check } from 'lucide-react';
-import { ChartConfig } from '../../types/chart';
 import { generateComponentCode } from '../../utils/chartUtils';
+import { ChartConfig } from '../../types/chart';
 
 interface CodeViewerModalProps {
   isOpen: boolean;
   onClose: () => void;
   config: ChartConfig;
+  isDarkMode: boolean;
 }
 
-const CodeViewerModal: React.FC<CodeViewerModalProps> = ({ isOpen, onClose, config }) => {
+const CodeViewerModal: React.FC<CodeViewerModalProps> = ({ isOpen, onClose, config, isDarkMode }) => {
   const [copied, setCopied] = React.useState(false);
 
   if (!isOpen) return null;
 
+  // Generate code based on CONFIG
   const code = generateComponentCode(config);
 
   const handleCopy = () => {
@@ -26,7 +28,7 @@ const CodeViewerModal: React.FC<CodeViewerModalProps> = ({ isOpen, onClose, conf
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-[#151923] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col border border-gray-200 dark:border-white/10">
         <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Код компонента</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Код компонента (Live Data)</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
             <X size={24} />
           </button>

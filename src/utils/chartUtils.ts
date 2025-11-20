@@ -22,6 +22,34 @@ export const parseValue = (value: any, type: 'number' | 'date' | 'string') => {
   return String(value);
 };
 
+/**
+ * Helper to merge multi-level headers into a single array of strings
+ */
+export const getMergedHeaders = (headers: any[][], headerRowsCount: number): string[] => {
+  if (!headers || headers.length === 0) return [];
+  
+  const rowsToProcess = headers.slice(0, headerRowsCount);
+  if (rowsToProcess.length === 0) return [];
+
+  const colCount = rowsToProcess[0].length;
+  const mergedHeaders: string[] = [];
+
+  for (let i = 0; i < colCount; i++) {
+    const values = rowsToProcess.map(row => row[i]?.toString().trim() || '');
+    const nonEmptyValues = values.filter(Boolean);
+    const uniqueValues = Array.from(new Set(nonEmptyValues));
+
+    let label = '';
+    if (uniqueValues.length === 0) {
+       label = `Столбец ${i + 1}`;
+    } else {
+       label = uniqueValues.join(' + ');
+    }
+    mergedHeaders.push(label);
+  }
+  return mergedHeaders;
+};
+
 export const processChartData = (
   rawData: any[][],
   headers: string[],
@@ -145,7 +173,7 @@ export const processChartData = (
       itemStyle: { color: colors[colorIdx % colors.length] },
       lineStyle: { width: 3 },
       symbol: config.showLabels ? 'circle' : 'none',
-      label: config.chartType === 'bar'
+      label: config.chartType === 'bar' 
         ? { show: true, position: 'top' }
         : { show: config.showLabels, position: 'top', formatter: (p: any) => p.value.toFixed(1) }
     });
@@ -194,14 +222,27 @@ export const processChartData = (
 
 // Generate component code string
 export const generateComponentCode = (config: ChartConfig) => {
-  // Clean up stringify to look nice
-  const jsonConfig = JSON.stringify(config, null, 2);
+  // We need to inject the config object into the template
+  const configString = JSON.stringify(config, null, 2).replace(/"(\w+)":/g, '$1:');
 
-  return `<EChartComponent 
-  options={{
-${jsonConfig.slice(2, -2)} 
-  }} 
-  height="400px" 
-  theme={isDarkMode ? 'dark' : 'light'} 
-/>`;
+  return `import React, { useMemo } from 'react';
+import DynamicChart from '../components/charts/DynamicChart'; // Проверьте путь до компонента
+import { ChartConfig } from '../types/chart';
+
+const MyGeneratedChart = ({ isDarkMode = true }) => {
+  // Настройки графика (можно вынести в пропсы или редактировать здесь)
+  const config: ChartConfig = useMemo(() => (${configString}), []);
+
+  return (
+    <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5">
+      <DynamicChart 
+        config={config} 
+        isDarkMode={isDarkMode} 
+        height="400px" 
+      />
+    </div>
+  );
+};
+
+export default MyGeneratedChart;`;
 };

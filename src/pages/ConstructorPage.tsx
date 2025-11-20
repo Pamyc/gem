@@ -3,11 +3,15 @@ import { useDataStore } from '../contexts/DataContext';
 import { ChartConfig } from '../types/chart';
 import ConfigPanel from './helperConstructor/ConfigPanel';
 import EChartComponent from '../components/charts/EChartComponent';
-import { processChartData } from '../utils/chartUtils';
+import { processChartData, getMergedHeaders } from '../utils/chartUtils';
 import { Code, Download, Loader2, BarChart } from 'lucide-react';
 import CodeViewerModal from './helperConstructor/CodeViewerModal';
 
-const ConstructorPage: React.FC = () => {
+interface ConstructorPageProps {
+  isDarkMode: boolean;
+}
+
+const ConstructorPage: React.FC<ConstructorPageProps> = ({ isDarkMode }) => {
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
 
@@ -43,31 +47,9 @@ const ConstructorPage: React.FC = () => {
     const currentSheetConfig = sheetConfigs.find(c => c.key === config.sheetKey);
     const headerRowsCount = currentSheetConfig?.headerRows || 1;
 
-    // Slice the headers based on config
-    const headerRows = sheetData.headers.slice(0, headerRowsCount);
+    // Use utility to merge headers
+    const mergedHeaders = getMergedHeaders(sheetData.headers, headerRowsCount);
     const rows = sheetData.rows || [];
-
-    if (headerRows.length === 0) return { availableColumns: [], currentRows: rows };
-
-    const colCount = headerRows[0].length;
-    const mergedHeaders: string[] = [];
-
-    // Loop through columns and merge headers
-    for (let i = 0; i < colCount; i++) {
-      const values = headerRows.map(row => row[i]?.toString().trim() || '');
-      const nonEmptyValues = values.filter(Boolean);
-      
-      // Remove duplicates (e.g. if "Income" spans 2 columns, it effectively appears once in the path for that column)
-      const uniqueValues = Array.from(new Set(nonEmptyValues));
-
-      let label = '';
-      if (uniqueValues.length === 0) {
-         label = `Столбец ${i + 1}`;
-      } else {
-         label = uniqueValues.join(' + ');
-      }
-      mergedHeaders.push(label);
-    }
 
     return { availableColumns: mergedHeaders, currentRows: rows };
   }, [googleSheets, config.sheetKey, sheetConfigs]);
@@ -78,16 +60,14 @@ const ConstructorPage: React.FC = () => {
     
     const sheetData = googleSheets[config.sheetKey as keyof typeof googleSheets];
     if (!sheetData) return null;
-
-    const isDark = document.documentElement.classList.contains('dark');
     
     return processChartData(
       sheetData.rows, 
       availableColumns, 
       config, 
-      isDark
+      isDarkMode
     );
-  }, [googleSheets, config, availableColumns]); // Re-calc when config changes
+  }, [googleSheets, config, availableColumns, isDarkMode]); // Re-calc when config changes
 
   if (isLoading) {
     return (
@@ -123,7 +103,8 @@ const ConstructorPage: React.FC = () => {
         <div className="pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
            <button 
             onClick={() => setIsCodeModalOpen(true)}
-            className="w-full py-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+            disabled={!chartOptions}
+            className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${!chartOptions ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'}`}
            >
              <Code size={18} /> Получить код
            </button>
@@ -139,7 +120,7 @@ const ConstructorPage: React.FC = () => {
              <EChartComponent 
                 options={chartOptions} 
                 height="100%" 
-                theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'} 
+                theme={isDarkMode ? 'dark' : 'light'} 
              />
           ) : (
             <div className="text-center text-gray-400">
@@ -150,10 +131,12 @@ const ConstructorPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Pass CONFIG instead of OPTIONS */}
       <CodeViewerModal 
         isOpen={isCodeModalOpen} 
         onClose={() => setIsCodeModalOpen(false)} 
         config={config}
+        isDarkMode={isDarkMode}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 // Типы данных для разных источников
 export interface SheetDataWithHeaders {
@@ -66,7 +66,7 @@ interface DataContextType extends DataStore {
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
-export function DataProvider({ children }: { children: ReactNode }) {
+export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [dataStore, setDataStore] = useState<DataStore>({
     googleSheets: {},
     sheetConfigs: SHEET_CONFIGS,

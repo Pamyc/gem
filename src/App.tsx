@@ -60,7 +60,7 @@ const AppContent: React.FC = () => {
       >
         {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
         {activeTab === 'home' && <HomePage />}
-        {activeTab === 'constructor' && <ConstructorPage />}
+        {activeTab === 'constructor' && <ConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>

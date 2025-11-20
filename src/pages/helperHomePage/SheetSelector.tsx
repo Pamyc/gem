@@ -40,7 +40,7 @@ const SheetSelector: React.FC<SheetSelectorProps> = ({ selectedSheetKey, onSheet
       const generatedOptions: SheetOption[] = [];
 
       for (let i = 0; i < colCount; i++) {
-        const values = headerRows.map(row => row[i]?.toString().trim() || '');
+        const values = headerRows.map(row => String(row[i] || '').trim());
         const nonEmptyValues = values.filter(Boolean);
         const uniqueValues = Array.from(new Set(nonEmptyValues));
 
