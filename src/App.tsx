@@ -17,8 +17,8 @@ const AppContent: React.FC = () => {
   // Статистика теперь первая вкладка и дефолтная
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   
-  // Состояние темы (по умолчанию светлая)
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Состояние темы (по умолчанию темная)
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Эффект для применения класса dark к html тегу
   useEffect(() => {
