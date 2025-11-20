@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import CCMLogo from '../components/CCMLogo';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -33,16 +34,30 @@ const LoginPage: React.FC = () => {
          <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none"></div>
          <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
+         {/* LEFT Flanking Logo */}
+         <div className="absolute left-10 lg:left-20 top-1/2 -translate-y-1/2 h-[70vh] w-auto aspect-[1/2] text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+            <CCMLogo className="w-full h-full" />
+         </div>
+
+         {/* RIGHT Flanking Logo */}
+         <div className="absolute right-10 lg:right-20 top-1/2 -translate-y-1/2 h-[70vh] w-auto aspect-[1/2] text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+            <CCMLogo className="w-full h-full" />
+         </div>
+
         <div className="bg-[#151923] w-full max-w-md rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative z-10">
           
           {/* Header */}
-          <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-8 text-center relative overflow-hidden">
-             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-inner border border-white/20">
-                <Sparkles className="w-8 h-8 text-white" />
+          <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-10 text-center relative overflow-hidden min-h-[180px] flex flex-col items-center justify-center">
+             {/* Background Watermark Logo inside card */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-96 text-white opacity-[0.15] pointer-events-none transform scale-125">
+                <CCMLogo className="w-full h-full" />
              </div>
-             <h2 className="text-3xl font-bold text-white tracking-tight">CCM Elevator</h2>
-             <p className="text-violet-100 mt-2 text-sm font-medium opacity-90">Войдите для доступа к панели управления</p>
+             
+             {/* Text Content */}
+             <div className="relative z-10">
+                <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">CCM Elevator</h2>
+                <p className="text-violet-100 mt-2 text-sm font-medium opacity-90">Лучшая установка лифтов ЮГА России</p>
+             </div>
           </div>
 
           {/* Form */}

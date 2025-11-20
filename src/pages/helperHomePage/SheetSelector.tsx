@@ -48,7 +48,7 @@ const SheetSelector: React.FC<SheetSelectorProps> = ({ selectedSheetKey, onSheet
         if (uniqueValues.length === 0) {
            label = `Столбец ${i + 1}`;
         } else if (uniqueValues.length === 1) {
-           label = uniqueValues[0];
+           label = String(uniqueValues[0]);
         } else {
            label = values.filter(Boolean).join(' + '); 
         }
