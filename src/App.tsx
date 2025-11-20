@@ -12,7 +12,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('home');
 
   const menuItems: MenuItem[] = [
-    { id: 'home', label: 'Главная', icon: LayoutDashboard },
+    { id: 'home', label: 'Главная333', icon: LayoutDashboard },
     { id: 'stats', label: 'Статистика', icon: BarChart3 },
     { id: 'form', label: 'Заявка', icon: FileText },
     { id: 'settings', label: 'Настройки', icon: Settings },
