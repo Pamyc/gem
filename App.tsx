@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -11,10 +11,50 @@ import {
   Mail, 
   MessageSquare,
   CheckCircle2,
-  Bell
+  Bell,
+  BarChart3
 } from 'lucide-react';
+import * as echarts from 'echarts';
 
-type Tab = 'home' | 'form' | 'settings';
+// --- ECharts Wrapper Component ---
+interface ChartProps {
+  options: any;
+  height?: string;
+}
+
+const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px" }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<echarts.ECharts | null>(null);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      // Initialize chart
+      if (!chartInstance.current) {
+        chartInstance.current = echarts.init(chartRef.current);
+      }
+      // Set options
+      chartInstance.current.setOption(options);
+
+      // Handle resize
+      const handleResize = () => {
+        chartInstance.current?.resize();
+      };
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        chartInstance.current?.dispose();
+        chartInstance.current = null;
+      };
+    }
+  }, [options]);
+
+  return <div ref={chartRef} style={{ width: '100%', height }} />;
+};
+
+// --- Main App Component ---
+
+type Tab = 'home' | 'form' | 'settings' | 'stats';
 
 const App: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -34,9 +74,112 @@ const App: React.FC = () => {
 
   const menuItems = [
     { id: 'home', label: 'Главная', icon: LayoutDashboard },
+    { id: 'stats', label: 'Статистика', icon: BarChart3 },
     { id: 'form', label: 'Заявка', icon: FileText },
     { id: 'settings', label: 'Настройки', icon: Settings },
   ];
+
+  // --- Chart Configurations ---
+  
+  const lineChartOption = {
+    title: { text: 'Динамика обращений', textStyle: { fontSize: 14, color: '#64748b' } },
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b' }
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'Заявки',
+        type: 'line',
+        smooth: true,
+        data: [120, 132, 101, 134, 90, 230, 210],
+        lineStyle: { color: '#6366f1', width: 3 },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(99, 102, 241, 0.5)' },
+            { offset: 1, color: 'rgba(99, 102, 241, 0.0)' }
+          ])
+        }
+      },
+      {
+        name: 'Решено',
+        type: 'line',
+        smooth: true,
+        data: [100, 120, 90, 120, 85, 200, 190],
+        lineStyle: { color: '#10b981', width: 3 },
+      }
+    ]
+  };
+
+  const barChartOption = {
+    title: { text: 'Загрузка менеджеров', textStyle: { fontSize: 14, color: '#64748b' } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: ['Анна', 'Олег', 'Мария', 'Дмитрий', 'Елена'],
+      axisTick: { alignWithLabel: true },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b' }
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'Обработано',
+        type: 'bar',
+        barWidth: '60%',
+        data: [320, 250, 200, 334, 290],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#818cf8' },
+            { offset: 1, color: '#4f46e5' }
+          ]),
+          borderRadius: [4, 4, 0, 0]
+        }
+      }
+    ]
+  };
+
+  const donutChartOption = {
+    title: { text: 'Категории', left: 'center', textStyle: { fontSize: 14, color: '#64748b' } },
+    tooltip: { trigger: 'item' },
+    legend: { bottom: '0%', left: 'center' },
+    series: [
+      {
+        name: 'Тип обращения',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: { show: false, position: 'center' },
+        emphasis: {
+          label: { show: true, fontSize: 20, fontWeight: 'bold' }
+        },
+        data: [
+          { value: 1048, name: 'Техподдержка', itemStyle: { color: '#6366f1' } },
+          { value: 735, name: 'Продажи', itemStyle: { color: '#ec4899' } },
+          { value: 580, name: 'Бухгалтерия', itemStyle: { color: '#f59e0b' } },
+          { value: 484, name: 'Другое', itemStyle: { color: '#10b981' } },
+        ]
+      }
+    ]
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800 font-sans overflow-hidden">
@@ -135,12 +278,11 @@ const App: React.FC = () => {
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-4">
                     <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">v2.0 Обновлено</span>
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">v2.1 Charts</span>
                   </div>
                   <h1 className="text-4xl md:text-5xl font-bold mb-4">Добро пожаловать!</h1>
                   <p className="text-lg text-indigo-100 max-w-2xl">
-                    Интерфейс успешно обновлен. Теперь у вас есть боковое меню, навигация и формы. 
-                    Это отличная основа для панели управления.
+                    Интерфейс успешно обновлен. Теперь у вас есть доступ к разделу "Статистика" с интерактивными графиками ECharts.
                   </p>
                 </div>
               </div>
@@ -156,6 +298,26 @@ const App: React.FC = () => {
                     <p className="text-3xl font-bold text-gray-800">{12 * i}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: STATISTICS */}
+          {activeTab === 'stats' && (
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Top Row: Line Chart */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <EChartComponent options={lineChartOption} height="350px" />
+              </div>
+
+              {/* Bottom Row: Bar and Donut */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                  <EChartComponent options={barChartOption} height="300px" />
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                  <EChartComponent options={donutChartOption} height="300px" />
+                </div>
               </div>
             </div>
           )}
