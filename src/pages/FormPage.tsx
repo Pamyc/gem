@@ -1,9 +1,10 @@
 import React from 'react';
-import SupportForm from './helperFormPage/SupportForm';
 
 const FormPage: React.FC = () => {
   return (
-    <SupportForm />
+    <div className="flex items-center justify-center h-[50vh] text-gray-400 dark:text-gray-600">
+       <p className="text-lg font-medium">Пример 1 (Пустая страница)</p>
+    </div>
   );
 };
 

@@ -1,6 +1,8 @@
 import React from 'react';
-import { Sparkles, Menu, ChevronLeft, Sun, Moon } from 'lucide-react';
+import { Menu, ChevronLeft, Sun, Moon, LogOut } from 'lucide-react';
 import { MenuItem, TabId } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import CCMLogo from '../components/CCMLogo';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -21,6 +23,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isDarkMode,
   toggleTheme
 }) => {
+  const { user, logout } = useAuth();
+
   return (
     <aside 
       className={`
@@ -29,13 +33,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       `}
     >
       {/* Logo Area */}
-      <div className="h-16 flex items-center justify-center border-b border-gray-700/30 dark:border-white/5">
+      <div className="h-16 flex items-center justify-center border-b border-gray-700/30 dark:border-white/5 shrink-0">
         <div className="flex items-center gap-3 overflow-hidden px-4">
-          <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 p-2 rounded-xl shrink-0 shadow-lg shadow-violet-500/20">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
           <span className={`font-bold text-xl whitespace-nowrap transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-            CCM <span className="text-indigo-400 dark:text-violet-400">Dash</span>
+            CCM <span className="text-indigo-400 dark:text-violet-400">Elevator</span>
           </span>
         </div>
       </div>
@@ -49,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </button>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto scrollbar-none">
+      <nav className="py-6 px-3 space-y-2 overflow-y-auto scrollbar-none shrink-0 max-h-[50%]">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -85,29 +86,55 @@ const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
+      {/* Watermark Logo Container (Flexible Spacer) */}
+      <div className="flex-1 flex items-end justify-center pb-6 overflow-hidden min-h-0 px-4">
+        <div 
+          className={`
+            transition-all duration-500 ease-in-out text-[#C5A059] opacity-70 hover:opacity-100
+            ${isCollapsed ? 'w-12 opacity-30' : 'w-48'}
+          `}
+        >
+           <CCMLogo className="w-full h-full max-h-[300px] object-contain drop-shadow-lg" />
+        </div>
+      </div>
+
       {/* Footer Sidebar */}
       <div className="p-4 border-t border-gray-700/30 dark:border-white/5 shrink-0 bg-slate-800/20 dark:bg-black/10">
         <div className={`flex items-center gap-3 ${isCollapsed ? 'flex-col justify-center' : 'justify-between'}`}>
           
           {/* User Info Group */}
-          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-fuchsia-400 to-violet-400 shrink-0 border border-white/20"></div>
+          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''} overflow-hidden`}>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-fuchsia-400 to-violet-400 shrink-0 border border-white/20 flex items-center justify-center text-xs font-bold text-white">
+               {user?.username.substring(0, 2).toUpperCase()}
+            </div>
             {!isCollapsed && (
               <div className="overflow-hidden">
-                <p className="text-sm font-medium text-white">Пользователь</p>
-                <p className="text-xs text-slate-400 truncate">user@example.com</p>
+                <p className="text-sm font-medium text-white truncate max-w-[100px]">{user?.name}</p>
+                <p className="text-xs text-slate-400 truncate capitalize">{user?.role}</p>
               </div>
             )}
           </div>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-700/50 dark:bg-white/5 text-slate-300 hover:text-yellow-300 hover:bg-slate-700 dark:hover:bg-white/10 transition-all cursor-pointer"
-            title={isDarkMode ? "Включить светлую тему" : "Включить темную тему"}
-          >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+          {/* Action Buttons */}
+          <div className={`flex items-center gap-2 ${isCollapsed ? 'flex-col mt-2' : ''}`}>
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-slate-700/50 dark:bg-white/5 text-slate-300 hover:text-yellow-300 hover:bg-slate-700 dark:hover:bg-white/10 transition-all cursor-pointer"
+              title={isDarkMode ? "Включить светлую тему" : "Включить темную тему"}
+            >
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            {/* Logout Button */}
+             <button
+              onClick={logout}
+              className="p-2 rounded-lg bg-slate-700/50 dark:bg-white/5 text-slate-300 hover:text-red-400 hover:bg-slate-700 dark:hover:bg-white/10 transition-all cursor-pointer"
+              title="Выйти"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
 
         </div>
       </div>

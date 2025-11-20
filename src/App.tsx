@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Settings, BarChart3 } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
 import FormPage from './pages/FormPage';
 import SettingsPage from './pages/SettingsPage';
+import LoginPage from './pages/LoginPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-const App: React.FC = () => {
+// Компонент-обертка для содержимого приложения, чтобы использовать useAuth
+const AppContent: React.FC = () => {
+  const { user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabId>('home');
+  // Статистика теперь первая вкладка и дефолтная
+  const [activeTab, setActiveTab] = useState<TabId>('stats');
   
   // Состояние темы (по умолчанию светлая)
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -29,11 +34,16 @@ const App: React.FC = () => {
   };
 
   const menuItems: MenuItem[] = [
-    { id: 'home', label: 'Главная', icon: LayoutDashboard },
     { id: 'stats', label: 'Статистика', icon: BarChart3 },
-    { id: 'form', label: 'Заявка', icon: FileText },
+    { id: 'home', label: 'Источник данных', icon: Database },
+    { id: 'form', label: 'Пример 1', icon: FileText },
     { id: 'settings', label: 'Настройки', icon: Settings },
   ];
+
+  // Если пользователь не авторизован, показываем страницу входа
+  if (!user) {
+    return <LoginPage />;
+  }
 
   return (
     <DataProvider>
@@ -46,12 +56,20 @@ const App: React.FC = () => {
         isDarkMode={isDarkMode}
         toggleTheme={toggleTheme}
       >
-        {activeTab === 'home' && <HomePage />}
         {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
+        {activeTab === 'home' && <HomePage />}
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>
     </DataProvider>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

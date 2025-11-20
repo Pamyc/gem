@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-import { Bell } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { MenuItem, TabId } from '../types';
 
@@ -51,10 +50,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             {currentTitle}
           </h2>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-violet-400 transition-colors relative cursor-pointer">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-fuchsia-500 rounded-full border border-white dark:border-[#151923] animate-pulse"></span>
-            </button>
+            {/* Placeholder for future header items if needed */}
           </div>
         </header>
 
