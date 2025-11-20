@@ -103,6 +103,42 @@ const DashboardCharts: React.FC = () => {
     ]
   };
 
+  const pieChartOption = {
+    title: {
+      text: 'Referer of a Website',
+      subtext: 'Fake Data',
+      left: 'center'
+    },
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left'
+    },
+    series: [
+      {
+        name: 'Access From',
+        type: 'pie',
+        radius: '50%',
+        data: [
+          { value: 1048, name: 'Search Engine' },
+          { value: 735, name: 'Direct' },
+          { value: 580, name: 'Email' },
+          { value: 484, name: 'Union Ads' },
+          { value: 300, name: 'Video Ads' }
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Top Row: Line Chart */}
@@ -117,6 +153,9 @@ const DashboardCharts: React.FC = () => {
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <EChartComponent options={donutChartOption} height="300px" />
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <EChartComponent options={pieChartOption} height="300px" />
         </div>
       </div>
     </div>
