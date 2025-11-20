@@ -31,7 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className={`font-bold text-xl whitespace-nowrap transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-            Timeweb App
+            CCM Dashboard
           </span>
         </div>
       </div>

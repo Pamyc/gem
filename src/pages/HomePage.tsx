@@ -1,25 +1,39 @@
-import React from 'react';
-import { FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import WelcomeBanner from './helperHomePage/WelcomeBanner';
+import SheetSelector from './helperHomePage/SheetSelector';
+import SheetConfigTable from './helperHomePage/SheetConfigTable';
+import SheetMetrics from './helperHomePage/SheetMetrics';
+import { useDataStore } from '../contexts/DataContext';
 
 const HomePage: React.FC = () => {
+  const { sheetConfigs } = useDataStore();
+  const [selectedSheetKey, setSelectedSheetKey] = useState<string>('');
+
+  // Устанавливаем первую таблицу по умолчанию, когда загрузились конфиги
+  useEffect(() => {
+    if (sheetConfigs.length > 0 && !selectedSheetKey) {
+      setSelectedSheetKey(sheetConfigs[0].key);
+    }
+  }, [sheetConfigs, selectedSheetKey]);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Welcome Banner from Helper */}
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Welcome Banner */}
       <WelcomeBanner />
 
-      {/* Stats Grid Example */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 text-indigo-600">
-              <FileText size={24} />
-            </div>
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Активные задачи</h3>
-            <p className="text-3xl font-bold text-gray-800">{12 * i}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Google Sheets Selector (Controlled) */}
+        <SheetSelector 
+          selectedSheetKey={selectedSheetKey} 
+          onSheetChange={setSelectedSheetKey} 
+        />
+        
+        {/* Metrics for the selected sheet */}
+        <SheetMetrics selectedSheetKey={selectedSheetKey} />
       </div>
+
+      {/* Sheet Configuration Table */}
+      <SheetConfigTable />
     </div>
   );
 };
