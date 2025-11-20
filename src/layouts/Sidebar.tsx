@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     >
       {/* Background Watermark Logo */}
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
-         <div className={`transition-all duration-500 ease-in-out text-[#C5A059] ${isCollapsed ? 'w-[80%] opacity-[0.07]' : 'w-[90%] opacity-[0.27]'}`}>
+         <div className={`transition-all duration-500 ease-in-out text-[#C5A059] ${isCollapsed ? 'w-[80%] opacity-[0.07]' : 'w-[90%] opacity-[0.23]'}`}>
             <CCMLogo className="w-full h-full opacity-100" />
          </div>
       </div>

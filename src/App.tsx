@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Settings, BarChart3, Database } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
 import FormPage from './pages/FormPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import ConstructorPage from './pages/ConstructorPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -36,6 +37,7 @@ const AppContent: React.FC = () => {
   const menuItems: MenuItem[] = [
     { id: 'stats', label: 'Статистика', icon: BarChart3 },
     { id: 'home', label: 'Источник данных', icon: Database },
+    { id: 'constructor', label: 'Конструктор', icon: PenTool },
     { id: 'form', label: 'Пример 1', icon: FileText },
     { id: 'settings', label: 'Настройки', icon: Settings },
   ];
@@ -58,6 +60,7 @@ const AppContent: React.FC = () => {
       >
         {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
         {activeTab === 'home' && <HomePage />}
+        {activeTab === 'constructor' && <ConstructorPage />}
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>
