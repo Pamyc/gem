@@ -44,9 +44,9 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
 
   // NEW: Pie Chart Config based on user request from analytics-dashboard.tsx logic
   const elevatorsByCityConfig: ChartConfig = useMemo(() => ({
-    title: "Кол-во лифтов (Пончик)",
-    sheetKey: "montag", // Assuming montag sheet has similar structure or using clientGrowth for demo
-    chartType: "pie",
+    title: "Кол-во лифтов",
+    sheetKey: "clientGrowth", // Assuming montag sheet has similar structure or using clientGrowth for demo
+    chartType: "donut",
     xAxisColumn: "Город", // Used for grouping in Pie logic
     yAxisColumn: "Кол-во лифтов",
     segmentColumn: "Город", // For Pie, we group by this
@@ -54,7 +54,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     isCumulative: false,
     showLabels: true,
     showDataZoomSlider: false,
-    showLegend: true,
+    showLegend: false,
     filters: [
       { id: 'f1', column: "Итого (Да/Нет)", operator: 'equals', value: "Нет" },
       // Note: 'Без разбивки на литеры (Да/Нет)' might not exist in current demo data, 
