@@ -91,7 +91,7 @@ export const getAxisOptions = (
       type: 'category',
       boundaryGap: config.chartType === 'bar',
       data: xValues,
-      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b' },
+      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b', interval: 0, rotate: 30 },
       axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#cbd5e1' } }
     },
     yAxis: {
