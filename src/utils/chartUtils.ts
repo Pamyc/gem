@@ -221,11 +221,41 @@ export const processChartData = (
                   },
                   label: {
                       show: config.showLabels,
-                      formatter: '{b}: {d}%',
-                      color: isDarkMode ? '#fff' : '#333'
+                      // Rich Text Formatter
+                      formatter: ' {b|{b}：}{c}  {per|{d}%}  ',
+                      backgroundColor: isDarkMode ? '#334155' : '#F6F8FC',
+                      borderColor: isDarkMode ? '#475569' : '#8C8D8E',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      rich: {
+                          a: {
+                              color: isDarkMode ? '#94a3b8' : '#6E7079',
+                              lineHeight: 22,
+                              align: 'center'
+                          },
+                          hr: {
+                              borderColor: isDarkMode ? '#475569' : '#8C8D8E',
+                              width: '100%',
+                              borderWidth: 1,
+                              height: 0
+                          },
+                          b: {
+                              color: isDarkMode ? '#fff' : '#4C5058',
+                              fontSize: 14,
+                              fontWeight: 'bold',
+                              lineHeight: 33
+                          },
+                          per: {
+                              color: '#fff',
+                              backgroundColor: isDarkMode ? '#6366f1' : '#4C5058',
+                              padding: [3, 4],
+                              borderRadius: 4
+                          }
+                      }
                   },
                   labelLine: {
-                      show: config.showLabels
+                      show: config.showLabels,
+                      length: 30
                   },
                   emphasis: {
                       label: {
@@ -254,21 +284,11 @@ export const processChartData = (
 
       if (values.length > 0) {
         switch (config.aggregation) {
-          case 'sum':
-            aggregatedVal = values.reduce((a, b) => a + b, 0);
-            break;
-          case 'count':
-            aggregatedVal = values.length;
-            break;
-          case 'average':
-            aggregatedVal = values.reduce((a, b) => a + b, 0) / values.length;
-            break;
-          case 'max':
-            aggregatedVal = Math.max(...values);
-            break;
-          case 'min':
-            aggregatedVal = Math.min(...values);
-            break;
+          case 'sum': aggregatedVal = values.reduce((a, b) => a + b, 0); break;
+          case 'count': aggregatedVal = values.length; break;
+          case 'average': aggregatedVal = values.reduce((a, b) => a + b, 0) / values.length; break;
+          case 'max': aggregatedVal = Math.max(...values); break;
+          case 'min': aggregatedVal = Math.min(...values); break;
         }
       }
 
@@ -280,34 +300,29 @@ export const processChartData = (
       }
     });
 
-    const commonSeriesProps = {
-        name: segmentName,
-        type: config.chartType === 'area' ? 'line' : config.chartType,
-        data: dataPoints,
-        itemStyle: { color: colors[colorIdx % colors.length] },
-        label: config.chartType === 'bar' 
-            ? { show: config.showLabels, position: 'top', formatter: (p: any) => Number(p.value).toFixed(1).replace(/\.0$/, '') }
-            : { show: config.showLabels, position: 'top', formatter: (p: any) => Number(p.value).toFixed(1).replace(/\.0$/, '') }
-    };
-
-    // Standard XY Charts
     series.push({
-        ...commonSeriesProps,
-        smooth: true,
-        areaStyle: config.chartType === 'area' ? { opacity: 0.3 } : undefined,
-        lineStyle: { width: 3 },
-        symbol: config.showLabels ? 'circle' : 'none',
+      name: segmentName,
+      type: config.chartType,
+      stack: config.chartType === 'area' ? 'total' : undefined,
+      areaStyle: config.chartType === 'area' ? {} : undefined,
+      data: dataPoints,
+      smooth: true,
+      showSymbol: false,
+      itemStyle: {
+        color: colors[colorIdx % colors.length]
+      },
+      label: {
+        show: config.showLabels,
+        position: 'top'
+      }
     });
-    
     colorIdx++;
   });
 
-  // ECharts Options (XY Charts)
   return {
     backgroundColor: 'transparent',
     title: {
       text: config.title,
-      left: 'center',
       textStyle: { color: isDarkMode ? '#e2e8f0' : '#1e293b' }
     },
     tooltip: {
@@ -318,63 +333,75 @@ export const processChartData = (
     },
     legend: {
       show: config.showLegend !== false,
+      data: Array.from(groupedData.keys()),
       bottom: 0,
       textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
     },
     grid: {
-      left: '3%', 
-      right: '4%', 
-      // If slider is visible, we need more space at the bottom. If hidden, less space.
-      bottom: config.showDataZoomSlider ? '10%' : '3%', 
+      left: '3%',
+      right: '4%',
+      bottom: config.showLegend !== false ? '15%' : '3%',
+      top: '15%',
       containLabel: true
     },
-    dataZoom: [
-      { 
-        type: 'slider', 
-        show: config.showDataZoomSlider !== false, 
-        bottom: 30, 
-        height: 20, 
-        borderColor: 'transparent' 
-      },
-      { type: 'inside' }
-    ],
     xAxis: {
       type: 'category',
+      boundaryGap: config.chartType === 'bar',
       data: xValues,
-      axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0' } },
-      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b', rotate: 45 }
+      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b' },
+      axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#cbd5e1' } }
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { type: 'dashed', color: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9' } },
-      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b' }
+      axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b' },
+      splitLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0', type: 'dashed' } }
     },
-    series: series
+    // Only show dataZoom slider if enabled and supported (bar/line/area)
+    dataZoom: config.showDataZoomSlider !== false && ['line', 'bar', 'area'].includes(config.chartType) ? [
+      {
+        type: 'slider',
+        show: true,
+        bottom: config.showLegend !== false ? 30 : 10,
+        height: 20,
+        borderColor: 'transparent',
+        backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+        fillerColor: isDarkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)',
+        handleStyle: { color: '#6366f1' },
+        textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
+      },
+      {
+        type: 'inside'
+      }
+    ] : [
+       // Even if slider is hidden, keep 'inside' zoom for mousewheel if desired, 
+       // or remove completely. Here we keep mousewheel zoom active.
+       { type: 'inside' }
+    ],
+    series
   };
 };
 
-// Generate component code string
 export const generateComponentCode = (config: ChartConfig) => {
-  // We need to inject the config object into the template
   const configString = JSON.stringify(config, null, 2).replace(/"(\w+)":/g, '$1:');
 
-  return `import React, { useMemo } from 'react';
-import DynamicChart from '../components/charts/DynamicChart'; // Проверьте путь до компонента
+  return `
+import React, { useMemo } from 'react';
+import DynamicChart from '../components/charts/DynamicChart'; // Make sure path is correct
 import { ChartConfig } from '../types/chart';
 
-const MyGeneratedChart = ({ isDarkMode = true }) => {
-  // Настройки графика (можно вынести в пропсы или редактировать здесь)
+const MyChartWidget = () => {
+  
   const config: ChartConfig = useMemo(() => (${configString}), []);
 
   return (
-    <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5">
-      <DynamicChart 
-        config={config} 
-        isDarkMode={isDarkMode} 
-        height="400px" 
-      />
-    </div>
+    <DynamicChart 
+      config={config} 
+      isDarkMode={true} // Or pass from props
+      height="300px" 
+    />
   );
 };
 
-export default MyGeneratedChart;`;
+export default MyChartWidget;
+  `;
+};
