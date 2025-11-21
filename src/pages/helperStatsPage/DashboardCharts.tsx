@@ -123,10 +123,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
           })}
         </div>
 
-        {/* Optional: Date Range Picker or Actions can go here */}
-        <div className="hidden sm:block text-xs font-mono text-gray-400">
-           Last updated: Today, 12:00
-        </div>
+        
       </div>
 
       {/* Tab Content Area */}
@@ -134,7 +131,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
         
         {/* 1. ОБЩИЕ ДАННЫЕ */}
         {activeTab === 'general' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
               <DynamicChart config={clientGrowthConfig} isDarkMode={isDarkMode} height="350px" />
             </div>
