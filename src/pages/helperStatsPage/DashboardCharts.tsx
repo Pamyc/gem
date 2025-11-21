@@ -21,7 +21,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     segmentColumn: "",
     aggregation: "sum",
     isCumulative: false,
-    showLabels: false,
+    showLabels: true,
     showDataZoomSlider: false,
     showLegend: true,
     filters: []
@@ -36,7 +36,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     segmentColumn: "",
     aggregation: "sum",
     isCumulative: false,
-    showLabels: false,
+    showLabels: true,
     showDataZoomSlider: false,
     showLegend: true,
     filters: []

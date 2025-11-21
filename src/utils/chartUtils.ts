@@ -307,13 +307,17 @@ export const processChartData = (
       areaStyle: config.chartType === 'area' ? {} : undefined,
       data: dataPoints,
       smooth: true,
-      showSymbol: false,
+      // FIX: Enable symbols if labels are shown to ensure they have an anchor point.
+      showSymbol: config.showLabels, 
       itemStyle: {
         color: colors[colorIdx % colors.length]
       },
       label: {
         show: config.showLabels,
-        position: 'top'
+        position: 'top',
+        color: isDarkMode ? '#e2e8f0' : '#1e293b',
+        fontSize: 11,
+        fontWeight: 'bold'
       }
     });
     colorIdx++;
@@ -373,8 +377,7 @@ export const processChartData = (
         type: 'inside'
       }
     ] : [
-       // Even if slider is hidden, keep 'inside' zoom for mousewheel if desired, 
-       // or remove completely. Here we keep mousewheel zoom active.
+       // Keep 'inside' zoom for mousewheel if desired
        { type: 'inside' }
     ],
     series
