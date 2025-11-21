@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
   }, [sheetConfigs, selectedSheetKey]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="w-full max-w-[1152px] mx-auto space-y-6">
       {/* Welcome Banner */}
       <WelcomeBanner />
 

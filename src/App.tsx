@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -7,6 +7,8 @@ import FormPage from './pages/FormPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import ConstructorPage from './pages/ConstructorPage';
+import CardConstructorPage from './pages/CardConstructorPage';
+import KPIPage from './pages/KPIPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -39,22 +41,29 @@ const AppContent: React.FC = () => {
     const items: MenuItem[] = [
       { id: 'stats', label: 'Статистика', icon: BarChart3 },
       { id: 'home', label: 'Источник данных', icon: Database },
-      { id: 'constructor', label: 'Конструктор', icon: PenTool },
+      { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
+      { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
+      { id: 'kpi', label: 'KPI Примеры', icon: Target },
       { id: 'form', label: 'Пример 1', icon: FileText },
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
-    // Скрываем конструктор для всех, кроме integrat
+    // Скрываем конструктор и KPI для всех, кроме integrat
     if (user?.username !== 'integrat') {
-      return items.filter(item => item.id !== 'constructor');
+      return items.filter(item => 
+        item.id !== 'constructor' && 
+        item.id !== 'kpi' && 
+        item.id !== 'card-constructor'
+      );
     }
 
     return items;
   }, [user]);
 
-  // Защита роута: если пользователь на вкладке конструктора, но прав нет -> редирект
+  // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    if (activeTab === 'constructor' && user?.username !== 'integrat') {
+    const restrictedTabs = ['constructor', 'kpi', 'card-constructor'];
+    if (restrictedTabs.includes(activeTab) && user?.username !== 'integrat') {
       setActiveTab('stats');
     }
   }, [activeTab, user]);
@@ -77,8 +86,12 @@ const AppContent: React.FC = () => {
       >
         {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
         {activeTab === 'home' && <HomePage />}
-        {/* Рендерим конструктор только если пользователь имеет доступ */}
+        
+        {/* Рендерим админские страницы только если пользователь имеет доступ */}
         {activeTab === 'constructor' && user.username === 'integrat' && <ConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'card-constructor' && user.username === 'integrat' && <CardConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'kpi' && user.username === 'integrat' && <KPIPage isDarkMode={isDarkMode} />}
+        
         {activeTab === 'form' && <FormPage />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>

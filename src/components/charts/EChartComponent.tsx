@@ -25,7 +25,10 @@ const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", them
     };
 
     const resizeObserver = new ResizeObserver(() => {
-      resizeChart();
+      // Оборачиваем в rAF, чтобы избежать ошибки "ResizeObserver loop completed with undelivered notifications"
+      window.requestAnimationFrame(() => {
+        resizeChart();
+      });
     });
 
     if (chartRef.current) {

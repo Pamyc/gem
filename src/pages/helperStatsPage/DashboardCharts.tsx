@@ -35,16 +35,14 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   }), []);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Bottom Row: Bar and Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="w-full space-y-6">
+      {/* Responsive Grid: 1 col mobile, 2 cols laptop, 3 cols desktop, 4 cols ultrawide */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors">
-          {/* Replaced repetitive logic with reusable DynamicChart component */}
-          <DynamicChart config={clientGrowthConfig} isDarkMode={isDarkMode} height="300px" />
+          <DynamicChart config={clientGrowthConfig} isDarkMode={isDarkMode} height="350px" />
         </div>
         <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors">
-          {/* Replaced repetitive logic with reusable DynamicChart component */}
-          <DynamicChart config={testConfig} isDarkMode={isDarkMode} height="300px" />
+          <DynamicChart config={testConfig} isDarkMode={isDarkMode} height="350px" />
         </div>
       </div>
     </div>
