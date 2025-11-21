@@ -64,6 +64,27 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     ]
   }), []);
 
+  const corsByCityConfig: ChartConfig = useMemo(() => ({
+    title: "Кол-во этажей",
+    sheetKey: "clientGrowth", // Assuming montag sheet has similar structure or using clientGrowth for demo
+    chartType: "pie",
+    xAxisColumn: "Город", // Used for grouping in Pie logic
+    yAxisColumn: "Кол-во этажей",
+    segmentColumn: "Город", // For Pie, we group by this
+    aggregation: "sum",
+    isCumulative: false,
+    showLabels: true,
+    showDataZoomSlider: false,
+    showLegend: false,
+    filters: [
+      { id: 'f1', column: "Итого (Да/Нет)", operator: 'equals', value: "Нет" },
+      // Note: 'Без разбивки на литеры (Да/Нет)' might not exist in current demo data, 
+      // but adding it to match the logic requested. 
+      // If column doesn't exist, filter is safely ignored in utils.
+      { id: 'f2', column: "Без разбивки на литеры (Да/Нет)", operator: 'equals', value: "Да" }, 
+    ]
+  }), []);
+
   const tabs = [
     { 
       id: 'general', 
@@ -140,6 +161,9 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
             </div>
              <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
               <DynamicChart config={elevatorsByCityConfig} isDarkMode={isDarkMode} height="350px" />
+            </div>
+            <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
+              <DynamicChart config={corsByCityConfig} isDarkMode={isDarkMode} height="350px" />
             </div>
           </div>
         )}
