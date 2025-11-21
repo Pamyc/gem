@@ -91,7 +91,6 @@ export const processChartData = (
   });
 
   // 3. Grouping & Aggregation
-  // Structure: Map<SegmentName, Map<XValue, Array<YValues>>>
   const groupedData = new Map<string, Map<string, number[]>>();
   const xValuesSet = new Set<string>();
 
@@ -121,11 +120,128 @@ export const processChartData = (
     return a.localeCompare(b);
   });
 
-  // 4. Build Series
-  const series: any[] = [];
+  // Common Palette
   const colors = [
-    '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e'
+    '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e', '#84cc16', '#14b8a6'
   ];
+
+  // --- PIE / DONUT Logic ---
+  if (config.chartType === 'pie' || config.chartType === 'donut') {
+      const pieData: any[] = [];
+      
+      if (config.segmentColumn) {
+          // CASE A: Grouping enabled (Segment is slice)
+          // We aggregate ALL values for each segment, ignoring X-axis distribution
+          let colorIdx = 0;
+          groupedData.forEach((segmentMap, segmentName) => {
+              // Collect all values for this segment from the map
+              let allValues: number[] = [];
+              for (const vals of segmentMap.values()) {
+                  allValues.push(...vals);
+              }
+              
+              let val = 0;
+              if (allValues.length > 0) {
+                  if (config.aggregation === 'sum') val = allValues.reduce((a,b)=>a+b, 0);
+                  else if (config.aggregation === 'count') val = allValues.length;
+                  else if (config.aggregation === 'average') val = allValues.reduce((a,b)=>a+b, 0) / allValues.length;
+                  else if (config.aggregation === 'max') val = Math.max(...allValues);
+                  else if (config.aggregation === 'min') val = Math.min(...allValues);
+              }
+
+              if (val > 0 || config.aggregation === 'min') {
+                  pieData.push({
+                      name: segmentName,
+                      value: val,
+                      itemStyle: { color: colors[colorIdx % colors.length] }
+                  });
+              }
+              colorIdx++;
+          });
+      } else {
+          // CASE B: No Grouping (X-Axis is slice)
+          // We iterate xValues and aggregate
+          xValues.forEach((x, idx) => {
+             let allValuesForX: number[] = [];
+             
+             // Collect values for this X from all segments (likely just one 'Все данные')
+             groupedData.forEach(segmentMap => {
+                 const v = segmentMap.get(x);
+                 if (v) allValuesForX.push(...v);
+             });
+
+             let val = 0;
+             if (allValuesForX.length > 0) {
+                 if (config.aggregation === 'sum') val = allValuesForX.reduce((a,b)=>a+b, 0);
+                 else if (config.aggregation === 'count') val = allValuesForX.length;
+                 else if (config.aggregation === 'average') val = allValuesForX.reduce((a,b)=>a+b, 0) / allValuesForX.length;
+                 else if (config.aggregation === 'max') val = Math.max(...allValuesForX);
+                 else if (config.aggregation === 'min') val = Math.min(...allValuesForX);
+             }
+             
+             if (val > 0 || (val === 0 && config.aggregation !== 'count' && config.aggregation !== 'sum')) {
+                 pieData.push({
+                     name: x,
+                     value: val,
+                     itemStyle: { color: colors[idx % colors.length] }
+                 });
+             }
+          });
+      }
+
+      return {
+          backgroundColor: 'transparent',
+          title: {
+            text: config.title,
+            left: 'center',
+            textStyle: { color: isDarkMode ? '#e2e8f0' : '#1e293b' }
+          },
+          tooltip: {
+            trigger: 'item',
+            backgroundColor: isDarkMode ? 'rgba(21, 25, 35, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+            textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
+            formatter: '{b}: {c} ({d}%)'
+          },
+          legend: {
+            show: config.showLegend !== false,
+            bottom: 0,
+            textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
+          },
+          series: [
+              {
+                  name: config.title,
+                  type: 'pie',
+                  radius: config.chartType === 'donut' ? ['40%', '70%'] : '70%',
+                  avoidLabelOverlap: true,
+                  itemStyle: {
+                      borderRadius: 5,
+                      borderColor: isDarkMode ? '#1e293b' : '#fff',
+                      borderWidth: 2
+                  },
+                  label: {
+                      show: config.showLabels,
+                      formatter: '{b}: {d}%',
+                      color: isDarkMode ? '#fff' : '#333'
+                  },
+                  labelLine: {
+                      show: config.showLabels
+                  },
+                  emphasis: {
+                      label: {
+                          show: true,
+                          fontSize: 16,
+                          fontWeight: 'bold'
+                      }
+                  },
+                  data: pieData
+              }
+          ]
+      };
+  }
+
+  // --- LINE / BAR / AREA Logic ---
+  const series: any[] = [];
   let colorIdx = 0;
 
   groupedData.forEach((segmentMap, segmentName) => {
@@ -164,23 +280,29 @@ export const processChartData = (
       }
     });
 
+    const commonSeriesProps = {
+        name: segmentName,
+        type: config.chartType === 'area' ? 'line' : config.chartType,
+        data: dataPoints,
+        itemStyle: { color: colors[colorIdx % colors.length] },
+        label: config.chartType === 'bar' 
+            ? { show: config.showLabels, position: 'top', formatter: (p: any) => Number(p.value).toFixed(1).replace(/\.0$/, '') }
+            : { show: config.showLabels, position: 'top', formatter: (p: any) => Number(p.value).toFixed(1).replace(/\.0$/, '') }
+    };
+
+    // Standard XY Charts
     series.push({
-      name: segmentName,
-      type: config.chartType === 'area' ? 'line' : config.chartType,
-      smooth: true,
-      areaStyle: config.chartType === 'area' ? { opacity: 0.3 } : undefined,
-      data: dataPoints,
-      itemStyle: { color: colors[colorIdx % colors.length] },
-      lineStyle: { width: 3 },
-      symbol: config.showLabels ? 'circle' : 'none',
-      label: config.chartType === 'bar' 
-        ? { show: true, position: 'top' }
-        : { show: config.showLabels, position: 'top', formatter: (p: any) => p.value.toFixed(1) }
+        ...commonSeriesProps,
+        smooth: true,
+        areaStyle: config.chartType === 'area' ? { opacity: 0.3 } : undefined,
+        lineStyle: { width: 3 },
+        symbol: config.showLabels ? 'circle' : 'none',
     });
+    
     colorIdx++;
   });
 
-  // 5. ECharts Options
+  // ECharts Options (XY Charts)
   return {
     backgroundColor: 'transparent',
     title: {
@@ -195,6 +317,7 @@ export const processChartData = (
       textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' }
     },
     legend: {
+      show: config.showLegend !== false,
       bottom: 0,
       textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
     },
@@ -208,12 +331,12 @@ export const processChartData = (
     dataZoom: [
       { 
         type: 'slider', 
-        show: config.showDataZoomSlider !== false, // Default to true if undefined
+        show: config.showDataZoomSlider !== false, 
         bottom: 30, 
         height: 20, 
         borderColor: 'transparent' 
       },
-      { type: 'inside' } // Always allow mouse wheel/pinch zoom
+      { type: 'inside' }
     ],
     xAxis: {
       type: 'category',
@@ -255,4 +378,3 @@ const MyGeneratedChart = ({ isDarkMode = true }) => {
 };
 
 export default MyGeneratedChart;`;
-};

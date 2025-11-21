@@ -48,7 +48,10 @@ const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", them
   // Эффект для обновления данных (опций)
   useEffect(() => {
     if (chartInstance.current) {
-      chartInstance.current.setOption(options);
+      // Важно: используем второй параметр true (notMerge), 
+      // чтобы старые опции (например, dataZoom от линейного графика) 
+      // не оставались при переключении на график (например, Pie), где этих опций нет.
+      chartInstance.current.setOption(options, true);
     }
   }, [options]);
 

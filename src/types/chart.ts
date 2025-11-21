@@ -1,6 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 
-export type TabId = 'home' | 'form' | 'settings' | 'stats' | 'constructor';
+export type TabId = 'home' | 'form' | 'settings' | 'stats' | 'constructor' | 'kpi' | 'card-constructor';
 
 export interface MenuItem {
   id: TabId;
@@ -15,7 +15,7 @@ export interface ChartProps {
 }
 
 export type AggregationType = 'sum' | 'count' | 'average' | 'min' | 'max';
-export type ChartType = 'line' | 'bar' | 'area'; // Expanded for future use
+export type ChartType = 'line' | 'bar' | 'area' | 'pie' | 'donut';
 export type FilterOperator = 'equals' | 'contains' | 'greater' | 'less' | 'between' | 'in';
 
 export interface ChartFilter {
@@ -35,6 +35,7 @@ export interface ChartConfig {
   aggregation: AggregationType;
   isCumulative: boolean;
   showLabels: boolean;
-  showDataZoomSlider: boolean; // New property
+  showDataZoomSlider: boolean;
+  showLegend: boolean;
   filters: ChartFilter[];
 }

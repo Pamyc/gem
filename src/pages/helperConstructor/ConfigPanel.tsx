@@ -119,146 +119,175 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
           </div>
 
           <div>
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block ml-1">Разбивка (Серии)</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block ml-1">Группировка (Series)</span>
             <select
               value={config.segmentColumn}
               onChange={(e) => updateConfig('segmentColumn', e.target.value)}
               className={selectClassName}
             >
-              <option value="" className="dark:bg-[#1e2433]">Без разбивки</option>
+              <option value="" className="dark:bg-[#1e2433]">Без группировки</option>
               {availableColumns.map(c => <option key={c} value={c} className="dark:bg-[#1e2433]">{c}</option>)}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Aggregation Settings */}
+      {/* Chart Settings */}
       <div className="space-y-3">
         <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center gap-2">
-          <TrendingUp size={14} /> Обработка
+          <TrendingUp size={14} /> Настройки графика
         </label>
         
-        <div className="flex gap-2">
-           <select
-              value={config.aggregation}
-              onChange={(e) => updateConfig('aggregation', e.target.value)}
-              className={selectClassName}
-            >
-              <option value="sum" className="dark:bg-[#1e2433]">Сумма</option>
-              <option value="count" className="dark:bg-[#1e2433]">Количество</option>
-              <option value="average" className="dark:bg-[#1e2433]">Среднее</option>
-              <option value="max" className="dark:bg-[#1e2433]">Максимум</option>
-              <option value="min" className="dark:bg-[#1e2433]">Минимум</option>
-            </select>
-            
-            <select
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block ml-1">Тип графика</span>
+             <select
               value={config.chartType}
               onChange={(e) => updateConfig('chartType', e.target.value)}
               className={selectClassName}
             >
-              <option value="line" className="dark:bg-[#1e2433]">Линия</option>
-              <option value="bar" className="dark:bg-[#1e2433]">Столбцы</option>
-              <option value="area" className="dark:bg-[#1e2433]">Область</option>
+              <option value="line" className="dark:bg-[#1e2433]">Линейный</option>
+              <option value="bar" className="dark:bg-[#1e2433]">Столбчатый</option>
+              <option value="area" className="dark:bg-[#1e2433]">Область (Area)</option>
+              <option value="pie" className="dark:bg-[#1e2433]">Круговая (Pie)</option>
+              <option value="donut" className="dark:bg-[#1e2433]">Пончик (Donut)</option>
             </select>
+          </div>
+
+          <div>
+             <span className="text-xs text-gray-400 mb-1 block ml-1">Агрегация</span>
+             <select
+              value={config.aggregation}
+              onChange={(e) => updateConfig('aggregation', e.target.value)}
+              className={selectClassName}
+            >
+              <option value="sum">Сумма</option>
+              <option value="count">Количество</option>
+              <option value="average">Среднее</option>
+              <option value="max">Максимум</option>
+              <option value="min">Минимум</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2 mt-2">
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="cumulative"
-              checked={config.isCumulative} 
-              onChange={(e) => updateConfig('isCumulative', e.target.checked)}
-              className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
-            />
-            <label htmlFor="cumulative" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-              Кумулятивный итог
-            </label>
-          </div>
+        {/* Checkboxes */}
+        <div className="grid grid-cols-2 gap-2 pt-2">
+           <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="cumulative"
+                checked={config.isCumulative}
+                onChange={(e) => updateConfig('isCumulative', e.target.checked)}
+                className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="cumulative" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Нарастающий итог</label>
+           </div>
 
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="dataZoom"
-              checked={config.showDataZoomSlider !== false} // Default to true
-              onChange={(e) => updateConfig('showDataZoomSlider', e.target.checked)}
-              className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
-            />
-            <label htmlFor="dataZoom" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-              Слайдер зума
-            </label>
-          </div>
+           <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="labels"
+                checked={config.showLabels}
+                onChange={(e) => updateConfig('showLabels', e.target.checked)}
+                className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="labels" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Показывать метки</label>
+           </div>
+
+           <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="zoomSlider"
+                checked={config.showDataZoomSlider !== false} // Default true
+                onChange={(e) => updateConfig('showDataZoomSlider', e.target.checked)}
+                className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="zoomSlider" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Слайдер зума</label>
+           </div>
+
+           <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="legend"
+                checked={config.showLegend !== false} // Default true
+                onChange={(e) => updateConfig('showLegend', e.target.checked)}
+                className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="legend" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Легенда</label>
+           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-white/5">
+      <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-white/5">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center gap-2">
             <Filter size={14} /> Фильтры
           </label>
           <button 
             onClick={addFilter}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-indigo-500 transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded text-indigo-500 transition-colors"
             title="Добавить фильтр"
           >
-            <Plus size={16} />
+            <Plus size={14} />
           </button>
         </div>
 
         {config.filters.length === 0 && (
-            <p className="text-xs text-gray-400 italic">Нет активных фильтров</p>
+          <p className="text-xs text-gray-400 italic text-center py-2">Нет активных фильтров</p>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {config.filters.map((filter) => {
             const uniqueValues = getUniqueValues(filter.column);
-            
             return (
-              <div key={filter.id} className="bg-gray-50 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-200 dark:border-white/5 flex flex-col gap-2 group hover:border-indigo-500/30 transition-colors">
+              <div key={filter.id} className="bg-gray-50 dark:bg-[#1e2433] p-2 rounded-lg border border-gray-200 dark:border-white/5 flex flex-col gap-2 group">
                 <div className="flex gap-2">
-                   <select
-                      value={filter.column}
-                      onChange={(e) => updateFilterColumn(filter.id, e.target.value)}
-                      className="w-1/2 p-1.5 text-xs rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 outline-none focus:border-indigo-500"
-                    >
-                      {availableColumns.map(c => <option key={c} value={c} className="dark:bg-[#1e2433]">{c}</option>)}
-                    </select>
-                    <select
-                      value={filter.operator}
-                      onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
-                      className="w-1/2 p-1.5 text-xs rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 outline-none focus:border-indigo-500"
-                    >
-                      <option value="equals" className="dark:bg-[#1e2433]">Равно (=)</option>
-                      <option value="contains" className="dark:bg-[#1e2433]">Содержит</option>
-                      <option value="greater" className="dark:bg-[#1e2433]">Больше (&gt;)</option>
-                      <option value="less" className="dark:bg-[#1e2433]">Меньше (&lt;)</option>
-                    </select>
-                    <button onClick={() => removeFilter(filter.id)} className="text-gray-400 hover:text-red-500 p-0.5">
-                      <Trash2 size={14} />
-                    </button>
+                  <select
+                    value={filter.column}
+                    onChange={(e) => updateFilterColumn(filter.id, e.target.value)}
+                    className={`${selectClassName} text-xs py-1.5 px-2 h-8`}
+                  >
+                    {availableColumns.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <button onClick={() => removeFilter(filter.id)} className="text-gray-400 hover:text-red-500 p-1">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
                 
-                {uniqueValues.length > 0 && uniqueValues.length < 200 ? (
+                <div className="flex gap-2">
                   <select
-                    value={filter.value}
-                    onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 outline-none focus:border-indigo-500 appearance-none"
+                    value={filter.operator}
+                    onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
+                    className={`${selectClassName} w-1/3 text-xs py-1.5 px-2 h-8`}
                   >
-                    <option value="" className="dark:bg-[#1e2433]">Выберите значение...</option>
-                    {uniqueValues.map(val => (
-                      <option key={val} value={val} className="dark:bg-[#1e2433]">{val}</option>
-                    ))}
+                    <option value="equals">=</option>
+                    <option value="contains">In</option>
+                    <option value="greater">&gt;</option>
+                    <option value="less">&lt;</option>
                   </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={filter.value}
-                    onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                    placeholder="Значение..."
-                    className="w-full p-2 text-xs rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 outline-none focus:border-indigo-500 placeholder-gray-500"
-                  />
-                )}
+                  
+                  {uniqueValues.length > 0 ? (
+                    <select
+                      value={filter.value}
+                      onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
+                      className={`${selectClassName} w-2/3 text-xs py-1.5 px-2 h-8`}
+                    >
+                      <option value="">Выбрать...</option>
+                      {uniqueValues.map(val => (
+                        <option key={val} value={val}>{val}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={filter.value}
+                      onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
+                      placeholder="Значение"
+                      className={`${selectClassName} w-2/3 text-xs py-1.5 px-2 h-8`}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

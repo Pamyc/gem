@@ -23,6 +23,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     isCumulative: false,
     showLabels: false,
     showDataZoomSlider: false,
+    showLegend: true,
     filters: []
   }), []);
 
@@ -37,7 +38,30 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     isCumulative: false,
     showLabels: false,
     showDataZoomSlider: false,
+    showLegend: true,
     filters: []
+  }), []);
+
+  // NEW: Pie Chart Config based on user request from analytics-dashboard.tsx logic
+  const elevatorsByCityConfig: ChartConfig = useMemo(() => ({
+    title: "Кол-во лифтов (Пончик)",
+    sheetKey: "montag", // Assuming montag sheet has similar structure or using clientGrowth for demo
+    chartType: "pie",
+    xAxisColumn: "Город", // Used for grouping in Pie logic
+    yAxisColumn: "Кол-во лифтов",
+    segmentColumn: "Город", // For Pie, we group by this
+    aggregation: "sum",
+    isCumulative: false,
+    showLabels: true,
+    showDataZoomSlider: false,
+    showLegend: true,
+    filters: [
+      { id: 'f1', column: "Итого (Да/Нет)", operator: 'equals', value: "Нет" },
+      // Note: 'Без разбивки на литеры (Да/Нет)' might not exist in current demo data, 
+      // but adding it to match the logic requested. 
+      // If column doesn't exist, filter is safely ignored in utils.
+      { id: 'f2', column: "Без разбивки на литеры (Да/Нет)", operator: 'equals', value: "Да" }, 
+    ]
   }), []);
 
   const tabs = [
@@ -116,6 +140,9 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
             </div>
             <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
               <DynamicChart config={testConfig} isDarkMode={isDarkMode} height="350px" />
+            </div>
+             <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
+              <DynamicChart config={elevatorsByCityConfig} isDarkMode={isDarkMode} height="350px" />
             </div>
           </div>
         )}
