@@ -94,7 +94,7 @@ export const getPieOptions = (
           {
               name: config.title,
               type: 'pie',
-              radius: config.chartType === 'donut' ? ['35%', '55%'] : '55%',
+              radius: config.chartType === 'donut' ? ['37%', '60%'] : '55%',
               center: ['50%', '50%'],
               avoidLabelOverlap: true,
               itemStyle: {
@@ -104,7 +104,7 @@ export const getPieOptions = (
               },
               label: {
                   show: config.showLabels,
-                  formatter: ' {b|{b}：}{c}  {per|{d}%}  ',
+                  formatter: '{per|{d}%} {st|{c}шт.}\n {b|{b} }    ',
                   backgroundColor: isDarkMode ? '#334155' : '#F6F8FC',
                   borderColor: isDarkMode ? '#475569' : '#8C8D8E',
                   borderWidth: 1,
@@ -125,13 +125,23 @@ export const getPieOptions = (
                           color: isDarkMode ? '#fff' : '#4C5058',
                           fontSize: 14,
                           fontWeight: 'bold',
-                          lineHeight: 33
+                          lineHeight: 33,
+                          padding: [3, 4],
+                          align: 'center'
                       },
                       per: {
                           color: '#fff',
                           backgroundColor: isDarkMode ? '#6366f1' : '#4C5058',
                           padding: [3, 4],
-                          borderRadius: 4
+                          borderRadius: 4,
+                          align: 'center'
+                      },
+                      st: {
+                          color: '#fff',
+                          backgroundColor: isDarkMode ? '#6366f1' : '#4C5058',
+                          padding: [3, 4],
+                          borderRadius: 4,
+                          align: 'center'
                       }
                   }
               },
