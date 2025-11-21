@@ -162,17 +162,32 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
             </select>
         </div>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input 
-            type="checkbox" 
-            id="cumulative"
-            checked={config.isCumulative} 
-            onChange={(e) => updateConfig('isCumulative', e.target.checked)}
-            className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
-          />
-          <label htmlFor="cumulative" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-            Кумулятивный итог
-          </label>
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="cumulative"
+              checked={config.isCumulative} 
+              onChange={(e) => updateConfig('isCumulative', e.target.checked)}
+              className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+            />
+            <label htmlFor="cumulative" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+              Кумулятивный итог
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="dataZoom"
+              checked={config.showDataZoomSlider !== false} // Default to true
+              onChange={(e) => updateConfig('showDataZoomSlider', e.target.checked)}
+              className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+            />
+            <label htmlFor="dataZoom" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+              Слайдер зума
+            </label>
+          </div>
         </div>
       </div>
 

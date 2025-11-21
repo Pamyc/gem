@@ -199,11 +199,21 @@ export const processChartData = (
       textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
     },
     grid: {
-      left: '3%', right: '4%', bottom: '10%', containLabel: true
+      left: '3%', 
+      right: '4%', 
+      // If slider is visible, we need more space at the bottom. If hidden, less space.
+      bottom: config.showDataZoomSlider ? '10%' : '3%', 
+      containLabel: true
     },
     dataZoom: [
-      { type: 'slider', show: true, bottom: 30, height: 20, borderColor: 'transparent' },
-      { type: 'inside' }
+      { 
+        type: 'slider', 
+        show: config.showDataZoomSlider !== false, // Default to true if undefined
+        bottom: 30, 
+        height: 20, 
+        borderColor: 'transparent' 
+      },
+      { type: 'inside' } // Always allow mouse wheel/pinch zoom
     ],
     xAxis: {
       type: 'category',

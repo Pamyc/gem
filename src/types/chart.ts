@@ -35,5 +35,6 @@ export interface ChartConfig {
   aggregation: AggregationType;
   isCumulative: boolean;
   showLabels: boolean;
+  showDataZoomSlider: boolean; // New property
   filters: ChartFilter[];
 }

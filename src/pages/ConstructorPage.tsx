@@ -26,6 +26,7 @@ const ConstructorPage: React.FC<ConstructorPageProps> = ({ isDarkMode }) => {
     aggregation: 'sum',
     isCumulative: false,
     showLabels: false,
+    showDataZoomSlider: true, // Default visible
     filters: []
   });
 
