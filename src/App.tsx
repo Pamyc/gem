@@ -3,7 +3,7 @@ import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout } from
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
-import FormPage from './pages/FormPage';
+import ExamplePage from './pages/ExamplePage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import ConstructorPage from './pages/ConstructorPage';
@@ -44,7 +44,7 @@ const AppContent: React.FC = () => {
       { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
       { id: 'kpi', label: 'KPI Примеры', icon: Target },
-      { id: 'form', label: 'Пример 1', icon: FileText },
+      { id: 'example', label: 'Пример 1', icon: FileText },
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
@@ -92,7 +92,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'card-constructor' && user.username === 'integrat' && <CardConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'kpi' && user.username === 'integrat' && <KPIPage isDarkMode={isDarkMode} />}
         
-        {activeTab === 'form' && <FormPage />}
+        {activeTab === 'example' && <ExamplePage isDarkMode={isDarkMode} />}
         {activeTab === 'settings' && <SettingsPage />}
       </MainLayout>
     </DataProvider>

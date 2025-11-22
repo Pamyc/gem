@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import DynamicChart from '../../components/charts/DynamicChart';
-import { ChartConfig } from '../../types/chart';
+import React, { useState } from 'react';
 import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer } from 'lucide-react';
+import GeneralTab from './GeneralTab';
+import LiftsTab from './LiftsTab';
+import FinanceTab from './FinanceTab';
+import MontagTab from './MontagTab';
 
 interface DashboardChartsProps {
   isDarkMode: boolean;
@@ -11,79 +13,6 @@ type TabType = 'general' | 'lifts' | 'finance' | 'montag';
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
-  
-  const clientGrowthConfig: ChartConfig = useMemo(() => ({
-    title: "Динамика этажей по городам (Live)",
-    sheetKey: "clientGrowth",
-    chartType: "line",
-    xAxisColumn: "Город",
-    yAxisColumn: "Кол-во этажей",
-    segmentColumn: "",
-    aggregation: "sum",
-    isCumulative: false,
-    showLabels: true,
-    showDataZoomSlider: false,
-    showLegend: true,
-    filters: []
-  }), []);
-
-  const testConfig: ChartConfig = useMemo(() => ({
-    title: "Мой новый график",
-    sheetKey: "clientGrowth",
-    chartType: "bar",
-    xAxisColumn: "ЖК",
-    yAxisColumn: "Кол-во лифтов",
-    segmentColumn: "",
-    aggregation: "sum",
-    isCumulative: false,
-    showLabels: true,
-    showDataZoomSlider: false,
-    showLegend: true,
-    filters: []
-  }), []);
-
-  // NEW: Pie Chart Config based on user request from analytics-dashboard.tsx logic
-  const elevatorsByCityConfig: ChartConfig = useMemo(() => ({
-    title: "Кол-во лифтов",
-    sheetKey: "clientGrowth", // Assuming montag sheet has similar structure or using clientGrowth for demo
-    chartType: "donut",
-    xAxisColumn: "Город", // Used for grouping in Pie logic
-    yAxisColumn: "Кол-во лифтов",
-    segmentColumn: "Город", // For Pie, we group by this
-    aggregation: "sum",
-    isCumulative: false,
-    showLabels: true,
-    showDataZoomSlider: false,
-    showLegend: false,
-    filters: [
-      { id: 'f1', column: "Итого (Да/Нет)", operator: 'equals', value: "Нет" },
-      // Note: 'Без разбивки на литеры (Да/Нет)' might not exist in current demo data, 
-      // but adding it to match the logic requested. 
-      // If column doesn't exist, filter is safely ignored in utils.
-      { id: 'f2', column: "Без разбивки на литеры (Да/Нет)", operator: 'equals', value: "Да" }, 
-    ]
-  }), []);
-
-  const corsByCityConfig: ChartConfig = useMemo(() => ({
-    title: "Кол-во этажей",
-    sheetKey: "clientGrowth", // Assuming montag sheet has similar structure or using clientGrowth for demo
-    chartType: "pie",
-    xAxisColumn: "Город", // Used for grouping in Pie logic
-    yAxisColumn: "Кол-во этажей",
-    segmentColumn: "Город", // For Pie, we group by this
-    aggregation: "sum",
-    isCumulative: false,
-    showLabels: true,
-    showDataZoomSlider: false,
-    showLegend: false,
-    filters: [
-      { id: 'f1', column: "Итого (Да/Нет)", operator: 'equals', value: "Нет" },
-      // Note: 'Без разбивки на литеры (Да/Нет)' might not exist in current demo data, 
-      // but adding it to match the logic requested. 
-      // If column doesn't exist, filter is safely ignored in utils.
-      { id: 'f2', column: "Без разбивки на литеры (Да/Нет)", operator: 'equals', value: "Да" }, 
-    ]
-  }), []);
 
   const tabs = [
     { 
@@ -143,56 +72,14 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
             );
           })}
         </div>
-
-        
       </div>
 
       {/* Tab Content Area */}
       <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        {/* 1. ОБЩИЕ ДАННЫЕ */}
-        {activeTab === 'general' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
-              <DynamicChart config={clientGrowthConfig} isDarkMode={isDarkMode} height="350px" />
-            </div>
-            <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
-              <DynamicChart config={testConfig} isDarkMode={isDarkMode} height="350px" />
-            </div>
-             <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
-              <DynamicChart config={elevatorsByCityConfig} isDarkMode={isDarkMode} height="350px" />
-            </div>
-            <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 transition-colors hover:border-indigo-500/20 dark:hover:border-indigo-500/20">
-              <DynamicChart config={corsByCityConfig} isDarkMode={isDarkMode} height="350px" />
-            </div>
-          </div>
-        )}
-
-        {/* 2. ЛИФТЫ (Placeholder) */}
-        {activeTab === 'lifts' && (
-          <div className="flex flex-col items-center justify-center h-64 bg-white dark:bg-[#151923] rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-             <ArrowUpFromLine size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
-             <p className="text-gray-500 dark:text-gray-400 font-medium">Статистика по лифтам будет здесь</p>
-             <p className="text-sm text-gray-400 mt-1">Настройте графики в конструкторе</p>
-          </div>
-        )}
-
-        {/* 3. ФИНАНСЫ (Placeholder) */}
-        {activeTab === 'finance' && (
-          <div className="flex flex-col items-center justify-center h-64 bg-white dark:bg-[#151923] rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-             <Banknote size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
-             <p className="text-gray-500 dark:text-gray-400 font-medium">Финансовые показатели</p>
-          </div>
-        )}
-
-        {/* 4. МОНТАЖ (Placeholder) */}
-        {activeTab === 'montag' && (
-          <div className="flex flex-col items-center justify-center h-64 bg-white dark:bg-[#151923] rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-             <Hammer size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
-             <p className="text-gray-500 dark:text-gray-400 font-medium">Данные по монтажу</p>
-          </div>
-        )}
-
+        {activeTab === 'general' && <GeneralTab isDarkMode={isDarkMode} />}
+        {activeTab === 'lifts' && <LiftsTab isDarkMode={isDarkMode} />}
+        {activeTab === 'finance' && <FinanceTab isDarkMode={isDarkMode} />}
+        {activeTab === 'montag' && <MontagTab isDarkMode={isDarkMode} />}
       </div>
     </div>
   );
