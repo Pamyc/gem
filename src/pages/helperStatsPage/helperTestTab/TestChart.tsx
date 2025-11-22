@@ -1,16 +1,13 @@
 import React from 'react';
-import EChartComponent from '../../components/charts/EChartComponent';
-import { ProcessedDataItem } from '../../hooks/useProcessedChartData';
+import EChartComponent from '../../../components/charts/EChartComponent';
+import { ProcessedDataItem } from '../../../hooks/useProcessedChartData';
 
-interface NestedPieChartProps {
+interface TestChartProps {
   isDarkMode: boolean;
   data: ProcessedDataItem[];
 }
 
-const NestedPieChart: React.FC<NestedPieChartProps> = ({ isDarkMode, data }) => {
-  
-  // Вы можете копировать код ниже прямо с примеров ECharts, 
-  // просто заменяя поле data: [...] на data: data
+const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   
   const option = {
     backgroundColor: 'transparent',
@@ -19,7 +16,6 @@ const NestedPieChart: React.FC<NestedPieChartProps> = ({ isDarkMode, data }) => 
       subtext: 'Динамические данные',
       left: 'center',
       textStyle: {
-        // Адаптация цвета текста под тему, чтобы было видно и на темном, и на светлом
         color: isDarkMode ? '#fff' : '#333'
       },
       subtextStyle: {
@@ -41,11 +37,7 @@ const NestedPieChart: React.FC<NestedPieChartProps> = ({ isDarkMode, data }) => 
         name: 'Access From',
         type: 'pie',
         radius: '50%',
-        
-        // --- ВАЖНО: Здесь мы подставляем данные из пропсов ---
         data: data, 
-        // ----------------------------------------------------
-
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
@@ -68,4 +60,4 @@ const NestedPieChart: React.FC<NestedPieChartProps> = ({ isDarkMode, data }) => 
   );
 };
 
-export default NestedPieChart;
+export default TestChart;

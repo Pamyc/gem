@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer } from 'lucide-react';
+import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical } from 'lucide-react';
 import GeneralTab from './GeneralTab';
+import TestTab from './TestTab';
 import LiftsTab from './LiftsTab';
 import FinanceTab from './FinanceTab';
 import MontagTab from './MontagTab';
@@ -9,7 +10,7 @@ interface DashboardChartsProps {
   isDarkMode: boolean;
 }
 
-type TabType = 'general' | 'lifts' | 'finance' | 'montag';
+type TabType = 'general' | 'test' | 'lifts' | 'finance' | 'montag';
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
@@ -21,6 +22,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       icon: LayoutDashboard,
       gradient: 'from-violet-600 to-indigo-600 shadow-indigo-500/30',
       inactiveStyle: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
+    },
+    { 
+      id: 'test', 
+      label: 'Тест', 
+      icon: FlaskConical,
+      gradient: 'from-pink-500 to-rose-500 shadow-rose-500/30',
+      inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
     },
     { 
       id: 'lifts', 
@@ -77,6 +85,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       {/* Tab Content Area */}
       <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'general' && <GeneralTab isDarkMode={isDarkMode} />}
+        {activeTab === 'test' && <TestTab isDarkMode={isDarkMode} />}
         {activeTab === 'lifts' && <LiftsTab isDarkMode={isDarkMode} />}
         {activeTab === 'finance' && <FinanceTab isDarkMode={isDarkMode} />}
         {activeTab === 'montag' && <MontagTab isDarkMode={isDarkMode} />}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import ConstructorPage from './pages/ConstructorPage';
 import CardConstructorPage from './pages/CardConstructorPage';
 import KPIPage from './pages/KPIPage';
+import FilterTestPage from './pages/FilterTestPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -43,6 +44,7 @@ const AppContent: React.FC = () => {
       { id: 'home', label: 'Источник данных', icon: Database },
       { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
+      { id: 'filter-test', label: 'Тест фильтров', icon: Filter },
       { id: 'kpi', label: 'KPI Примеры', icon: Target },
       { id: 'example', label: 'Пример 1', icon: FileText },
       { id: 'settings', label: 'Настройки', icon: Settings },
@@ -53,7 +55,8 @@ const AppContent: React.FC = () => {
       return items.filter(item => 
         item.id !== 'constructor' && 
         item.id !== 'kpi' && 
-        item.id !== 'card-constructor'
+        item.id !== 'card-constructor' &&
+        item.id !== 'filter-test'
       );
     }
 
@@ -62,7 +65,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'kpi', 'card-constructor'];
+    const restrictedTabs = ['constructor', 'kpi', 'card-constructor', 'filter-test'];
     if (restrictedTabs.includes(activeTab) && user?.username !== 'integrat') {
       setActiveTab('stats');
     }
@@ -90,6 +93,7 @@ const AppContent: React.FC = () => {
         {/* Рендерим админские страницы только если пользователь имеет доступ */}
         {activeTab === 'constructor' && user.username === 'integrat' && <ConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'card-constructor' && user.username === 'integrat' && <CardConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'filter-test' && user.username === 'integrat' && <FilterTestPage isDarkMode={isDarkMode} />}
         {activeTab === 'kpi' && user.username === 'integrat' && <KPIPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'example' && <ExamplePage isDarkMode={isDarkMode} />}

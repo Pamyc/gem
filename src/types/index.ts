@@ -1,6 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 
-export type TabId = 'home' | 'example' | 'settings' | 'stats' | 'constructor' | 'kpi' | 'card-constructor';
+export type TabId = 'home' | 'example' | 'settings' | 'stats' | 'constructor' | 'kpi' | 'card-constructor' | 'filter-test';
 
 export interface MenuItem {
   id: TabId;
