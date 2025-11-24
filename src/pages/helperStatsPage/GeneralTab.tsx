@@ -150,7 +150,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
       {/* Круговые диаграммы оставляем с лимитом по умолчанию (7), чтобы не было каши */}
-      <GeneralChartCard config={SumElevatorDataConfig} limit={7} showTotal valueSuffix=" шт.">
+      <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
         {(data) => (
           <PieDonutChart 
             isDarkMode={isDarkMode} 
@@ -161,7 +161,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={SumFloorDataConfig} limit={7} showTotal valueSuffix=" шт.">
+      <GeneralChartCard config={SumFloorDataConfig} limit={8} showTotal valueSuffix=" шт.">
         {(data) => (
           <PieDonutChart 
             isDarkMode={isDarkMode} 

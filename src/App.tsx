@@ -54,7 +54,7 @@ const AppContent: React.FC = () => {
     if (user?.username !== 'integrat') {
       return items.filter(item => 
         item.id !== 'constructor' && 
-        item.id !== 'kpi' && 
+        
         item.id !== 'card-constructor' &&
         item.id !== 'filter-test'
       );
