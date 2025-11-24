@@ -107,6 +107,9 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
   const inputClass = "w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all";
   const selectClass = "w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer";
 
+  // Specific high-contrast class for inputs inside the filter card
+  const filterInputClass = "w-full px-3 py-2 rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer h-9";
+
   return (
     <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
       
@@ -172,6 +175,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                 >
                     <option value="sum">Сумма (Sum)</option>
                     <option value="count">Количество (Count)</option>
+                    <option value="unique">Уникальные (Unique)</option>
                     <option value="average">Среднее (Avg)</option>
                     <option value="max">Максимум (Max)</option>
                     <option value="min">Минимум (Min)</option>
@@ -185,32 +189,37 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Фильтры</span>
                 <button 
                   onClick={addFilter}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded text-indigo-500 transition-colors"
+                  className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg text-indigo-600 dark:text-indigo-400 transition-colors flex items-center gap-1 text-[10px] font-bold uppercase"
                   title="Добавить фильтр"
                 >
-                  <Plus size={14} />
+                  <Plus size={12} /> Добавить
                 </button>
             </div>
 
             {config.filters.length === 0 && (
-                <p className="text-[10px] text-gray-400 italic">Нет фильтров</p>
+                <div className="text-center py-4 border border-dashed border-gray-200 dark:border-white/10 rounded-xl bg-gray-50/50 dark:bg-[#1e2433]/50">
+                    <p className="text-[10px] text-gray-400 italic">Нет активных фильтров</p>
+                </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {config.filters.map((filter) => {
                   const uniqueValues = getUniqueValues(filter.column);
                   return (
-                    <div key={filter.id} className="bg-gray-50 dark:bg-[#1e2433] p-2 rounded-lg border border-gray-200 dark:border-white/5 flex flex-col gap-2">
+                    <div key={filter.id} className="bg-gray-100 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-200 dark:border-white/5 flex flex-col gap-3 shadow-sm">
                         <div className="flex gap-2">
                             <select
                               value={filter.column}
                               onChange={(e) => updateFilterColumn(filter.id, e.target.value)}
-                              className={`${selectClass} text-xs py-1 px-1 h-7`}
+                              className={filterInputClass}
                             >
                               {availableColumns.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                            <button onClick={() => removeFilter(filter.id)} className="text-gray-400 hover:text-red-500 p-0.5 shrink-0">
-                              <Trash2 size={12} />
+                            <button 
+                                onClick={() => removeFilter(filter.id)} 
+                                className="text-gray-400 hover:text-red-500 bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 rounded-lg shrink-0 h-9 w-9 flex items-center justify-center transition-colors"
+                            >
+                              <Trash2 size={14} />
                             </button>
                         </div>
                         
@@ -218,7 +227,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                             <select
                               value={filter.operator}
                               onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
-                              className={`${selectClass} w-1/3 text-xs py-1 px-1 h-7`}
+                              className={`${filterInputClass} w-1/3`}
                             >
                               <option value="equals">=</option>
                               <option value="contains">In</option>
@@ -230,7 +239,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                               <select
                                 value={filter.value}
                                 onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                                className={`${selectClass} w-2/3 text-xs py-1 px-1 h-7`}
+                                className={`${filterInputClass} w-2/3`}
                               >
                                 <option value="">...</option>
                                 {uniqueValues.map(val => (
@@ -243,7 +252,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                                 value={filter.value}
                                 onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
                                 placeholder="..."
-                                className={`${inputClass} w-2/3 text-xs py-1 px-1 h-7`}
+                                className={`${filterInputClass} w-2/3 cursor-text`}
                               />
                             )}
                         </div>

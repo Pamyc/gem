@@ -69,7 +69,19 @@ const DynamicCard: React.FC<DynamicCardProps> = ({ config, className = "" }) => 
       return `${config.valuePrefix}${count}${config.valueSuffix}`;
     }
 
-    // 2. Math (Sum, Avg, etc)
+    // 2. Unique Count (works on strings too)
+    if (config.aggregation === 'unique') {
+      const uniqueSet = new Set();
+      filteredData.forEach(row => {
+          const val = row[colIndex];
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+              uniqueSet.add(String(val).trim());
+          }
+      });
+      return `${config.valuePrefix}${uniqueSet.size}${config.valueSuffix}`;
+    }
+
+    // 3. Math (Sum, Avg, etc)
     const values = filteredData.map(row => {
         const val = String(row[colIndex]).replace(',', '.').trim();
         return parseFloat(val);

@@ -108,6 +108,7 @@ function calculateAggregation(values: number[], type: string): number {
     case 'average': return values.reduce((a, b) => a + b, 0) / values.length;
     case 'max': return Math.max(...values);
     case 'min': return Math.min(...values);
+    case 'unique': return new Set(values).size;
     default: return 0;
   }
 }

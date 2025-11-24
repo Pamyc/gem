@@ -14,7 +14,7 @@ export interface ChartProps {
   theme?: 'light' | 'dark';
 }
 
-export type AggregationType = 'sum' | 'count' | 'average' | 'min' | 'max';
+export type AggregationType = 'sum' | 'count' | 'average' | 'min' | 'max' | 'unique';
 export type ChartType = 'line' | 'bar' | 'area' | 'pie' | 'donut';
 export type FilterOperator = 'equals' | 'contains' | 'greater' | 'less' | 'between' | 'in';
 

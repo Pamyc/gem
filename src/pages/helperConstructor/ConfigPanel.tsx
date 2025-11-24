@@ -65,6 +65,10 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
   // Общий стиль для селектов
   const selectClassName = "w-full p-2.5 rounded-xl bg-gray-50 dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none hover:bg-white dark:hover:bg-[#252b3b]";
 
+  // Style for filter inputs (darker background for contrast)
+  const filterInputClass = "w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer h-9";
+
+
   return (
     <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar">
       
@@ -226,10 +230,10 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
           </label>
           <button 
             onClick={addFilter}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded text-indigo-500 transition-colors"
+            className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg text-indigo-600 dark:text-indigo-400 transition-colors flex items-center gap-1 text-[10px] font-bold uppercase"
             title="Добавить фильтр"
           >
-            <Plus size={14} />
+            <Plus size={12} /> Добавить
           </button>
         </div>
 
@@ -237,20 +241,23 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
           <p className="text-xs text-gray-400 italic text-center py-2">Нет активных фильтров</p>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {config.filters.map((filter) => {
             const uniqueValues = getUniqueValues(filter.column);
             return (
-              <div key={filter.id} className="bg-gray-50 dark:bg-[#1e2433] p-2 rounded-lg border border-gray-200 dark:border-white/5 flex flex-col gap-2 group">
+              <div key={filter.id} className="bg-gray-100 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-200 dark:border-white/5 flex flex-col gap-3 group shadow-sm">
                 <div className="flex gap-2">
                   <select
                     value={filter.column}
                     onChange={(e) => updateFilterColumn(filter.id, e.target.value)}
-                    className={`${selectClassName} text-xs py-1.5 px-2 h-8`}
+                    className={filterInputClass}
                   >
                     {availableColumns.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  <button onClick={() => removeFilter(filter.id)} className="text-gray-400 hover:text-red-500 p-1">
+                  <button 
+                    onClick={() => removeFilter(filter.id)} 
+                    className="text-gray-400 hover:text-red-500 bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 rounded-lg shrink-0 h-9 w-9 flex items-center justify-center transition-colors"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -259,7 +266,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
                   <select
                     value={filter.operator}
                     onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
-                    className={`${selectClassName} w-1/3 text-xs py-1.5 px-2 h-8`}
+                    className={`${filterInputClass} w-1/3`}
                   >
                     <option value="equals">=</option>
                     <option value="contains">In</option>
@@ -271,7 +278,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
                     <select
                       value={filter.value}
                       onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                      className={`${selectClassName} w-2/3 text-xs py-1.5 px-2 h-8`}
+                      className={`${filterInputClass} w-2/3`}
                     >
                       <option value="">Выбрать...</option>
                       {uniqueValues.map(val => (
@@ -284,7 +291,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, setConfig, sheetConfi
                       value={filter.value}
                       onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
                       placeholder="Значение"
-                      className={`${selectClassName} w-2/3 text-xs py-1.5 px-2 h-8`}
+                      className={`${filterInputClass} w-2/3 cursor-text`}
                     />
                   )}
                 </div>

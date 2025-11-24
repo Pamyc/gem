@@ -7,7 +7,7 @@ export interface CardConfig {
   // Data Source Configuration
   sheetKey: string;
   dataColumn: string;
-  aggregation: 'sum' | 'count' | 'average' | 'min' | 'max';
+  aggregation: 'sum' | 'count' | 'average' | 'min' | 'max' | 'unique';
   filters: ChartFilter[];
 
   // Formatting
