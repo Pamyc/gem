@@ -10,6 +10,7 @@ interface PieDonutChartProps {
   title?: string;
   valuePrefix?: string;
   valueSuffix?: string;
+  className?: string;
 }
 
 const colors = [
@@ -22,7 +23,8 @@ const PieDonutChart: React.FC<PieDonutChartProps> = ({
   radius = ['30%', '60%'], 
   title = 'Статистика',
   valuePrefix = '',
-  valueSuffix = ''
+  valueSuffix = '',
+  className = "w-full h-[350px]"
 }) => {
 
   const processedData = useMemo(() => {
@@ -125,7 +127,7 @@ const PieDonutChart: React.FC<PieDonutChartProps> = ({
   };
 
   return (
-    <div className="w-full h-[350px]">
+    <div className={className}>
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}

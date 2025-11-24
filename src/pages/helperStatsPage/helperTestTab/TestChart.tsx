@@ -5,9 +5,10 @@ import { ProcessedDataItem } from '../../../hooks/useProcessedChartData';
 interface TestChartProps {
   isDarkMode: boolean;
   data: ProcessedDataItem[];
+  className?: string;
 }
 
-const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
+const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data, className = "w-full h-full min-h-[350px]" }) => {
   
   const option = {
     backgroundColor: 'transparent',
@@ -50,7 +51,7 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   };
 
   return (
-    <div className="w-full h-full min-h-[350px]">
+    <div className={className}>
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}

@@ -10,13 +10,21 @@ interface TreemapSunburstChartProps {
   title?: string;
   radius?: string | string[] | number | number[];
   valuePrefix?: string;
+  className?: string;
 }
 
 const colors = [
   '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e', '#84cc16', '#14b8a6'
 ];
 
-const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({ isDarkMode, data, title, radius = ['30%', '60%'], valuePrefix = '' }) => {
+const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({ 
+  isDarkMode, 
+  data, 
+  title, 
+  radius = ['30%', '60%'], 
+  valuePrefix = '',
+  className = "w-full h-[350px]"
+}) => {
   const [chartType, setChartType] = useState<'treemap' | 'pie'>('treemap');
 
   // Pre-process data with colors for consistency across transitions
@@ -176,7 +184,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({ isDarkMode,
   }, [chartType, processedData, isDarkMode, title, radius, valuePrefix]);
 
   return (
-    <div className="w-full h-[350px] relative group">
+    <div className={`${className} relative group`}>
       
       {/* Chart Switcher Controls */}
       <div className="absolute top-0 right-0 z-10 flex bg-gray-100 dark:bg-white/5 rounded-lg p-1 gap-1 border border-gray-200 dark:border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

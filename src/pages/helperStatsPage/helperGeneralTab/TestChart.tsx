@@ -5,13 +5,14 @@ import { ProcessedDataItem } from '../../../hooks/useProcessedChartData';
 interface TestChartProps {
   isDarkMode: boolean;
   data: ProcessedDataItem[];
+  className?: string;
 }
 
 const colors = [
   '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e', '#84cc16', '#14b8a6'
 ];
 
-const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
+const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data, className = "w-full h-[350px]" }) => {
 
   const processedData = useMemo(() => {
     return data.map((item, index) => ({
@@ -106,7 +107,7 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   };
 
   return (
-    <div className="w-full h-[350px]">
+    <div className={className}>
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}

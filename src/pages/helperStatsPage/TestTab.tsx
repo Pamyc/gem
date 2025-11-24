@@ -148,7 +148,7 @@ const TestTab: React.FC<TestTabProps> = ({ isDarkMode }) => {
               </div>
               <div className="flex-1 p-6 bg-white dark:bg-[#0b0f19] overflow-hidden">
                  {testChartData.length > 0 ? (
-                    <TestChart isDarkMode={isDarkMode} data={testChartData} /> 
+                    <TestChart isDarkMode={isDarkMode} data={testChartData} className="w-full h-full" /> 
                  ) : (
                     <div className="h-full flex items-center justify-center text-gray-400">Нет данных</div>
                  )}

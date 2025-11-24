@@ -9,6 +9,7 @@ interface LineChartProps {
   title?: string;
   valuePrefix?: string;
   valueSuffix?: string;
+  className?: string;
 }
 
 const LineChart: React.FC<LineChartProps> = ({
@@ -16,7 +17,8 @@ const LineChart: React.FC<LineChartProps> = ({
   data,
   title,
   valuePrefix = '',
-  valueSuffix = ''
+  valueSuffix = '',
+  className = "w-full h-[350px]"
 }) => {
 
   const option = useMemo(() => {
@@ -117,7 +119,7 @@ const LineChart: React.FC<LineChartProps> = ({
   }, [data, isDarkMode, title, valuePrefix, valueSuffix]);
 
   return (
-    <div className="w-full h-[350px]">
+    <div className={className}>
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}

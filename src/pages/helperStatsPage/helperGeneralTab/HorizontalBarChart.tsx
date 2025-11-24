@@ -9,6 +9,7 @@ interface HorizontalBarChartProps {
   title?: string;
   valuePrefix?: string;
   valueSuffix?: string;
+  className?: string;
 }
 
 const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
@@ -16,7 +17,8 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   data,
   title,
   valuePrefix = '',
-  valueSuffix = ''
+  valueSuffix = '',
+  className = "w-full h-[350px]"
 }) => {
 
   const option = useMemo(() => {
@@ -92,7 +94,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   }, [data, isDarkMode, title, valuePrefix, valueSuffix]);
 
   return (
-    <div className="w-full h-[350px]">
+    <div className={className}>
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}
