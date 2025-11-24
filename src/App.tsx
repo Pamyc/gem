@@ -65,7 +65,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'kpi', 'card-constructor', 'filter-test'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test'];
     if (restrictedTabs.includes(activeTab) && user?.username !== 'integrat') {
       setActiveTab('stats');
     }
@@ -94,7 +94,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'constructor' && user.username === 'integrat' && <ConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'card-constructor' && user.username === 'integrat' && <CardConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'filter-test' && user.username === 'integrat' && <FilterTestPage isDarkMode={isDarkMode} />}
-        {activeTab === 'kpi' && user.username === 'integrat' && <KPIPage isDarkMode={isDarkMode} />}
+        {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'example' && <ExamplePage isDarkMode={isDarkMode} />}
         {activeTab === 'settings' && <SettingsPage />}
