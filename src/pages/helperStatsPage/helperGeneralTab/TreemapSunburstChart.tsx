@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { LayoutGrid, PieChart } from 'lucide-react';
 import EChartComponent from '../../../components/charts/EChartComponent';
@@ -177,7 +176,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({ isDarkMode,
   }, [chartType, processedData, isDarkMode, title, radius, valuePrefix]);
 
   return (
-    <div className="w-full h-full min-h-[350px] relative group">
+    <div className="w-full h-[350px] relative group">
       
       {/* Chart Switcher Controls */}
       <div className="absolute top-0 right-0 z-10 flex bg-gray-100 dark:bg-white/5 rounded-lg p-1 gap-1 border border-gray-200 dark:border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

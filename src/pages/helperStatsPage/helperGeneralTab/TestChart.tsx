@@ -106,7 +106,7 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   };
 
   return (
-    <div className="w-full h-full min-h-[350px]">
+    <div className="w-full h-[350px]">
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}

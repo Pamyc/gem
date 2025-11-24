@@ -117,7 +117,7 @@ const LineChart: React.FC<LineChartProps> = ({
   }, [data, isDarkMode, title, valuePrefix, valueSuffix]);
 
   return (
-    <div className="w-full h-full min-h-[350px]">
+    <div className="w-full h-[350px]">
       <EChartComponent
         options={option}
         theme={isDarkMode ? 'dark' : 'light'}
