@@ -3,6 +3,7 @@ import GeneralChartCard from './helperGeneralTab/GeneralChartCard';
 import PieDonutChart from './helperGeneralTab/PieDonutChart';
 import TreemapSunburstChart from './helperGeneralTab/TreemapSunburstChart';
 import HorizontalBarChart from './helperGeneralTab/HorizontalBarChart';
+import LineChart from './helperGeneralTab/LineChart';
 import { ChartConfig } from '../../types/chart';
 
 interface GeneralTabProps {
@@ -100,6 +101,52 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
     ]
   }), []);
 
+  // Новая конфигурация: Валовая прибыль по ЖК (Line Chart)
+  const GrossProfitByJKConfig = useMemo<Partial<ChartConfig>>(() => ({ 
+    title: 'Валовая прибыль по ЖК',
+    sheetKey: 'clientGrowth', 
+    xAxisColumn: 'ЖК', 
+    yAxisColumn: 'Валовая', 
+    aggregation: 'sum',
+    filters: [
+      {
+        id: "l33xzfgdy",
+        column: "Итого (Да/Нет)",
+        operator: "equals",
+        value: "Нет"
+      },
+      {
+        id: "c5bslnolw",
+        column: "Без разбивки на литеры (Да/Нет)",
+        operator: "equals",
+        value: "Да"
+      }
+    ] 
+  }), []);
+
+  // Новая конфигурация: Средняя прибыль с 1 лифта по ЖК (Line Chart)
+  const AvgProfitPerLiftByJKConfig = useMemo<Partial<ChartConfig>>(() => ({ 
+    title: 'Средняя прибыль с 1 лифта по ЖК',
+    sheetKey: 'clientGrowth', 
+    xAxisColumn: 'ЖК', 
+    yAxisColumn: 'Прибыль с 1 лифта', 
+    aggregation: 'average',
+    filters: [
+      {
+        id: "l33xzfgdy",
+        column: "Итого (Да/Нет)",
+        operator: "equals",
+        value: "Нет"
+      },
+      {
+        id: "c5bslnolw",
+        column: "Без разбивки на литеры (Да/Нет)",
+        operator: "equals",
+        value: "Да"
+      }
+    ] 
+  }), []);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
       <GeneralChartCard config={SumElevatorDataConfig}>
@@ -142,6 +189,29 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
             isDarkMode={isDarkMode} 
             data={data}
             title={AverageProfitConfig.title}
+            valuePrefix="₽ "
+          />
+        )}
+      </GeneralChartCard>
+
+      {/* Новые линейные графики */}
+      <GeneralChartCard config={GrossProfitByJKConfig}>
+        {(data) => (
+          <LineChart 
+            isDarkMode={isDarkMode} 
+            data={data}
+            title={GrossProfitByJKConfig.title}
+            valuePrefix="₽ "
+          />
+        )}
+      </GeneralChartCard>
+
+      <GeneralChartCard config={AvgProfitPerLiftByJKConfig}>
+        {(data) => (
+          <LineChart 
+            isDarkMode={isDarkMode} 
+            data={data}
+            title={AvgProfitPerLiftByJKConfig.title}
             valuePrefix="₽ "
           />
         )}
