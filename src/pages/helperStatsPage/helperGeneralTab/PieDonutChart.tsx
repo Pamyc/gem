@@ -2,16 +2,18 @@ import React, { useMemo } from 'react';
 import EChartComponent from '../../../components/charts/EChartComponent';
 import { ProcessedDataItem } from '../../../hooks/useProcessedChartData';
 
-interface TestChartProps {
+interface PieDonutChartProps {
   isDarkMode: boolean;
   data: ProcessedDataItem[];
+  radius?: string | string[] | number | number[];
+  title?: string;
 }
 
 const colors = [
   '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e', '#84cc16', '#14b8a6'
 ];
 
-const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
+const PieDonutChart: React.FC<PieDonutChartProps> = ({ isDarkMode, data, radius = ['40%', '70%'], title = 'Статистика' }) => {
 
   const processedData = useMemo(() => {
     return data.map((item, index) => ({
@@ -23,7 +25,7 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   const option = {
     backgroundColor: 'transparent',
     title: {
-      text: 'Статистика по городам',
+      text: title,
       left: 'center',
       textStyle: { color: isDarkMode ? '#e2e8f0' : '#1e293b' }
     },
@@ -36,9 +38,9 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
     },
     series: [
       {
-        name: 'Статистика по городам',
+        name: title,
         type: 'pie',
-        radius: ['17%', '37%'],
+        radius: radius,
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 5,
@@ -81,7 +83,7 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
             },
             st: {
               color: '#fff',
-              backgroundColor: isDarkMode ? '#6366f1' : '#4C5058',
+              backgroundColor: isDarkMode ? '#E07B7B' : '#E07B7B',
               padding: [3, 4],
               borderRadius: 4,
               align: 'center'
@@ -116,4 +118,4 @@ const TestChart: React.FC<TestChartProps> = ({ isDarkMode, data }) => {
   );
 };
 
-export default TestChart;
+export default PieDonutChart;

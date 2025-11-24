@@ -94,7 +94,7 @@ export const getPieOptions = (
           {
               name: config.title,
               type: 'pie',
-              radius: config.chartType === 'donut' ? ['37%', '60%'] : '55%',
+              radius: config.chartType === 'donut' ? ['27%', '40%'] : '55%',
               center: ['50%', '50%'],
               avoidLabelOverlap: true,
               itemStyle: {
@@ -147,8 +147,8 @@ export const getPieOptions = (
               },
               labelLine: {
                   show: config.showLabels,
-                  length: 20,
-                  length2: 15
+                  length: 10,
+                  length2: 7
               },
               emphasis: {
                   label: {
