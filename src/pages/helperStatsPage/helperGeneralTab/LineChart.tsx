@@ -41,10 +41,18 @@ const LineChart: React.FC<LineChartProps> = ({
       grid: {
         left: '3%',
         right: '4%',
-        bottom: '3%',
+        bottom: '3%', // Reduced from 15% since slider is gone
         top: '15%',
         containLabel: true
       },
+      dataZoom: [
+        {
+          type: 'inside', // Enables mouse wheel zooming
+          start: 0,
+          end: 100
+        }
+        // Slider removed
+      ],
       xAxis: {
         type: 'category',
         boundaryGap: false,

@@ -149,69 +149,72 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
-      <GeneralChartCard config={SumElevatorDataConfig}>
+      {/* Круговые диаграммы оставляем с лимитом по умолчанию (7), чтобы не было каши */}
+      <GeneralChartCard config={SumElevatorDataConfig} limit={7} showTotal valueSuffix=" шт.">
         {(data) => (
           <PieDonutChart 
             isDarkMode={isDarkMode} 
             data={data} 
-            title={SumElevatorDataConfig.title}
+            title=""
             valueSuffix=" шт."
           />
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={SumFloorDataConfig}>
+      <GeneralChartCard config={SumFloorDataConfig} limit={7} showTotal valueSuffix=" шт.">
         {(data) => (
           <PieDonutChart 
             isDarkMode={isDarkMode} 
             data={data} 
             radius={['0%', '60%']}
-            title={SumFloorDataConfig.title}
+            title=""
             valueSuffix=" шт."
           />
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={TreemapDataConfig}>
+      {/* Treemap можно показать чуть больше, например 10 */}
+      <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valuePrefix="₽ ">
         {(data) => (
           <TreemapSunburstChart 
             isDarkMode={isDarkMode} 
             data={data}
-            title={TreemapDataConfig.title}
+            title=""
             valuePrefix="₽ "
           />
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={AverageProfitConfig}>
+      {/* Для горизонтального бара увеличим до 15 */}
+      <GeneralChartCard config={AverageProfitConfig} limit={7} showTotal valuePrefix="₽ ">
         {(data) => (
           <HorizontalBarChart 
             isDarkMode={isDarkMode} 
             data={data}
-            title={AverageProfitConfig.title}
+            title=""
             valuePrefix="₽ "
           />
         )}
       </GeneralChartCard>
 
-      {/* Новые линейные графики */}
-      <GeneralChartCard config={GrossProfitByJKConfig}>
+      {/* Для линейных графиков ставим limit={0}, чтобы показать ВСЕ данные, так как там есть скролл/зум */}
+      <GeneralChartCard config={GrossProfitByJKConfig} limit={7} showTotal valuePrefix="₽ ">
         {(data) => (
           <LineChart 
             isDarkMode={isDarkMode} 
             data={data}
-            title={GrossProfitByJKConfig.title}
+            title=""
             valuePrefix="₽ "
           />
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={AvgProfitPerLiftByJKConfig}>
+      <GeneralChartCard config={AvgProfitPerLiftByJKConfig} limit={7} showTotal valuePrefix="₽ ">
         {(data) => (
           <LineChart 
             isDarkMode={isDarkMode} 
             data={data}
-            title={AvgProfitPerLiftByJKConfig.title}
+            title=""
             valuePrefix="₽ "
           />
         )}
