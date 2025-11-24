@@ -1,19 +1,29 @@
 import React, { useMemo } from 'react';
 import EChartComponent from '../../../components/charts/EChartComponent';
 import { ProcessedDataItem } from '../../../hooks/useProcessedChartData';
+import { formatLargeNumber } from '../../../utils/formatUtils';
 
 interface PieDonutChartProps {
   isDarkMode: boolean;
   data: ProcessedDataItem[];
   radius?: string | string[] | number | number[];
   title?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
 }
 
 const colors = [
   '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#0ea5e9', '#f43f5e', '#84cc16', '#14b8a6'
 ];
 
-const PieDonutChart: React.FC<PieDonutChartProps> = ({ isDarkMode, data, radius = ['40%', '70%'], title = 'Статистика' }) => {
+const PieDonutChart: React.FC<PieDonutChartProps> = ({ 
+  isDarkMode, 
+  data, 
+  radius = ['30%', '60%'], 
+  title = 'Статистика',
+  valuePrefix = '',
+  valueSuffix = ''
+}) => {
 
   const processedData = useMemo(() => {
     return data.map((item, index) => ({
@@ -34,13 +44,17 @@ const PieDonutChart: React.FC<PieDonutChartProps> = ({ isDarkMode, data, radius 
       backgroundColor: isDarkMode ? 'rgba(21, 25, 35, 0.9)' : 'rgba(255, 255, 255, 0.95)',
       borderColor: isDarkMode ? '#334155' : '#e2e8f0',
       textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
-      formatter: '{b}: {c} ({d}%)'
+      formatter: (params: any) => {
+        const val = formatLargeNumber(params.value, valuePrefix);
+        return `${params.marker} ${params.name}: <b>${val}${valueSuffix}</b> (${params.percent}%)`;
+      }
     },
     series: [
       {
         name: title,
         type: 'pie',
         radius: radius,
+        center: ['50%', '50%'],
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 5,
@@ -49,7 +63,10 @@ const PieDonutChart: React.FC<PieDonutChartProps> = ({ isDarkMode, data, radius 
         },
         label: {
           show: true,
-          formatter: '{per|{d}%} {st|{c}шт.}\n {b|{b} }    ',
+          formatter: (params: any) => {
+            const val = formatLargeNumber(params.value, valuePrefix);
+            return `{per|${params.percent}%} {st|${val}${valueSuffix}}\n {b|${params.name} }    `;
+          },
           backgroundColor: isDarkMode ? '#334155' : '#F6F8FC',
           borderColor: isDarkMode ? '#475569' : '#8C8D8E',
           borderWidth: 1,

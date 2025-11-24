@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { ChartProps } from '../../types';
 
-const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", theme }) => {
+const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", theme, merge = false }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
@@ -48,12 +48,12 @@ const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", them
   // Эффект для обновления данных (опций)
   useEffect(() => {
     if (chartInstance.current) {
-      // Важно: используем второй параметр true (notMerge), 
-      // чтобы старые опции (например, dataZoom от линейного графика) 
-      // не оставались при переключении на график (например, Pie), где этих опций нет.
-      chartInstance.current.setOption(options, true);
+      // Важно: используем второй параметр (notMerge).
+      // Если merge = true, то notMerge = false.
+      // По умолчанию merge = false, значит notMerge = true (старое поведение).
+      chartInstance.current.setOption(options, !merge);
     }
-  }, [options]);
+  }, [options, merge]);
 
   return <div ref={chartRef} style={{ width: '100%', height, overflow: 'hidden' }} />;
 };

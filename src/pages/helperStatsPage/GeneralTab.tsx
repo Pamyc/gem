@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import GeneralChartCard from './helperGeneralTab/GeneralChartCard';
 import PieDonutChart from './helperGeneralTab/PieDonutChart';
+import TreemapSunburstChart from './helperGeneralTab/TreemapSunburstChart';
+import HorizontalBarChart from './helperGeneralTab/HorizontalBarChart';
 import { ChartConfig } from '../../types/chart';
 
 interface GeneralTabProps {
@@ -54,6 +56,50 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
     ]
   }), []);
 
+  const TreemapDataConfig = useMemo<Partial<ChartConfig>>(() => ({
+    title: 'Валовая прибыль по городам',
+    sheetKey: 'clientGrowth',
+    xAxisColumn: 'Город',
+    yAxisColumn: 'Валовая',
+    aggregation: 'sum',
+    filters: [
+      {
+        id: "o09z9l2b4",
+        column: "Итого (Да/Нет)",
+        operator: "equals",
+        value: "Нет"
+      },
+      {
+        id: "aagerz8uy",
+        column: "Без разбивки на литеры (Да/Нет)",
+        operator: "equals",
+        value: "Да"
+      }
+    ]
+  }), []);
+
+  const AverageProfitConfig = useMemo<Partial<ChartConfig>>(() => ({
+    title: 'Средняя прибыль с 1 лифта',
+    sheetKey: 'clientGrowth',
+    xAxisColumn: 'Город',
+    yAxisColumn: 'Прибыль с 1 лифта',
+    aggregation: 'average',
+    filters: [
+      {
+        id: "l33xzfgdy",
+        column: "Итого (Да/Нет)",
+        operator: "equals",
+        value: "Нет"
+      },
+      {
+        id: "c5bslnolw",
+        column: "Без разбивки на литеры (Да/Нет)",
+        operator: "equals",
+        value: "Да"
+      }
+    ]
+  }), []);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
       <GeneralChartCard config={SumElevatorDataConfig}>
@@ -61,8 +107,8 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
           <PieDonutChart 
             isDarkMode={isDarkMode} 
             data={data} 
-            radius={['17%', '37%']}
             title={SumElevatorDataConfig.title}
+            valueSuffix=" шт."
           />
         )}
       </GeneralChartCard>
@@ -72,8 +118,31 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
           <PieDonutChart 
             isDarkMode={isDarkMode} 
             data={data} 
-            radius={['0%', '37%']}
+            radius={['0%', '60%']}
             title={SumFloorDataConfig.title}
+            valueSuffix=" шт."
+          />
+        )}
+      </GeneralChartCard>
+
+      <GeneralChartCard config={TreemapDataConfig}>
+        {(data) => (
+          <TreemapSunburstChart 
+            isDarkMode={isDarkMode} 
+            data={data}
+            title={TreemapDataConfig.title}
+            valuePrefix="₽ "
+          />
+        )}
+      </GeneralChartCard>
+
+      <GeneralChartCard config={AverageProfitConfig}>
+        {(data) => (
+          <HorizontalBarChart 
+            isDarkMode={isDarkMode} 
+            data={data}
+            title={AverageProfitConfig.title}
+            valuePrefix="₽ "
           />
         )}
       </GeneralChartCard>
