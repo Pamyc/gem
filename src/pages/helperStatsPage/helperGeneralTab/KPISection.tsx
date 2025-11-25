@@ -42,7 +42,7 @@ const KPISection: React.FC = () => {
       gradientTo: "amber",
       elements: []
     },
-    
+
     {
       template: "gradient",
       title: "Затраты",
@@ -255,6 +255,86 @@ const KPISection: React.FC = () => {
       gradientFrom: "violet",
       gradientTo: "purple",
       elements: []
+    },
+    {
+      template: "custom",
+  title: "Мой показатель",
+  sheetKey: "clientGrowth",
+  dataColumn: "",
+  aggregation: "sum",
+  filters: [],
+  valuePrefix: "",
+  valueSuffix: "",
+  compactNumbers: false,
+  icon: "Users",
+  showIcon: true,
+  showTrend: false,
+  trendValue: "0%",
+  trendDirection: "neutral",
+  width: "100%",
+  height: "80px",
+  colorTheme: "blue",
+  gradientFrom: "violet",
+  gradientTo: "fuchsia",
+  elements: [
+    {
+      id: "icon-g4oc6",
+      type: "icon",
+      style: {
+        top: 15,
+        left: 20,
+        fontSize: 24,
+        color: "#ffffff",
+        backgroundColor: "rgba(255,255,255,0.2)",
+        borderRadius: 12,
+        padding: 10,
+        width: 44,
+        height: 44
+      }
+    },
+    {
+      id: "89atzno1j",
+      type: "value",
+      style: {
+        top: 20,
+        left: 255,
+        fontSize: 24,
+        color: "#000000",
+        zIndex: 10,
+        width: "auto",
+        height: "auto",
+        fontWeight: "bold"
+      },
+      dataSettings: {
+        dataColumn: "Кол-во этажей",
+        aggregation: "unique",
+        filters: [
+          {
+            id: "9yc7jdlvw",
+            column: "Город",
+            operator: "equals",
+            value: "Кисловодск"
+          }
+        ]
+      }
+    },
+    {
+      id: "rmjsyhgvz",
+      type: "text",
+      style: {
+        top: 30,
+        left: 95,
+        fontSize: 14,
+        color: "#000000",
+        zIndex: 10,
+        width: "auto",
+        height: "auto"
+      },
+      content: "Новый текст"
+    }
+  ],
+  backgroundColor: "",
+  borderColor: ""
     },
   ], []);
 

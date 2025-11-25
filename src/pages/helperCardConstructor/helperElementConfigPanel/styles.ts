@@ -1,0 +1,5 @@
+export const inputClass = "w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none";
+export const selectClass = "w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none appearance-none cursor-pointer";
+export const filterInputClass = "w-full px-2 py-1.5 rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer h-9";
+export const labelClass = "text-[10px] uppercase text-gray-400 font-bold mb-1 block";
+export const sectionClass = "border-t border-gray-100 dark:border-white/5 pt-3 mt-3";

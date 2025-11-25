@@ -26,6 +26,48 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
       backgroundStyle = `linear-gradient(135deg, ${getColor(config.gradientFrom)}, ${getColor(config.gradientTo)})`;
   }
 
+  // Calculate Auto Height for Absolute Layout
+  const computedHeight = useMemo(() => {
+    if (config.height !== 'auto') return undefined;
+    if (!config.elements || config.elements.length === 0) return 150; // Default min height
+
+    let maxBottom = 0;
+    
+    config.elements.forEach(el => {
+      const top = el.style.top || 0;
+      let height = 0;
+      
+      // Try to determine height
+      if (typeof el.style.height === 'number') {
+        height = el.style.height;
+      } else {
+        // Estimation for auto-height elements based on content type
+        if (el.type === 'icon') {
+            const width = typeof el.style.width === 'number' ? el.style.width : 0;
+            const fontSize = el.style.fontSize || 24;
+            // Icon usually square-ish, use font size or width + padding
+            const baseSize = width || fontSize;
+            const padding = el.style.padding || 0;
+            height = baseSize + (padding * 2);
+        } else {
+            // Text / Value / Title / Trend
+            const fontSize = el.style.fontSize || 14;
+            // Line height approximation (~1.4x)
+            const padding = el.style.padding || 0;
+            height = (fontSize * 1.4) + (padding * 2);
+        }
+      }
+      
+      if (top + height > maxBottom) {
+        maxBottom = top + height;
+      }
+    });
+
+    // Add some bottom padding
+    return Math.max(maxBottom + 24, 100); 
+  }, [config.elements, config.height]);
+
+
   // Base Container Style
   const baseStyle: React.CSSProperties = {
     ...containerStyle,
@@ -35,6 +77,9 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
     border: config.borderColor ? `1px solid ${config.borderColor}` : undefined,
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     borderRadius: '1rem',
+    // Apply computed height if auto is requested
+    height: computedHeight ? `${computedHeight}px` : containerStyle.height,
+    minHeight: computedHeight ? `${computedHeight}px` : containerStyle.minHeight
   };
 
   const renderElement = (el: CardElement) => {
