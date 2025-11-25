@@ -115,110 +115,72 @@ const KPISection: React.FC = () => {
 
     {
       template: "custom",
-      title: "Макс/Мин прибыль",
+      title: "Диапазон прибыли",
       sheetKey: "clientGrowth",
       dataColumn: "",
       aggregation: "sum",
       filters: [],
-      valuePrefix: "",
+      valuePrefix: "₽ ",
       valueSuffix: "",
       compactNumbers: true,
-      icon: "Users",
+      icon: "Activity",
       showIcon: true,
       showTrend: false,
       trendValue: "0%",
       trendDirection: "neutral",
       width: "100%",
       height: "150px",
-      colorTheme: "blue",
+      colorTheme: "violet",
       gradientFrom: "violet",
       gradientTo: "fuchsia",
       elements: [
         {
-          id: "icon-uxfox",
+          id: "card-title",
+          type: "title",
+          style: {
+            top: 15,
+            left: 25,
+            fontSize: 16,
+            color: "rgba(255,255,255,0.9)",
+            fontWeight: "600"
+          }
+        },
+        {
+          id: "icon-max",
           type: "icon",
           style: {
-            top: 45,
-            left: 20,
-            fontSize: 24,
-            color: "#16fe31",
-            backgroundColor: "rgba(255,255,255,0.2)",
-            borderRadius: 12,
-            padding: 7,
-            width: 44,
-            height: 44
+            top: 50,
+            left: 25,
+            fontSize: 20,
+            color: "#4ade80",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 10,
+            padding: 8,
+            width: 36,
+            height: 36
           },
           iconName: "ArrowUpRight"
         },
         {
-          id: "value-pxil6",
-          type: "value",
-          style: {
-            top: 100,
-            left: 80,
-            fontSize: 25,
-            color: "#ffffff",
-            fontWeight: "bold"
-          },
-          dataSettings: {
-            dataColumn: "Валовая",
-            aggregation: "min",
-            filters: [
-              {
-                id: "2jeg2v0y0",
-                column: "Итого (Да/Нет)",
-                operator: "equals",
-                value: "Нет"
-              },
-              {
-                id: "8w0inphro",
-                column: "Без разбивки на литеры (Да/Нет)",
-                operator: "equals",
-                value: "Да"
-              },
-              {
-                id: "baoorfq8p",
-                column: "Сдан да/нет",
-                operator: "equals",
-                value: "да"
-              }
-            ]
-          }
-        },
-        {
-          id: "title-fxbl5",
-          type: "title",
-          style: {
-            top: 10,
-            left: 15,
-            fontSize: 24,
-            color: "#ffffff",
-            fontWeight: "500"
-          }
-        },
-        {
-          id: "48c44d1jb",
-          type: "icon",
-          style: {
-            top: 95,
-            left: 20,
-            fontSize: 24,
-            color: "#ff0000",
-            backgroundColor: "rgba(255,255,255,0.2)",
-            borderRadius: 12,
-            padding: 7,
-            width: 44,
-            height: 44
-          },
-          iconName: "ArrowDownRight"
-        },
-        {
-          id: "j0hj7swsm",
-          type: "value",
+          id: "label-max",
+          type: "text",
+          content: "MAX",
           style: {
             top: 50,
-            left: 80,
-            fontSize: 25,
+            left: 70,
+            fontSize: 10,
+            color: "#4ade80",
+            fontWeight: "bold",
+            opacity: 0.8
+          }
+        },
+        {
+          id: "value-max",
+          type: "value",
+          style: {
+            top: 60,
+            left: 70,
+            fontSize: 22,
             color: "#ffffff",
             fontWeight: "bold"
           },
@@ -227,19 +189,83 @@ const KPISection: React.FC = () => {
             aggregation: "max",
             filters: [
               {
-                id: "yiq0mbknv",
+                id: "f1",
                 column: "Итого (Да/Нет)",
                 operator: "equals",
                 value: "Нет"
               },
               {
-                id: "7atztawkw",
+                id: "f2",
                 column: "Без разбивки на литеры (Да/Нет)",
                 operator: "equals",
                 value: "Да"
               },
               {
-                id: "95w6rpb13",
+                id: "f3",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "да"
+              }
+            ]
+          }
+        },
+        {
+          id: "icon-min",
+          type: "icon",
+          style: {
+            top: 100,
+            left: 25,
+            fontSize: 20,
+            color: "#fb7185",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 10,
+            padding: 8,
+            width: 36,
+            height: 36
+          },
+          iconName: "ArrowDownRight"
+        },
+        {
+          id: "label-min",
+          type: "text",
+          content: "MIN",
+          style: {
+            top: 100,
+            left: 70,
+            fontSize: 10,
+            color: "#fb7185",
+            fontWeight: "bold",
+            opacity: 0.8
+          }
+        },
+        {
+          id: "value-min",
+          type: "value",
+          style: {
+            top: 110,
+            left: 70,
+            fontSize: 22,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            dataColumn: "Валовая",
+            aggregation: "min",
+            filters: [
+              {
+                id: "f1",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "f2",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "f3",
                 column: "Сдан да/нет",
                 operator: "equals",
                 value: "да"
