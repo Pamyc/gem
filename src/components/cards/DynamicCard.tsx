@@ -3,6 +3,7 @@ import * as Icons from 'lucide-react';
 import { useDataStore } from '../../contexts/DataContext';
 import { CardConfig } from '../../types/card';
 import { getMergedHeaders } from '../../utils/chartUtils';
+import { formatLargeNumber } from '../../utils/formatUtils';
 
 interface DynamicCardProps {
   config: CardConfig;
@@ -16,6 +17,7 @@ const DynamicCard: React.FC<DynamicCardProps> = ({ config, className = "" }) => 
   const displayValue = useMemo(() => {
     // Return placeholder if no sheet selected
     if (!config.sheetKey || !config.dataColumn) {
+      if (config.compactNumbers) return `${formatLargeNumber(0, config.valuePrefix)}${config.valueSuffix}`;
       return `${config.valuePrefix}0${config.valueSuffix}`;
     }
 
@@ -59,18 +61,18 @@ const DynamicCard: React.FC<DynamicCardProps> = ({ config, className = "" }) => 
         });
     }
 
+    let result = 0;
+
     // Aggregation
     // 1. Count (works on strings too)
     if (config.aggregation === 'count') {
-      const count = filteredData.filter(row => {
+      result = filteredData.filter(row => {
           const val = row[colIndex];
           return val !== undefined && val !== null && String(val).trim() !== '';
       }).length;
-      return `${config.valuePrefix}${count}${config.valueSuffix}`;
     }
-
     // 2. Unique Count (works on strings too)
-    if (config.aggregation === 'unique') {
+    else if (config.aggregation === 'unique') {
       const uniqueSet = new Set();
       filteredData.forEach(row => {
           const val = row[colIndex];
@@ -78,53 +80,51 @@ const DynamicCard: React.FC<DynamicCardProps> = ({ config, className = "" }) => 
               uniqueSet.add(String(val).trim());
           }
       });
-      return `${config.valuePrefix}${uniqueSet.size}${config.valueSuffix}`;
+      result = uniqueSet.size;
     }
-
     // 3. Math (Sum, Avg, etc)
-    const values = filteredData.map(row => {
-        const val = String(row[colIndex]).replace(',', '.').trim();
-        return parseFloat(val);
-    }).filter(v => !isNaN(v));
+    else {
+      const values = filteredData.map(row => {
+          const val = row[colIndex];
+          if (typeof val === 'number') return val;
+          const str = String(val).replace(/\s/g, '').replace(',', '.');
+          const num = parseFloat(str);
+          return isNaN(num) ? 0 : num;
+      });
 
-    if (values.length === 0) return `${config.valuePrefix}0${config.valueSuffix}`;
-
-    let result = 0;
-    switch (config.aggregation) {
-        case 'sum':
+      if (values.length > 0) {
+        if (config.aggregation === 'sum') {
             result = values.reduce((a, b) => a + b, 0);
-            break;
-        case 'average':
+        } else if (config.aggregation === 'average') {
             result = values.reduce((a, b) => a + b, 0) / values.length;
-            break;
-        case 'min':
-            result = Math.min(...values);
-            break;
-        case 'max':
+        } else if (config.aggregation === 'max') {
             result = Math.max(...values);
-            break;
+        } else if (config.aggregation === 'min') {
+            result = Math.min(...values);
+        }
+      }
     }
 
-    // Formatting numbers
-    const formattedResult = Number.isInteger(result) ? result : parseFloat(result.toFixed(2));
-    return `${config.valuePrefix}${formattedResult}${config.valueSuffix}`;
+    if (config.compactNumbers) {
+      return `${formatLargeNumber(result, config.valuePrefix)}${config.valueSuffix}`;
+    }
 
+    return `${config.valuePrefix}${result.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}${config.valueSuffix}`;
   }, [googleSheets, sheetConfigs, config]);
 
-
-  // --- 2. Rendering Logic ---
-
+  // --- 2. Render Logic (UI) ---
   const IconComponent = (Icons as any)[config.icon] || Icons.HelpCircle;
   const TrendIcon = config.trendDirection === 'up' ? Icons.TrendingUp : 
                    config.trendDirection === 'down' ? Icons.TrendingDown : Icons.Minus;
 
+  // Container Style for Size
   const containerStyle: React.CSSProperties = {
       width: config.width || '100%',
       height: config.height === 'auto' ? 'auto' : config.height,
       minHeight: config.height === 'auto' ? 'auto' : config.height,
   };
 
-  // --- RENDER: CLASSIC ---
+  // --- CLASSIC TEMPLATE ---
   if (config.template === 'classic') {
     const bgMap: Record<string, string> = {
         blue: 'bg-blue-100 dark:bg-blue-900/30',
@@ -185,46 +185,51 @@ const DynamicCard: React.FC<DynamicCardProps> = ({ config, className = "" }) => 
     );
   }
 
-  // --- RENDER: GRADIENT ---
-  const getColor = (c: string) => {
-      const map: any = { blue: '#3b82f6', violet: '#8b5cf6', pink: '#ec4899', orange: '#f97316', emerald: '#10b981', red: '#ef4444', cyan: '#06b6d4', slate: '#64748b' };
-      return map[c] || '#3b82f6';
-  };
-  
-  const gradientStyle = {
-      background: `linear-gradient(135deg, ${getColor(config.gradientFrom)}, ${getColor(config.gradientTo)})`,
-      ...containerStyle
-  };
-  
-  const shadowColor = getColor(config.gradientTo);
+  // --- GRADIENT TEMPLATE ---
+  if (config.template === 'gradient') {
+      const getColor = (c: string) => {
+         const map: any = { blue: '#3b82f6', violet: '#8b5cf6', pink: '#ec4899', orange: '#f97316', emerald: '#10b981', red: '#ef4444', cyan: '#06b6d4', slate: '#64748b' };
+         return map[c] || '#3b82f6';
+      };
+      
+      const gradientStyle = {
+          background: `linear-gradient(135deg, ${getColor(config.gradientFrom)}, ${getColor(config.gradientTo)})`,
+          ...containerStyle
+      };
+      
+      const shadowColor = getColor(config.gradientTo);
 
-  return (
-      <div 
-        className={`rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-all duration-300 ${className}`}
-        style={{ ...gradientStyle, boxShadow: `0 10px 25px -5px ${shadowColor}40` }}
-      >
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black opacity-10 rounded-full blur-2xl"></div>
+      return (
+          <div 
+            className={`rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-all duration-300 ${className}`}
+            style={{ ...gradientStyle, boxShadow: `0 10px 25px -5px ${shadowColor}40` }}
+          >
+             {/* Decorative Blur */}
+             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
+             <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black opacity-10 rounded-full blur-2xl"></div>
 
-          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
-            <div className="flex justify-between items-start">
-                <div className={`p-2 bg-white/20 rounded-lg backdrop-blur-sm shrink-0 ${config.showIcon ? 'block' : 'hidden'}`}>
-                    <IconComponent size={24} className="text-white" />
-                </div>
-                {config.showTrend && (
-                    <div className="flex items-center gap-1 text-sm font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm shrink-0 ml-auto">
-                          <TrendIcon size={14} /> {config.trendValue}
+             <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+                <div className="flex justify-between items-start">
+                    <div className={`p-2 bg-white/20 rounded-lg backdrop-blur-sm shrink-0 ${config.showIcon ? 'block' : 'hidden'}`}>
+                        <IconComponent size={24} className="text-white" />
                     </div>
-                )}
-            </div>
-            
-            <div className="overflow-hidden mt-auto">
-                <h3 className="text-4xl font-bold mb-1 tracking-tight truncate" title={String(displayValue)}>{displayValue}</h3>
-                <p className="text-white/80 text-sm font-medium truncate">{config.title}</p>
-            </div>
+                    {config.showTrend && (
+                        <div className="flex items-center gap-1 text-sm font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm shrink-0 ml-auto">
+                             <TrendIcon size={14} /> {config.trendValue}
+                        </div>
+                    )}
+                </div>
+                
+                <div className="overflow-hidden mt-auto">
+                    <h3 className="text-4xl font-bold mb-1 tracking-tight truncate" title={String(displayValue)}>{displayValue}</h3>
+                    <p className="text-white/80 text-sm font-medium truncate">{config.title}</p>
+                </div>
+             </div>
           </div>
-      </div>
-  );
+      );
+  }
+
+  return null;
 };
 
 export default DynamicCard;

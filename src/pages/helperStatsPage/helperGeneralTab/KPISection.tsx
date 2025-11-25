@@ -6,6 +6,177 @@ const KPISection: React.FC = () => {
   // --- KPI CONFIGURATIONS ---
   const kpiConfigs = useMemo<CardConfig[]>(() => [
     // Row 1
+
+    {
+      template: "gradient",
+      title: "Чистая прибыль",
+      sheetKey: "clientGrowth",
+      dataColumn: "Валовая",
+      aggregation: "sum",
+      filters: [
+        {
+          id: "0qyvlzape",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "7jz2j15j5",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
+      valuePrefix: "₽ ",
+      valueSuffix: "",
+      compactNumbers: true,
+      icon: "Banknote",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "",
+      trendDirection: "up",
+      width: "100%",
+      height: "auto",
+      colorTheme: "orange",
+      gradientFrom: "orange",
+      gradientTo: "amber"
+    },
+    
+    {
+      template: "gradient",
+      title: "Затраты",
+      sheetKey: "clientGrowth",
+      dataColumn: "Расходы + Итого + факт",
+      aggregation: "sum",
+      filters: [
+        {
+          id: "td7n9i718",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "lha1msbcy",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
+      valuePrefix: "₽ ",
+      valueSuffix: "",
+      compactNumbers: true,
+      icon: "ShoppingCart",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "auto",
+      colorTheme: "blue",
+      gradientFrom: "purple",
+      gradientTo: "blue"
+    },
+    {
+      template: "gradient",
+      title: "Рентабельность",
+      sheetKey: "clientGrowth",
+      dataColumn: "Рентабельность",
+      aggregation: "average",
+      filters: [
+        {
+          id: "0qyvlzape",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "7jz2j15j5",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
+      valuePrefix: "",
+      valueSuffix: " %",
+      icon: "Banknote",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "",
+      trendDirection: "up",
+      width: "100%",
+      height: "auto",
+      colorTheme: "orange",
+      gradientFrom: "orange",
+      gradientTo: "amber"
+    },
+    // Row 2
+
+    {
+      template: "gradient",
+      title: "Всего лифтов",
+      sheetKey: "clientGrowth",
+      dataColumn: "Кол-во лифтов",
+      aggregation: "sum",
+      filters: [
+        {
+          id: "0qyvlzape",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "7jz2j15j5",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
+      valuePrefix: "",
+      valueSuffix: " шт",
+      icon: "ArrowUpFromLine",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "",
+      trendDirection: "up",
+      width: "100%",
+      height: "auto",
+      colorTheme: "emerald",
+      gradientFrom: "emerald",
+      gradientTo: "teal"
+    },
+    {
+      template: "gradient",
+      title: "Всего этажей",
+      sheetKey: "clientGrowth",
+      dataColumn: "Кол-во этажей",
+      aggregation: "sum",
+      filters: [
+        {
+          id: "0qyvlzape",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "7jz2j15j5",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
+      valuePrefix: "",
+      valueSuffix: " шт",
+      icon: "ArrowUpFromLine",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "",
+      trendDirection: "up",
+      width: "100%",
+      height: "auto",
+      colorTheme: "emerald",
+      gradientFrom: "emerald",
+      gradientTo: "teal"
+    },
     {
       template: "gradient",
       title: "Всего городов",
@@ -41,16 +212,35 @@ const KPISection: React.FC = () => {
     },
     {
       template: "gradient",
-      title: "Всего ЖК",
+      title: "Всего закрытых договоров",
       sheetKey: "clientGrowth",
-      dataColumn: "ЖК",
+      dataColumn: "Сдан да/нет",
       aggregation: "count",
-      filters: [],
+      filters: [
+        {
+          id: "0qyvlzape",
+          column: "Итого (Да/Нет)",
+          operator: "equals",
+          value: "Нет"
+        },
+        {
+          id: "7jz2j15j5",
+          column: "Без разбивки на литеры (Да/Нет)",
+          operator: "equals",
+          value: "Да"
+        },
+        {
+          id: "8jz2j15j5",
+          column: "Сдан да/нет",
+          operator: "equals",
+          value: "Да"
+        }
+      ],
       valuePrefix: "",
       valueSuffix: "",
       icon: "Building",
       showIcon: true,
-      showTrend: true,
+      showTrend: false,
       trendValue: "",
       trendDirection: "up",
       width: "100%",
@@ -59,127 +249,6 @@ const KPISection: React.FC = () => {
       gradientFrom: "violet",
       gradientTo: "purple"
     },
-    {
-      template: "gradient",
-      title: "Всего лифтов",
-      sheetKey: "clientGrowth",
-      dataColumn: "Кол-во лифтов",
-      aggregation: "sum",
-      filters: [],
-      valuePrefix: "",
-      valueSuffix: " шт",
-      icon: "ArrowUpFromLine",
-      showIcon: true,
-      showTrend: true,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "emerald",
-      gradientFrom: "emerald",
-      gradientTo: "teal"
-    },
-    {
-      template: "gradient",
-      title: "Валовая прибыль",
-      sheetKey: "clientGrowth",
-      dataColumn: "Валовая",
-      aggregation: "sum",
-      filters: [],
-      valuePrefix: "₽ ",
-      valueSuffix: "",
-      icon: "Banknote",
-      showIcon: true,
-      showTrend: true,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "orange",
-      gradientFrom: "orange",
-      gradientTo: "amber"
-    },
-    // Row 2
-    {
-      template: "classic",
-      title: "Средняя прибыль",
-      sheetKey: "clientGrowth",
-      dataColumn: "Прибыль с 1 лифта",
-      aggregation: "average",
-      filters: [],
-      valuePrefix: "₽ ",
-      valueSuffix: "",
-      icon: "TrendingUp",
-      showIcon: true,
-      showTrend: true,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "pink",
-      gradientFrom: "pink",
-      gradientTo: "rose"
-    },
-    {
-      template: "classic",
-      title: "Всего этажей",
-      sheetKey: "clientGrowth",
-      dataColumn: "Кол-во этажей",
-      aggregation: "sum",
-      filters: [],
-      valuePrefix: "",
-      valueSuffix: " эт",
-      icon: "Layers",
-      showIcon: true,
-      showTrend: false,
-      trendValue: "",
-      trendDirection: "neutral",
-      width: "100%",
-      height: "auto",
-      colorTheme: "cyan",
-      gradientFrom: "cyan",
-      gradientTo: "blue"
-    },
-    {
-      template: "classic",
-      title: "Новые клиенты",
-      sheetKey: "clientGrowth",
-      dataColumn: "Заказчик",
-      aggregation: "count",
-      filters: [],
-      valuePrefix: "",
-      valueSuffix: "",
-      icon: "Users",
-      showIcon: true,
-      showTrend: true,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "indigo",
-      gradientFrom: "indigo",
-      gradientTo: "violet"
-    },
-    {
-      template: "classic",
-      title: "Активность",
-      sheetKey: "clientGrowth",
-      dataColumn: "Кол-во лифтов",
-      aggregation: "count",
-      filters: [],
-      valuePrefix: "",
-      valueSuffix: "",
-      icon: "Activity",
-      showIcon: true,
-      showTrend: true,
-      trendValue: "",
-      trendDirection: "neutral",
-      width: "100%",
-      height: "auto",
-      colorTheme: "rose",
-      gradientFrom: "rose",
-      gradientTo: "red"
-    }
   ], []);
 
   return (

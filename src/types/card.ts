@@ -13,6 +13,7 @@ export interface CardConfig {
   // Formatting
   valuePrefix: string;
   valueSuffix: string;
+  compactNumbers?: boolean;
 
   // Visuals
   icon: string;

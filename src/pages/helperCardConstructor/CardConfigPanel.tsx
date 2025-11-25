@@ -280,6 +280,17 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                     className={inputClass}
                 />
             </div>
+
+            <div className="flex items-center gap-2 mb-2">
+                <input 
+                    type="checkbox" 
+                    id="compactNumbers"
+                    checked={config.compactNumbers || false}
+                    onChange={(e) => update('compactNumbers', e.target.checked)}
+                    className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="compactNumbers" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Сокращать большие числа (1.5M)</label>
+            </div>
             
             <div className="grid grid-cols-2 gap-3">
                 <div>

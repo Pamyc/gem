@@ -34,6 +34,7 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
 
     valuePrefix: '',
     valueSuffix: '',
+    compactNumbers: false,
 
     icon: 'Users',
     showIcon: true,
