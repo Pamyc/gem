@@ -29,14 +29,14 @@ const KPISection: React.FC = () => {
       ],
       valuePrefix: "₽ ",
       valueSuffix: "",
-      compactNumbers: true,
+      compactNumbers: false,
       icon: "Banknote",
       showIcon: true,
       showTrend: false,
       trendValue: "",
       trendDirection: "up",
       width: "100%",
-      height: "auto",
+      height: "150px",
       colorTheme: "orange",
       gradientFrom: "orange",
       gradientTo: "amber",
@@ -65,14 +65,14 @@ const KPISection: React.FC = () => {
       ],
       valuePrefix: "₽ ",
       valueSuffix: "",
-      compactNumbers: true,
+      compactNumbers: false,
       icon: "ShoppingCart",
       showIcon: true,
       showTrend: false,
       trendValue: "0%",
       trendDirection: "neutral",
       width: "100%",
-      height: "auto",
+      height: "150px",
       colorTheme: "blue",
       gradientFrom: "purple",
       gradientTo: "blue",
@@ -106,14 +106,152 @@ const KPISection: React.FC = () => {
       trendValue: "",
       trendDirection: "up",
       width: "100%",
-      height: "auto",
+      height: "150px",
       colorTheme: "orange",
       gradientFrom: "orange",
       gradientTo: "amber",
       elements: []
     },
-    // Row 2
 
+    {
+      template: "custom",
+      title: "Макс/Мин прибыль",
+      sheetKey: "clientGrowth",
+      dataColumn: "",
+      aggregation: "sum",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: "",
+      compactNumbers: true,
+      icon: "Users",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "150px",
+      colorTheme: "blue",
+      gradientFrom: "violet",
+      gradientTo: "fuchsia",
+      elements: [
+        {
+          id: "icon-uxfox",
+          type: "icon",
+          style: {
+            top: 45,
+            left: 20,
+            fontSize: 24,
+            color: "#16fe31",
+            backgroundColor: "rgba(255,255,255,0.2)",
+            borderRadius: 12,
+            padding: 7,
+            width: 44,
+            height: 44
+          },
+          iconName: "ArrowUpRight"
+        },
+        {
+          id: "value-pxil6",
+          type: "value",
+          style: {
+            top: 100,
+            left: 80,
+            fontSize: 25,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            dataColumn: "Валовая",
+            aggregation: "min",
+            filters: [
+              {
+                id: "2jeg2v0y0",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "8w0inphro",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "baoorfq8p",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-fxbl5",
+          type: "title",
+          style: {
+            top: 10,
+            left: 15,
+            fontSize: 24,
+            color: "#ffffff",
+            fontWeight: "500"
+          }
+        },
+        {
+          id: "48c44d1jb",
+          type: "icon",
+          style: {
+            top: 95,
+            left: 20,
+            fontSize: 24,
+            color: "#ff0000",
+            backgroundColor: "rgba(255,255,255,0.2)",
+            borderRadius: 12,
+            padding: 7,
+            width: 44,
+            height: 44
+          },
+          iconName: "ArrowDownRight"
+        },
+        {
+          id: "j0hj7swsm",
+          type: "value",
+          style: {
+            top: 50,
+            left: 80,
+            fontSize: 25,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            dataColumn: "Валовая",
+            aggregation: "max",
+            filters: [
+              {
+                id: "yiq0mbknv",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "7atztawkw",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "95w6rpb13",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "да"
+              }
+            ]
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+    // Row 2
     {
       template: "gradient",
       title: "Всего лифтов",
@@ -256,86 +394,7 @@ const KPISection: React.FC = () => {
       gradientTo: "purple",
       elements: []
     },
-    {
-      template: "custom",
-  title: "Мой показатель",
-  sheetKey: "clientGrowth",
-  dataColumn: "",
-  aggregation: "sum",
-  filters: [],
-  valuePrefix: "",
-  valueSuffix: "",
-  compactNumbers: false,
-  icon: "Users",
-  showIcon: true,
-  showTrend: false,
-  trendValue: "0%",
-  trendDirection: "neutral",
-  width: "100%",
-  height: "80px",
-  colorTheme: "blue",
-  gradientFrom: "violet",
-  gradientTo: "fuchsia",
-  elements: [
-    {
-      id: "icon-g4oc6",
-      type: "icon",
-      style: {
-        top: 15,
-        left: 20,
-        fontSize: 24,
-        color: "#ffffff",
-        backgroundColor: "rgba(255,255,255,0.2)",
-        borderRadius: 12,
-        padding: 10,
-        width: 44,
-        height: 44
-      }
-    },
-    {
-      id: "89atzno1j",
-      type: "value",
-      style: {
-        top: 20,
-        left: 255,
-        fontSize: 24,
-        color: "#000000",
-        zIndex: 10,
-        width: "auto",
-        height: "auto",
-        fontWeight: "bold"
-      },
-      dataSettings: {
-        dataColumn: "Кол-во этажей",
-        aggregation: "unique",
-        filters: [
-          {
-            id: "9yc7jdlvw",
-            column: "Город",
-            operator: "equals",
-            value: "Кисловодск"
-          }
-        ]
-      }
-    },
-    {
-      id: "rmjsyhgvz",
-      type: "text",
-      style: {
-        top: 30,
-        left: 95,
-        fontSize: 14,
-        color: "#000000",
-        zIndex: 10,
-        width: "auto",
-        height: "auto"
-      },
-      content: "Новый текст"
-    }
-  ],
-  backgroundColor: "",
-  borderColor: ""
-    },
+
   ], []);
 
   return (
