@@ -8,65 +8,16 @@ const KPISection: React.FC = () => {
     // Row 1
 
     {
-      template: "gradient",
-      title: "Чистая прибыль",
-      sheetKey: "clientGrowth",
-      dataColumn: "Валовая",
+      template: "custom",
+      title: "Валовая прибыль",
+      sheetKey: "",
+      dataColumn: "",
       aggregation: "sum",
-      filters: [
-        {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
-        },
-        {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        }
-      ],
-      valuePrefix: "₽ ",
-      valueSuffix: "",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: " ₽",
       compactNumbers: false,
-      icon: "Banknote",
-      showIcon: true,
-      showTrend: false,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "150px",
-      colorTheme: "orange",
-      gradientFrom: "orange",
-      gradientTo: "amber",
-      elements: []
-    },
-
-    {
-      template: "gradient",
-      title: "Затраты",
-      sheetKey: "clientGrowth",
-      dataColumn: "Расходы + Итого + факт",
-      aggregation: "sum",
-      filters: [
-        {
-          id: "td7n9i718",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
-        },
-        {
-          id: "lha1msbcy",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        }
-      ],
-      valuePrefix: "₽ ",
-      valueSuffix: "",
-      compactNumbers: false,
-      icon: "ShoppingCart",
+      icon: "Users",
       showIcon: true,
       showTrend: false,
       trendValue: "0%",
@@ -74,43 +25,192 @@ const KPISection: React.FC = () => {
       width: "100%",
       height: "150px",
       colorTheme: "blue",
-      gradientFrom: "purple",
-      gradientTo: "blue",
-      elements: []
-    },
-    {
-      template: "gradient",
-      title: "Рентабельность",
-      sheetKey: "clientGrowth",
-      dataColumn: "Рентабельность",
-      aggregation: "average",
-      filters: [
+      gradientFrom: "cyan",
+      gradientTo: "emerald",
+      elements: [
         {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 37,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Валовая",
+            aggregation: "sum",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
         },
         {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
         }
       ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+
+    {
+      template: "custom",
+      title: "Расходы общие",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "sum",
+      filters: [],
       valuePrefix: "",
-      valueSuffix: " %",
-      icon: "Banknote",
+      valueSuffix: " ₽",
+      compactNumbers: false,
+      icon: "Users",
       showIcon: true,
       showTrend: false,
-      trendValue: "",
-      trendDirection: "up",
+      trendValue: "0%",
+      trendDirection: "neutral",
       width: "100%",
       height: "150px",
-      colorTheme: "orange",
+      colorTheme: "blue",
+      gradientFrom: "red",
+      gradientTo: "slate",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 37,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Расходы + Итого + факт",
+            aggregation: "sum",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+    {
+      template: "custom",
+      title: "Рентабельность по завершенным",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "sum",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: " %",
+      compactNumbers: false,
+      icon: "Users",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "150px",
+      colorTheme: "blue",
       gradientFrom: "orange",
-      gradientTo: "amber",
-      elements: []
+      gradientTo: "violet",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 37,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Рентабельность",
+            aggregation: "average",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "f3",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
     },
 
     {
@@ -138,9 +238,9 @@ const KPISection: React.FC = () => {
           id: "card-title",
           type: "title",
           style: {
-            top: 15,
+            top: 25,
             left: 25,
-            fontSize: 16,
+            fontSize: 25,
             color: "rgba(255,255,255,0.9)",
             fontWeight: "600"
           }
@@ -149,7 +249,7 @@ const KPISection: React.FC = () => {
           id: "icon-max",
           type: "icon",
           style: {
-            top: 50,
+            top: 60,
             left: 25,
             fontSize: 20,
             color: "#4ade80",
@@ -166,7 +266,7 @@ const KPISection: React.FC = () => {
           type: "text",
           content: "MAX",
           style: {
-            top: 50,
+            top: 60,
             left: 70,
             fontSize: 10,
             color: "#4ade80",
@@ -178,7 +278,7 @@ const KPISection: React.FC = () => {
           id: "value-max",
           type: "value",
           style: {
-            top: 60,
+            top: 70,
             left: 70,
             fontSize: 22,
             color: "#ffffff",

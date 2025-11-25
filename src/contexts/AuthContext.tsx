@@ -10,7 +10,7 @@ export interface User {
 
 // Хардкод список пользователей
 export const HARDCODED_USERS: User[] = [
-  { id: '0', username: 'integrat', password: 'integrat', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ
+  { id: '0', username: 'i', password: 'i', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ
   { id: '1', username: 'admin', password: 'admin', name: 'Администратор', role: 'admin' },
 ];
 
