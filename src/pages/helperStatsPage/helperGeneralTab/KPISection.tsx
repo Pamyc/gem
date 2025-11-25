@@ -39,7 +39,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "orange",
       gradientFrom: "orange",
-      gradientTo: "amber"
+      gradientTo: "amber",
+      elements: []
     },
     
     {
@@ -74,7 +75,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "blue",
       gradientFrom: "purple",
-      gradientTo: "blue"
+      gradientTo: "blue",
+      elements: []
     },
     {
       template: "gradient",
@@ -107,7 +109,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "orange",
       gradientFrom: "orange",
-      gradientTo: "amber"
+      gradientTo: "amber",
+      elements: []
     },
     // Row 2
 
@@ -142,7 +145,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "emerald",
       gradientFrom: "emerald",
-      gradientTo: "teal"
+      gradientTo: "teal",
+      elements: []
     },
     {
       template: "gradient",
@@ -175,7 +179,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "emerald",
       gradientFrom: "emerald",
-      gradientTo: "teal"
+      gradientTo: "teal",
+      elements: []
     },
     {
       template: "gradient",
@@ -208,7 +213,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "blue",
       gradientFrom: "blue",
-      gradientTo: "cyan"
+      gradientTo: "cyan",
+      elements: []
     },
     {
       template: "gradient",
@@ -247,7 +253,8 @@ const KPISection: React.FC = () => {
       height: "auto",
       colorTheme: "violet",
       gradientFrom: "violet",
-      gradientTo: "purple"
+      gradientTo: "purple",
+      elements: []
     },
   ], []);
 

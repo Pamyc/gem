@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
-import { Palette, Type, Database, Filter, Plus, Trash2, Layout, ChevronDown, ChevronRight, Maximize } from 'lucide-react';
+import { Palette, Type, Database, Filter, Plus, Trash2, ChevronDown, ChevronRight, PaintBucket, LayoutTemplate } from 'lucide-react';
 import { CardConfig } from '../../types/card';
 import { SheetConfig } from '../../contexts/DataContext';
 import { ChartFilter } from '../../types/chart';
+import { getPresetLayout } from '../../utils/cardPresets';
 
 interface CardConfigPanelProps {
   config: CardConfig;
@@ -13,7 +15,7 @@ interface CardConfigPanelProps {
 }
 
 const COLORS = ['blue', 'emerald', 'violet', 'orange', 'pink', 'red', 'cyan', 'slate'];
-const ICONS = ['Users', 'DollarSign', 'Activity', 'CreditCard', 'ShoppingCart', 'TrendingUp', 'Target', 'Zap'];
+const ICONS = ['Users', 'DollarSign', 'Activity', 'CreditCard', 'ShoppingCart', 'TrendingUp', 'Target', 'Zap', 'ArrowUpRight', 'ArrowDownRight', 'Building', 'MapPin', 'LayoutList'];
 
 // Collapsible Section Component
 const Section: React.FC<{
@@ -49,10 +51,12 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
   
   // State for Accordion Sections
   const [openSections, setOpenSections] = useState({
+    preset: true,
     source: true,
     text: false,
     visuals: false,
-    size: false
+    size: false,
+    styling: false
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -61,6 +65,21 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
 
   const update = (key: keyof CardConfig, value: any) => {
     setConfig({ ...config, [key]: value });
+  };
+
+  const applyPreset = (presetName: string) => {
+     if (!presetName) return;
+     const layoutUpdates = getPresetLayout(presetName as any);
+     // Merge current data config with new layout
+     setConfig({
+        ...config,
+        ...layoutUpdates,
+        // Keep data config intact
+        sheetKey: config.sheetKey,
+        dataColumn: config.dataColumn,
+        aggregation: config.aggregation,
+        filters: config.filters
+     });
   };
 
   // Filter Management
@@ -106,27 +125,51 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
 
   const inputClass = "w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all";
   const selectClass = "w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1e2433] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer";
-
-  // Specific high-contrast class for inputs inside the filter card
   const filterInputClass = "w-full px-3 py-2 rounded-lg bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer h-9";
+  const colorInputClass = "w-10 h-10 rounded-lg border border-gray-200 dark:border-white/10 p-1 cursor-pointer bg-gray-50 dark:bg-[#1e2433]";
 
   return (
     <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
       
-      {/* 1. Template Selection (Top Level) */}
-      <div className="mb-4">
-        <span className="text-xs text-gray-400 mb-1 block ml-1 font-bold uppercase tracking-wider">Шаблон</span>
-        <div className="relative">
-          <select 
-            value={config.template}
-            onChange={(e) => update('template', e.target.value)}
-            className={selectClass}
-          >
-            <option value="classic">Classic Clean</option>
-            <option value="gradient">Vibrant Gradient</option>
-          </select>
+      {/* 1. Preset Selection */}
+      <Section 
+        title="Макет и Стиль" 
+        icon={<LayoutTemplate size={14} />} 
+        isOpen={openSections.preset} 
+        onToggle={() => toggleSection('preset')}
+      >
+        <div className="space-y-4">
+          <div>
+            <span className="text-xs text-gray-400 mb-1 block ml-1 font-bold uppercase tracking-wider">Загрузить пресет</span>
+            <div className="relative">
+              <select 
+                value=""
+                onChange={(e) => applyPreset(e.target.value)}
+                className={selectClass}
+              >
+                <option value="" disabled>Выберите стиль...</option>
+                <option value="classic">Classic Clean</option>
+                <option value="gradient">Vibrant Gradient</option>
+                <option value="minMax">Min/Max Range</option>
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1 ml-1">
+                 Выбор пресета сбросит текущее расположение элементов
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <span className="text-xs text-gray-400 mb-1 block ml-1 font-bold uppercase tracking-wider">Название</span>
+            <input 
+                type="text"
+                value={config.title}
+                onChange={(e) => update('title', e.target.value)}
+                className={inputClass}
+                placeholder="Заголовок карточки"
+            />
+          </div>
         </div>
-      </div>
+      </Section>
 
       {/* 2. Data Source Settings */}
       <Section 
@@ -136,7 +179,6 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
         onToggle={() => toggleSection('source')}
       >
         <div className="space-y-3">
-             {/* Sheet Selector */}
              <div>
                 <span className="text-xs text-gray-400 mb-1 block ml-1">Таблица</span>
                 <select
@@ -151,7 +193,6 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                 </select>
             </div>
 
-            {/* Column Selector */}
             <div>
                 <span className="text-xs text-gray-400 mb-1 block ml-1">Столбец значений</span>
                 <select
@@ -165,7 +206,6 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                 </select>
             </div>
 
-            {/* Aggregation */}
             <div>
                 <span className="text-xs text-gray-400 mb-1 block ml-1">Агрегация</span>
                 <select
@@ -206,8 +246,17 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                 {config.filters.map((filter) => {
                   const uniqueValues = getUniqueValues(filter.column);
                   return (
-                    <div key={filter.id} className="bg-gray-100 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-200 dark:border-white/5 flex flex-col gap-3 shadow-sm">
-                        <div className="flex gap-2">
+                    <div key={filter.id} className="bg-gray-100 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-200 dark:border-white/5 flex flex-col gap-3 shadow-sm relative group">
+                        
+                        <button 
+                            onClick={() => removeFilter(filter.id)} 
+                            className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] uppercase text-gray-400 font-bold">Столбец</label>
                             <select
                               value={filter.column}
                               onChange={(e) => updateFilterColumn(filter.id, e.target.value)}
@@ -215,46 +264,44 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
                             >
                               {availableColumns.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                            <button 
-                                onClick={() => removeFilter(filter.id)} 
-                                className="text-gray-400 hover:text-red-500 bg-white dark:bg-[#151923] border border-gray-200 dark:border-white/10 rounded-lg shrink-0 h-9 w-9 flex items-center justify-center transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
                         </div>
                         
                         <div className="flex gap-2">
-                            <select
-                              value={filter.operator}
-                              onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
-                              className={`${filterInputClass} w-1/3`}
-                            >
-                              <option value="equals">=</option>
-                              <option value="contains">In</option>
-                              <option value="greater">&gt;</option>
-                              <option value="less">&lt;</option>
-                            </select>
-                            
-                            {uniqueValues.length > 0 ? (
-                              <select
-                                value={filter.value}
-                                onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                                className={`${filterInputClass} w-2/3`}
-                              >
-                                <option value="">...</option>
-                                {uniqueValues.map(val => (
-                                  <option key={val} value={val}>{val}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                type="text"
-                                value={filter.value}
-                                onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
-                                placeholder="..."
-                                className={`${filterInputClass} w-2/3 cursor-text`}
-                              />
-                            )}
+                             <div className="w-1/3">
+                                <select
+                                    value={filter.operator}
+                                    onChange={(e) => updateFilter(filter.id, 'operator', e.target.value)}
+                                    className={filterInputClass}
+                                >
+                                    <option value="equals">=</option>
+                                    <option value="contains">In</option>
+                                    <option value="greater">&gt;</option>
+                                    <option value="less">&lt;</option>
+                                </select>
+                             </div>
+                             
+                             <div className="w-2/3">
+                                {uniqueValues.length > 0 ? (
+                                    <select
+                                      value={filter.value}
+                                      onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
+                                      className={filterInputClass}
+                                    >
+                                      <option value="">Значение...</option>
+                                      {uniqueValues.map(val => (
+                                        <option key={val} value={val}>{val}</option>
+                                      ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                      type="text"
+                                      value={filter.value}
+                                      onChange={(e) => updateFilter(filter.id, 'value', e.target.value)}
+                                      placeholder="Значение"
+                                      className={filterInputClass}
+                                    />
+                                )}
+                             </div>
                         </div>
                     </div>
                   );
@@ -263,227 +310,192 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
          </div>
       </Section>
 
-      {/* 3. Text Settings */}
+      {/* 3. Text & Formatting */}
       <Section 
         title="Текст и Формат" 
         icon={<Type size={14} />} 
         isOpen={openSections.text} 
         onToggle={() => toggleSection('text')}
       >
-        <div className="space-y-3">
-            <div>
-                <span className="text-xs text-gray-400 mb-1 block ml-1">Заголовок</span>
-                <input 
-                    type="text" 
-                    value={config.title}
-                    onChange={(e) => update('title', e.target.value)}
-                    className={inputClass}
-                />
-            </div>
-
-            <div className="flex items-center gap-2 mb-2">
-                <input 
-                    type="checkbox" 
-                    id="compactNumbers"
-                    checked={config.compactNumbers || false}
-                    onChange={(e) => update('compactNumbers', e.target.checked)}
-                    className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="compactNumbers" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Сокращать большие числа (1.5M)</label>
-            </div>
-            
+         <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <span className="text-xs text-gray-400 mb-1 block ml-1">Префикс</span>
-                    <input 
-                        type="text" 
-                        value={config.valuePrefix}
-                        onChange={(e) => update('valuePrefix', e.target.value)}
-                        className={inputClass}
-                        placeholder="₽ "
-                    />
+                   <span className="text-xs text-gray-400 mb-1 block ml-1">Префикс</span>
+                   <input 
+                      type="text" 
+                      value={config.valuePrefix}
+                      onChange={(e) => update('valuePrefix', e.target.value)}
+                      placeholder="₽, $..."
+                      className={inputClass}
+                   />
                 </div>
                 <div>
-                    <span className="text-xs text-gray-400 mb-1 block ml-1">Суффикс</span>
-                    <input 
-                        type="text" 
-                        value={config.valueSuffix}
-                        onChange={(e) => update('valueSuffix', e.target.value)}
-                        className={inputClass}
-                        placeholder=" шт."
-                    />
+                   <span className="text-xs text-gray-400 mb-1 block ml-1">Суффикс</span>
+                   <input 
+                      type="text" 
+                      value={config.valueSuffix}
+                      onChange={(e) => update('valueSuffix', e.target.value)}
+                      placeholder=" шт, %"
+                      className={inputClass}
+                   />
                 </div>
             </div>
-        </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input 
+                type="checkbox" 
+                id="compact"
+                checked={config.compactNumbers}
+                onChange={(e) => update('compactNumbers', e.target.checked)}
+                className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+              <label htmlFor="compact" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                 Компактные числа (1.2k, 1M)
+              </label>
+           </div>
+         </div>
       </Section>
 
-      {/* 4. Visual Settings */}
+      {/* 4. Visuals */}
       <Section 
-        title="Внешний вид" 
+        title="Визуализация" 
         icon={<Palette size={14} />} 
         isOpen={openSections.visuals} 
         onToggle={() => toggleSection('visuals')}
       >
-        <div className="space-y-3">
-             <div className="flex items-center gap-2">
-                <input 
-                    type="checkbox"
-                    id="showIcon"
-                    checked={config.showIcon}
-                    onChange={(e) => update('showIcon', e.target.checked)}
-                    className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="showIcon" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Иконка</label>
-            </div>
+        <div className="space-y-4">
             
-            {config.showIcon && (
-                <select 
-                    value={config.icon}
-                    onChange={(e) => update('icon', e.target.value)}
-                    className={selectClass}
-                >
-                    {ICONS.map(icon => <option key={icon} value={icon}>{icon}</option>)}
-                </select>
-            )}
-
-            <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-white/5 mt-2">
-                <input 
-                    type="checkbox"
-                    id="showTrend"
-                    checked={config.showTrend}
-                    onChange={(e) => update('showTrend', e.target.checked)}
-                    className="w-4 h-4 rounded bg-gray-100 dark:bg-[#1e2433] border-gray-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="showTrend" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Тренды</label>
+            {/* Gradient Config */}
+            <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 dark:bg-[#1e2433] rounded-xl border border-gray-100 dark:border-white/5">
+                <div>
+                    <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Градиент от</span>
+                    <select 
+                        value={config.gradientFrom}
+                        onChange={(e) => update('gradientFrom', e.target.value)}
+                        className={`${selectClass} text-xs py-1.5`}
+                    >
+                        <option value="">Нет</option>
+                        {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Градиент до</span>
+                    <select 
+                        value={config.gradientTo}
+                        onChange={(e) => update('gradientTo', e.target.value)}
+                        className={`${selectClass} text-xs py-1.5`}
+                    >
+                        <option value="">Нет</option>
+                        {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
             </div>
 
-            {config.showTrend && (
-                <div className="grid grid-cols-2 gap-2 pl-3 border-l-2 border-gray-100 dark:border-white/5">
+            {/* Icon Config */}
+            <div>
+               <div className="flex items-center justify-between mb-2">
+                   <span className="text-xs text-gray-400 ml-1">Иконка по умолчанию</span>
+               </div>
+               
+               <div className="grid grid-cols-5 gap-2 bg-gray-50 dark:bg-[#1e2433] p-3 rounded-xl border border-gray-100 dark:border-white/5 max-h-[120px] overflow-y-auto custom-scrollbar">
+                   {ICONS.map(iconName => (
+                       <button
+                         key={iconName}
+                         onClick={() => update('icon', iconName)}
+                         className={`p-2 rounded-lg flex items-center justify-center transition-all ${
+                             config.icon === iconName 
+                                ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300' 
+                                : 'hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500'
+                         }`}
+                         title={iconName}
+                       >
+                            <div className="text-[10px] font-bold truncate">{iconName.substring(0, 2)}</div>
+                       </button>
+                   ))}
+               </div>
+               <p className="text-[10px] text-gray-400 mt-1 ml-1">
+                  Это глобальная иконка. Вы также можете настроить иконку для каждого элемента отдельно.
+               </p>
+            </div>
+
+            {/* Trend Config */}
+            <div>
+               <div className="flex items-center justify-between mb-2">
+                   <span className="text-xs text-gray-400 ml-1">Тренд (Данные)</span>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <span className="text-xs text-gray-400 mb-1 block">Значение</span>
-                        <input 
-                            type="text" 
-                            value={config.trendValue}
-                            onChange={(e) => update('trendValue', e.target.value)}
-                            className={inputClass}
-                        />
+                       <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Значение</span>
+                       <input 
+                          type="text" 
+                          value={config.trendValue}
+                          onChange={(e) => update('trendValue', e.target.value)}
+                          placeholder="+5%"
+                          className={`${inputClass} text-xs py-1.5`}
+                       />
                     </div>
                     <div>
-                        <span className="text-xs text-gray-400 mb-1 block">Вектор</span>
-                        <select 
+                       <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Направление</span>
+                       <select 
                             value={config.trendDirection}
                             onChange={(e) => update('trendDirection', e.target.value)}
-                            className={selectClass}
+                            className={`${selectClass} text-xs py-1.5`}
                         >
-                            <option value="up">Рост</option>
-                            <option value="down">Падение</option>
-                            <option value="neutral">Нейтр.</option>
+                            <option value="up">Рост (Good)</option>
+                            <option value="down">Падение (Bad)</option>
+                            <option value="neutral">Нейтрально</option>
                         </select>
                     </div>
-                </div>
-            )}
-
-            {/* Classic Theme Colors */}
-            {config.template === 'classic' && (
-                <div className="pt-2">
-                    <span className="text-xs text-gray-400 mb-2 block ml-1">Цветовая тема</span>
-                    <div className="grid grid-cols-4 gap-2">
-                        {COLORS.map(color => (
-                            <button
-                                key={color}
-                                onClick={() => update('colorTheme', color)}
-                                className={`h-8 rounded-lg border-2 transition-all ${
-                                    config.colorTheme === color ? 'border-gray-500 dark:border-white scale-110' : 'border-transparent'
-                                }`}
-                                style={{ backgroundColor: `var(--color-${color}-500, ${getColorCode(color)})` }}
-                                title={color}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Gradient Theme Colors */}
-            {config.template === 'gradient' && (
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div>
-                        <span className="text-xs text-gray-400 mb-1 block ml-1">Градиент От</span>
-                        <select 
-                            value={config.gradientFrom}
-                            onChange={(e) => update('gradientFrom', e.target.value)}
-                            className={selectClass}
-                        >
-                             {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <span className="text-xs text-gray-400 mb-1 block ml-1">Градиент До</span>
-                        <select 
-                            value={config.gradientTo}
-                            onChange={(e) => update('gradientTo', e.target.value)}
-                            className={selectClass}
-                        >
-                             {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-                </div>
-            )}
+               </div>
+            </div>
         </div>
       </Section>
 
-      {/* 5. Size Settings (New) */}
+      {/* 5. Styling Overrides */}
       <Section 
-        title="Размер" 
-        icon={<Maximize size={14} />} 
-        isOpen={openSections.size} 
-        onToggle={() => toggleSection('size')}
+        title="Фон и Рамка" 
+        icon={<PaintBucket size={14} />} 
+        isOpen={openSections.styling} 
+        onToggle={() => toggleSection('styling')}
       >
-        <div className="grid grid-cols-2 gap-3">
-            <div>
-                <span className="text-xs text-gray-400 mb-1 block ml-1">Ширина</span>
-                <select 
-                    value={config.width}
-                    onChange={(e) => update('width', e.target.value)}
-                    className={selectClass}
-                >
-                    <option value="100%">Full (100%)</option>
-                    <option value="50%">1/2 (50%)</option>
-                    <option value="33%">1/3 (33%)</option>
-                    <option value="25%">1/4 (25%)</option>
-                    <option value="300px">300px</option>
-                    <option value="400px">400px</option>
-                    <option value="500px">500px</option>
-                </select>
-            </div>
-            <div>
-                <span className="text-xs text-gray-400 mb-1 block ml-1">Высота</span>
-                <select 
-                    value={config.height}
-                    onChange={(e) => update('height', e.target.value)}
-                    className={selectClass}
-                >
-                    <option value="auto">Auto</option>
-                    <option value="150px">150px</option>
-                    <option value="200px">200px</option>
-                    <option value="250px">250px</option>
-                    <option value="300px">300px</option>
-                    <option value="100%">100%</option>
-                </select>
+        <div className="space-y-4">
+            
+            {/* Card Background & Border */}
+            <div className="grid grid-cols-2 gap-3">
+               <div>
+                  <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Фон (Hex/RGBA)</span>
+                  <div className="flex items-center gap-2">
+                     <input 
+                       type="color" 
+                       value={config.backgroundColor || '#ffffff'}
+                       onChange={(e) => update('backgroundColor', e.target.value)}
+                       className={colorInputClass}
+                     />
+                     <input 
+                        type="text" 
+                        value={config.backgroundColor || ''}
+                        onChange={(e) => update('backgroundColor', e.target.value)}
+                        placeholder="default"
+                        className={`${inputClass} text-xs`}
+                     />
+                  </div>
+               </div>
+               <div>
+                  <span className="text-[10px] uppercase text-gray-400 font-bold mb-1 block">Бордер</span>
+                  <input 
+                    type="text" 
+                    value={config.borderColor || ''}
+                    onChange={(e) => update('borderColor', e.target.value)}
+                    placeholder="#e5e7eb"
+                    className={`${inputClass} text-xs`}
+                  />
+               </div>
             </div>
         </div>
       </Section>
-
     </div>
   );
 };
-
-function getColorCode(colorName: string) {
-    const map: Record<string, string> = {
-        blue: '#3b82f6', emerald: '#10b981', violet: '#8b5cf6', 
-        orange: '#f97316', pink: '#ec4899', red: '#ef4444', 
-        cyan: '#06b6d4', slate: '#64748b'
-    };
-    return map[colorName] || '#ccc';
-}
 
 export default CardConfigPanel;

@@ -1,13 +1,18 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Code, LayoutTemplate, Loader2, BarChart, Table as TableIcon, FileJson, Calculator, ChevronDown } from 'lucide-react';
+
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Code, LayoutTemplate, Loader2, Table as TableIcon, FileJson, Calculator, ChevronDown, MousePointer2, Plus, ArrowLeft } from 'lucide-react';
 import CardConfigPanel from './helperCardConstructor/CardConfigPanel';
-import DynamicCard from '../components/cards/DynamicCard';
+import ElementConfigPanel from './helperCardConstructor/ElementConfigPanel';
+import DraggableElement from './helperCardConstructor/DraggableElement';
 import CardCodeModal from './helperCardConstructor/CardCodeModal';
 import { useDataStore } from '../contexts/DataContext';
 import { getMergedHeaders } from '../utils/chartUtils';
-import { CardConfig } from '../types/card';
+import { CardConfig, CardElement } from '../types/card';
 import { useProcessedChartData } from '../hooks/useProcessedChartData';
 import { ChartConfig } from '../types/chart';
+import { getPresetLayout } from '../utils/cardPresets';
+import { formatLargeNumber } from '../utils/formatUtils';
+import { CalculationResult } from '../components/cards/DynamicCard';
 
 interface CardConstructorPageProps {
   isDarkMode: boolean;
@@ -17,13 +22,17 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
 
+  // Editor State
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Debug Table State
   const [debugGroupBy, setDebugGroupBy] = useState<string>('');
   const [viewMode, setViewMode] = useState<'table' | 'json'>('table');
 
   // Default Configuration
   const [config, setConfig] = useState<CardConfig>({
-    template: 'classic',
+    template: 'custom', // Always start in custom/editor mode
     title: 'Мой показатель',
     
     // Data defaults
@@ -42,14 +51,30 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
     trendValue: '0%',
     trendDirection: 'neutral',
     
-    // Size
-    width: '100%',
-    height: 'auto',
+    // Size (Fixed defaults to avoid stretching)
+    width: '350px',
+    height: '200px',
 
     colorTheme: 'blue', 
-    gradientFrom: 'purple',
-    gradientTo: 'blue',
+    gradientFrom: '',
+    gradientTo: '',
+
+    elements: [] 
   });
+
+  // Init default elements from Classic preset if empty
+  useEffect(() => {
+    if (config.elements.length === 0) {
+       const preset = getPresetLayout('classic');
+       if (preset.elements) {
+           setConfig(prev => ({
+             ...prev,
+             ...preset,
+             sheetKey: prev.sheetKey // Preserve sheet key if set
+           }));
+       }
+    }
+  }, []);
 
   // Set default sheet
   useEffect(() => {
@@ -84,9 +109,9 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
   // Data processing for Debug Table
   const debugChartConfig = useMemo<Partial<ChartConfig>>(() => ({
     sheetKey: config.sheetKey,
-    xAxisColumn: debugGroupBy, // Group by this column
-    yAxisColumn: config.dataColumn, // Value column
-    aggregation: config.aggregation === 'unique' ? 'count' : config.aggregation as any, // Map unique to count for visual table if needed, or stick to what hook supports
+    xAxisColumn: debugGroupBy,
+    yAxisColumn: config.dataColumn,
+    aggregation: config.aggregation === 'unique' ? 'count' : config.aggregation as any,
     filters: config.filters
   }), [config, debugGroupBy]);
 
@@ -96,180 +121,317 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
      return debugData.reduce((acc, item) => acc + item.value, 0);
   }, [debugData]);
 
+  // Calculate Single Value for the Card Editor Preview
+  const previewData: CalculationResult = useMemo(() => {
+     let val = 0;
+     
+     if (config.aggregation === 'count' || config.aggregation === 'unique') {
+        val = totalValue;
+     } else {
+        if (config.aggregation === 'min') {
+           val = debugData.length > 0 ? Math.min(...debugData.map(d => d.value)) : 0;
+        } else if (config.aggregation === 'max') {
+           val = debugData.length > 0 ? Math.max(...debugData.map(d => d.value)) : 0;
+        } else if (config.aggregation === 'average') {
+           val = debugData.length > 0 ? debugData.reduce((a,b) => a + b.value, 0) / debugData.length : 0;
+        } else {
+           val = totalValue; // Sum
+        }
+     }
+     
+     const format = (v: number) => {
+        if (config.compactNumbers) {
+           return formatLargeNumber(v, config.valuePrefix) + config.valueSuffix;
+        }
+        return `${config.valuePrefix}${v.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}${config.valueSuffix}`;
+     }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="animate-spin text-indigo-500" size={32} />
-      </div>
-    );
+     return {
+        displayValue: format(val),
+        minValue: format(0), // Placeholder logic
+        maxValue: format(val * 1.5), // Placeholder logic
+        rawMin: 0,
+        rawMax: val * 1.5
+     };
+  }, [debugData, config, totalValue]);
+
+  // Element Actions
+  const handleElementUpdate = (id: string, updates: Partial<CardElement> | Partial<CardElement['style']>) => {
+    setConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id !== id) return el;
+        // Check if updates are style properties
+        const styleKeys = ['top', 'left', 'fontSize', 'color', 'zIndex', 'width', 'height', 'fontWeight', 'backgroundColor', 'borderRadius', 'padding', 'opacity', 'textAlign'];
+        const isStyleUpdate = Object.keys(updates).some(key => styleKeys.includes(key));
+        
+        if (isStyleUpdate) {
+            return { ...el, style: { ...el.style, ...updates } };
+        }
+        return { ...el, ...updates };
+      })
+    }));
+  };
+
+  const handleElementDelete = (id: string) => {
+    setConfig(prev => ({
+      ...prev,
+      elements: prev.elements.filter(el => el.id !== id)
+    }));
+    if (selectedElementId === id) setSelectedElementId(null);
+  };
+
+  const handleAddElement = (type: CardElement['type']) => {
+      const newElement: CardElement = {
+          id: Math.random().toString(36).substr(2, 9),
+          type,
+          style: {
+              top: 50,
+              left: 50,
+              fontSize: 14,
+              color: '#000000',
+              zIndex: 10,
+              width: 'auto',
+              height: 'auto'
+          },
+          content: type === 'text' ? 'Новый текст' : undefined
+      };
+      
+      // Default styles per type
+      if (type === 'value') {
+          newElement.style.fontSize = 24;
+          newElement.style.fontWeight = 'bold';
+      } else if (type === 'icon') {
+          newElement.style.fontSize = 24;
+          newElement.style.color = '#6366f1';
+      } else if (type === 'shape') {
+          newElement.style.width = 100;
+          newElement.style.height = 100;
+          newElement.style.backgroundColor = '#e5e7eb';
+          newElement.style.borderRadius = 8;
+      }
+
+      setConfig(prev => ({
+          ...prev,
+          elements: [...prev.elements, newElement]
+      }));
+      setSelectedElementId(newElement.id);
+  };
+
+  const selectedElement = useMemo(() => 
+    config.elements.find(el => el.id === selectedElementId), 
+  [config.elements, selectedElementId]);
+
+  // --- KEYBOARD SHORTCUTS ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (!selectedElementId) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        handleElementDelete(selectedElementId);
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedElementId(null);
+        return;
+      }
+
+      // Nudging with arrows
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const el = config.elements.find(el => el.id === selectedElementId);
+        if (!el) return;
+
+        let { top, left } = el.style;
+        const step = e.shiftKey ? 10 : 1;
+
+        if (e.key === 'ArrowUp') top -= step;
+        if (e.key === 'ArrowDown') top += step;
+        if (e.key === 'ArrowLeft') left -= step;
+        if (e.key === 'ArrowRight') left += step;
+
+        handleElementUpdate(selectedElementId, { top, left });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElementId, config.elements]);
+
+  const getColor = (c: string) => {
+     const map: any = { blue: '#3b82f6', violet: '#8b5cf6', pink: '#ec4899', orange: '#f97316', emerald: '#10b981', red: '#ef4444', cyan: '#06b6d4', slate: '#64748b', fuchsia: '#d946ef', amber: '#f59e0b', teal: '#14b8a6', purple: '#a855f7' };
+     return map[c] || c || '#3b82f6';
+  };
+
+  // Determine Editor Background
+  let editorBackground = config.backgroundColor || '#ffffff';
+  if (config.gradientFrom && config.gradientTo && !config.backgroundColor) {
+      editorBackground = `linear-gradient(135deg, ${getColor(config.gradientFrom)}, ${getColor(config.gradientTo)})`;
   }
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6">
       
-      {/* Left Pane: Settings */}
-      <div className="w-full md:w-80 bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col shrink-0 transition-colors overflow-hidden">
-        <div className="mb-4 border-b border-gray-100 dark:border-white/5 pb-4">
-           <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <LayoutTemplate size={20} className="text-indigo-500" />
-              Конструктор Карточек
-           </h2>
-        </div>
+      {/* LEFT PANE: CONFIG */}
+      <div className="w-full md:w-80 bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col shrink-0 transition-colors overflow-hidden relative">
         
-        <CardConfigPanel 
-          config={config} 
-          setConfig={setConfig}
-          sheetConfigs={sheetConfigs}
-          availableColumns={availableColumns}
-          rows={currentRows}
-        />
-
-        <div className="pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
-           <button 
-            onClick={() => setIsCodeModalOpen(true)}
-            className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 cursor-pointer"
-           >
-             <Code size={18} /> Получить код
-           </button>
-        </div>
+        {selectedElement ? (
+           <div className="flex flex-col h-full animate-in fade-in slide-in-from-left-4 duration-200">
+               <button 
+                  onClick={() => setSelectedElementId(null)}
+                  className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-500 mb-4 transition-colors"
+               >
+                   <ArrowLeft size={16} /> Назад к общим
+               </button>
+               <ElementConfigPanel 
+                  element={selectedElement}
+                  onUpdate={(updates) => handleElementUpdate(selectedElement.id, updates)}
+                  onDelete={() => handleElementDelete(selectedElement.id)}
+                  googleSheets={googleSheets}
+                  sheetConfigs={sheetConfigs}
+                  globalSheetKey={config.sheetKey}
+               />
+           </div>
+        ) : (
+           <CardConfigPanel 
+             config={config} 
+             setConfig={setConfig} 
+             sheetConfigs={sheetConfigs}
+             availableColumns={availableColumns}
+             rows={currentRows}
+           />
+        )}
       </div>
 
-      {/* Right Pane: Split View (Preview + Debug) */}
-      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-        
-        {/* Top: Card Preview */}
-        <div className="bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col relative transition-colors shrink-0 max-h-[50%]">
-          <div className="flex justify-between items-center mb-6">
-               <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Предпросмотр</h3>
-               <span className="text-xs font-mono text-gray-500 dark:text-gray-500">
-                   Live DynamicCard
-               </span>
-          </div>
-          
-          <div className="flex-1 w-full min-h-[200px] flex items-center justify-center bg-gray-50 dark:bg-[#0b0f19] rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-8 overflow-auto custom-scrollbar">
-             {/* Wrapper with max-width to ensure the card looks like a card and not a banner */}
-             <div className="w-full max-w-md flex items-center justify-center">
-                {config.sheetKey && config.dataColumn ? (
-                    <DynamicCard config={config} />
-                ) : (
-                    <div className="text-center text-gray-400 py-6">
-                      <BarChart size={48} className="mx-auto mb-2 opacity-20" />
-                      <p>Выберите данные в настройках,<br/>чтобы увидеть результат</p>
-                    </div>
-                )}
-             </div>
-          </div>
-        </div>
-
-        {/* Bottom: Data Debugger */}
-        <div className="flex-1 bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col relative transition-colors overflow-hidden">
-           
-           {/* Debug Header */}
-           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-              <div className="flex items-center gap-3">
-                 <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Результат запроса</h3>
-                 
-                 {/* Group By Selector */}
-                 <div className="relative">
-                    <select
-                      value={debugGroupBy}
-                      onChange={(e) => setDebugGroupBy(e.target.value)}
-                      className="pl-3 pr-8 py-1.5 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-700 dark:text-gray-300 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10"
-                    >
-                      {availableColumns.map(col => (
-                        <option key={col} value={col}>Группировка: {col}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                 </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                  {/* View Toggles */}
-                  <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
-                    <button
-                      onClick={() => setViewMode('table')}
-                      className={`p-1.5 rounded-md transition-colors ${viewMode === 'table' ? 'bg-white dark:bg-[#1e2433] text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                      title="Таблица"
-                    >
-                      <TableIcon size={14} />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('json')}
-                      className={`p-1.5 rounded-md transition-colors ${viewMode === 'json' ? 'bg-white dark:bg-[#1e2433] text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                      title="JSON"
-                    >
-                      <FileJson size={14} />
-                    </button>
-                  </div>
-                  
-                  {/* Total */}
-                  <div className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-100 dark:border-emerald-500/20 flex items-center gap-2">
-                    <Calculator size={14} className="text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
-                      {totalValue.toLocaleString('ru-RU')}
+      {/* MIDDLE PANE: EDITOR */}
+      <div className="flex-1 flex flex-col gap-6 min-w-0">
+         
+         {/* Editor Canvas Area */}
+         <div className="flex-1 bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">Интерактивный редактор</span>
+                    <span className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                        <MousePointer2 size={10} /> Drag & Resize
                     </span>
-                  </div>
-              </div>
-           </div>
-
-           {/* Debug Content */}
-           <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-[#0b0f19] rounded-2xl border border-gray-200 dark:border-white/10 relative">
-              {isDebugLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 backdrop-blur-sm z-10">
-                  <Loader2 className="animate-spin text-indigo-500" size={24} />
                 </div>
-              ) : null}
-
-              {debugData.length === 0 && !isDebugLoading ? (
-                <div className="flex items-center justify-center h-full text-gray-400 flex-col gap-2">
-                  <p className="text-xs">Нет данных</p>
+                <div className="flex gap-2">
+                   <button onClick={() => handleAddElement('text')} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-500" title="Добавить текст"><Plus size={16} /></button>
+                   <button onClick={() => handleAddElement('value')} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-500" title="Добавить значение"><Calculator size={16} /></button>
+                   <button onClick={() => handleAddElement('icon')} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-500" title="Добавить иконку"><LayoutTemplate size={16} /></button>
                 </div>
-              ) : (
-                <div className="h-full overflow-auto custom-scrollbar p-0">
-                  {viewMode === 'table' ? (
-                    <table className="w-full text-left border-collapse">
-                      <thead className="sticky top-0 bg-gray-100 dark:bg-[#1e2433] z-10 shadow-sm">
-                        <tr>
-                          <th className="px-4 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {debugGroupBy} (Group)
-                          </th>
-                          <th className="px-4 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">
-                            {config.dataColumn} ({config.aggregation})
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-white/5">
-                        {debugData.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-white dark:hover:bg-white/5 transition-colors">
-                            <td className="px-4 py-2 text-xs text-gray-700 dark:text-gray-300 font-medium truncate max-w-[200px]" title={item.name}>
-                              {item.name}
-                            </td>
-                            <td className="px-4 py-2 text-xs text-gray-900 dark:text-white font-mono text-right">
-                              {item.value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <pre className="p-4 font-mono text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      {JSON.stringify(debugData, null, 2)}
-                    </pre>
+            </div>
+
+            <div 
+               className="flex-1 w-full bg-gray-50 dark:bg-[#0b0f19] rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/5 flex items-center justify-center relative overflow-hidden user-select-none"
+               onClick={() => setSelectedElementId(null)}
+               ref={containerRef}
+            >
+                {/* The Card Container */}
+                <div 
+                   style={{
+                      width: config.width,
+                      height: config.height,
+                      background: editorBackground,
+                      borderColor: config.borderColor,
+                      borderWidth: config.borderColor ? 1 : 0,
+                      borderStyle: 'solid',
+                      position: 'relative',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                      borderRadius: 16,
+                      overflow: 'hidden'
+                   }}
+                   onClick={(e) => e.stopPropagation()} // Prevent deselect when clicking card bg
+                >
+                    {config.elements.map(el => (
+                        <DraggableElement 
+                            key={el.id}
+                            element={el}
+                            isSelected={selectedElementId === el.id}
+                            onSelect={setSelectedElementId}
+                            onUpdate={handleElementUpdate}
+                            data={previewData}
+                            config={config}
+                            containerRef={containerRef}
+                        />
+                    ))}
+                </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end">
+               <button 
+                  onClick={() => setIsCodeModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20"
+               >
+                   <Code size={18} /> Получить код
+               </button>
+            </div>
+         </div>
+
+         {/* Bottom Pane: Debug Data */}
+         <div className="h-64 bg-white dark:bg-[#151923] rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 p-6 flex flex-col relative overflow-hidden shrink-0">
+             <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Результат запроса</h3>
+                 <div className="flex items-center gap-4">
+                     <select 
+                        value={debugGroupBy}
+                        onChange={(e) => setDebugGroupBy(e.target.value)}
+                        className="text-xs bg-gray-100 dark:bg-white/5 border-none rounded-lg px-2 py-1"
+                     >
+                        <option value="">Группировка: Не выбрано</option>
+                        {availableColumns.map(c => <option key={c} value={c}>Группировка: {c}</option>)}
+                     </select>
+                 </div>
+             </div>
+
+             <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-[#0b0f19] rounded-xl border border-gray-200 dark:border-white/10 relative">
+                  {isDebugLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 backdrop-blur-sm z-10">
+                          <Loader2 className="animate-spin text-indigo-500" size={24} />
+                      </div>
                   )}
-                </div>
-              )}
-           </div>
-
-        </div>
-
+                  
+                  {debugData.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                          Нет данных
+                      </div>
+                  ) : (
+                      <div className="h-full overflow-auto custom-scrollbar p-0">
+                          <table className="w-full text-left border-collapse">
+                              <thead className="sticky top-0 bg-gray-100 dark:bg-[#1e2433] z-10">
+                                  <tr>
+                                      <th className="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase">Группа</th>
+                                      <th className="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase text-right">Значение</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 dark:divide-white/5">
+                                  {debugData.slice(0, 50).map((row, i) => (
+                                      <tr key={i} className="hover:bg-white dark:hover:bg-white/5">
+                                          <td className="px-4 py-2 text-xs text-gray-700 dark:text-gray-300">{row.name || '---'}</td>
+                                          <td className="px-4 py-2 text-xs text-gray-900 dark:text-white font-mono text-right">{row.value.toLocaleString()}</td>
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
+                      </div>
+                  )}
+             </div>
+         </div>
       </div>
 
       <CardCodeModal 
         isOpen={isCodeModalOpen} 
         onClose={() => setIsCodeModalOpen(false)} 
-        config={config}
+        config={config} 
       />
     </div>
   );

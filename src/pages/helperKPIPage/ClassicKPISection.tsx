@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  Activity, 
-  CreditCard, 
-  Wallet, 
-  ArrowDownRight, 
+import {
+  Users,
+  DollarSign,
+  TrendingUp,
+  Activity,
+  CreditCard,
+  Wallet,
+  ArrowDownRight,
   ArrowUpRight,
   MousePointerClick,
   Eye,
@@ -26,9 +26,9 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
   const miniLineChartOption = useMemo(() => ({
     backgroundColor: 'transparent',
     grid: { left: 0, right: 0, top: 5, bottom: 0 },
-    tooltip: { 
-      trigger: 'axis', 
-      confine: true, 
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
       appendToBody: true,
       backgroundColor: 'rgba(0,0,0,0.8)',
       textStyle: { color: '#fff' }
@@ -53,9 +53,9 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
   const miniBarChartOption = useMemo(() => ({
     backgroundColor: 'transparent',
     grid: { left: 0, right: 0, top: 5, bottom: 0 },
-    tooltip: { 
-      trigger: 'axis', 
-      confine: true, 
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
       appendToBody: true,
       backgroundColor: 'rgba(0,0,0,0.8)',
       textStyle: { color: '#fff' }
@@ -72,7 +72,7 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
 
   return (
     <div className="space-y-16">
-      
+
       {/* 1. Classic Style */}
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
@@ -90,7 +90,7 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">1,234</h3>
             </div>
           </div>
-          
+
           {/* Card 2 */}
           <div className="bg-white dark:bg-[#151923] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-white/5 flex items-center gap-4">
             <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
@@ -105,10 +105,10 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
           {/* Card 3 with Trend */}
           <div className="bg-white dark:bg-[#151923] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col gap-2">
             <div className="flex justify-between items-center">
-               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Заказы</p>
-               <span className="text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full flex items-center gap-1">
-                 <TrendingUp size={12} /> +15%
-               </span>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Заказы</p>
+              <span className="text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full flex items-center gap-1">
+                <TrendingUp size={12} /> +15%
+              </span>
             </div>
             <h3 className="text-3xl font-bold text-gray-900 dark:text-white">854</h3>
           </div>
@@ -123,17 +123,94 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
-             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
-             <Activity className="mb-4 opacity-80" size={28} />
-             <h3 className="text-4xl font-bold mb-1">98%</h3>
-             <p className="text-blue-100 text-sm font-medium">Uptime сервера</p>
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
+            <Activity className="mb-4 opacity-80" size={28} />
+            <h3 className="text-4xl font-bold mb-1">98%</h3>
+            <p className="text-blue-100 text-sm font-medium">Uptime сервера</p>
           </div>
 
           <div className="bg-gradient-to-br from-pink-500 to-orange-400 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
-             <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
-             <CreditCard className="mb-4 opacity-80" size={28} />
-             <h3 className="text-4xl font-bold mb-1">₽ 1.2M</h3>
-             <p className="text-pink-100 text-sm font-medium">Оборот за месяц</p>
+            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-white opacity-20 rounded-full blur-2xl"></div>
+            <CreditCard className="mb-4 opacity-80" size={28} />
+            <h3 className="text-4xl font-bold mb-1">₽ 1.2M</h3>
+            <p className="text-pink-100 text-sm font-medium">Оборот за месяц</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-pink-500 to-orange-400 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
+            <div className="flex items-baseline justify-between mb-1">
+              <div className="flex items-baseline gap-2">
+                <ArrowDownRight size={18} className="opacity-80 text-red-100" />
+                <span className="text-2xl font-bold">1.06M</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <ArrowUpRight size={18} className="opacity-80 text-emerald-100" />
+                <span className="text-2xl font-bold">46.44M</span>
+              </div>
+            </div>
+            <p className="text-pink-100 text-sm font-medium">
+              Оборот за месяц
+            </p>
+
+          </div>
+
+          {/* New Card 3: Min/Max Range (Dark Gradient) */}
+          <div className="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 rounded-2xl p-6 text-white shadow-lg shadow-gray-500/20 relative overflow-hidden border border-white/10">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500 opacity-10 rounded-full blur-2xl"></div>
+
+            <div className="flex items-center gap-2 mb-4 opacity-70">
+              <Activity size={20} />
+              <span className="font-semibold text-sm">Диапазон прибыли</span>
+            </div>
+
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-1 text-rose-400">
+                <ArrowDownRight size={20} />
+                <span className="text-2xl font-bold">1.06M</span>
+              </div>
+              <span className="text-gray-500 text-xl font-light">—</span>
+              <div className="flex items-center gap-1 text-emerald-400">
+                <ArrowUpRight size={20} />
+                <span className="text-2xl font-bold">46.44M</span>
+              </div>
+            </div>
+            <p className="text-gray-400 text-xs font-medium">Мин/Макс прибыль по договорам</p>
+          </div>
+
+          {/* New Card 4: Multi-row List (Indigo/Violet Gradient) */}
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
+            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-fuchsia-500 opacity-20 rounded-full blur-2xl"></div>
+
+            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Wallet size={20} />
+                <span className="font-bold text-sm">Расход материалов</span>
+              </div>
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded text-white/90">Всего: 36 кг</span>
+            </div>
+
+            <div className="space-y-3 relative z-10">
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-indigo-100 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/50 group-hover:bg-white transition-colors"></span>
+                  Монтаж
+                </span>
+                <span className="font-bold font-mono text-lg">27 <span className="text-xs font-sans font-normal opacity-70">кг</span></span>
+              </div>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-indigo-100 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/50 group-hover:bg-white transition-colors"></span>
+                  Доставка
+                </span>
+                <span className="font-bold font-mono text-lg">2 <span className="text-xs font-sans font-normal opacity-70">кг</span></span>
+              </div>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-indigo-100 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/50 group-hover:bg-white transition-colors"></span>
+                  Сборка
+                </span>
+                <span className="font-bold font-mono text-lg">7 <span className="text-xs font-sans font-normal opacity-70">кг</span></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -145,23 +222,23 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
           <p className="text-gray-500 dark:text-gray-400">Стиль киберпанка с неоновым свечением. Лучше всего смотрится в темной теме.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="bg-black rounded-xl border border-gray-800 p-6 relative group hover:border-cyan-500/50 transition-colors">
-              <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <p className="text-cyan-400 text-xs font-bold uppercase tracking-widest mb-2">Active Sessions</p>
-              <div className="flex items-end gap-2">
-                 <h3 className="text-4xl font-mono text-white shadow-[0_0_10px_rgba(34,211,238,0.5)]">4,291</h3>
-                 <span className="text-cyan-500 mb-1 animate-pulse">●</span>
-              </div>
-           </div>
+          <div className="bg-black rounded-xl border border-gray-800 p-6 relative group hover:border-cyan-500/50 transition-colors">
+            <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <p className="text-cyan-400 text-xs font-bold uppercase tracking-widest mb-2">Active Sessions</p>
+            <div className="flex items-end gap-2">
+              <h3 className="text-4xl font-mono text-white shadow-[0_0_10px_rgba(34,211,238,0.5)]">4,291</h3>
+              <span className="text-cyan-500 mb-1 animate-pulse">●</span>
+            </div>
+          </div>
 
-           <div className="bg-black rounded-xl border border-gray-800 p-6 relative group hover:border-fuchsia-500/50 transition-colors">
-              <div className="absolute inset-0 bg-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <p className="text-fuchsia-400 text-xs font-bold uppercase tracking-widest mb-2">Errors Detected</p>
-              <div className="flex items-end gap-2">
-                 <h3 className="text-4xl font-mono text-white shadow-[0_0_10px_rgba(232,121,249,0.5)]">0</h3>
-                 <span className="text-fuchsia-500 mb-1">All Clear</span>
-              </div>
-           </div>
+          <div className="bg-black rounded-xl border border-gray-800 p-6 relative group hover:border-fuchsia-500/50 transition-colors">
+            <div className="absolute inset-0 bg-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <p className="text-fuchsia-400 text-xs font-bold uppercase tracking-widest mb-2">Errors Detected</p>
+            <div className="flex items-end gap-2">
+              <h3 className="text-4xl font-mono text-white shadow-[0_0_10px_rgba(232,121,249,0.5)]">0</h3>
+              <span className="text-fuchsia-500 mb-1">All Clear</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -172,18 +249,18 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
           <p className="text-gray-500 dark:text-gray-400">Акцент на типографике и отступах. Ничего лишнего.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-gray-50 dark:bg-[#0f111a] p-8 rounded-3xl">
-           <div className="flex flex-col">
-              <span className="text-gray-400 text-sm font-medium">Views</span>
-              <span className="text-5xl font-light text-gray-800 dark:text-white">24k</span>
-           </div>
-           <div className="flex flex-col">
-              <span className="text-gray-400 text-sm font-medium">Clicks</span>
-              <span className="text-5xl font-light text-gray-800 dark:text-white">8.1k</span>
-           </div>
-           <div className="flex flex-col">
-              <span className="text-gray-400 text-sm font-medium">CTR</span>
-              <span className="text-5xl font-light text-gray-800 dark:text-white">32%</span>
-           </div>
+          <div className="flex flex-col">
+            <span className="text-gray-400 text-sm font-medium">Views</span>
+            <span className="text-5xl font-light text-gray-800 dark:text-white">24k</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-gray-400 text-sm font-medium">Clicks</span>
+            <span className="text-5xl font-light text-gray-800 dark:text-white">8.1k</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-gray-400 text-sm font-medium">CTR</span>
+            <span className="text-5xl font-light text-gray-800 dark:text-white">32%</span>
+          </div>
         </div>
       </div>
 
@@ -205,13 +282,13 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
               </div>
             </div>
             <div className="h-16 -mx-2">
-               <EChartComponent options={miniLineChartOption} height="100%" theme={isDarkMode ? 'dark' : 'light'} />
+              <EChartComponent options={miniLineChartOption} height="100%" theme={isDarkMode ? 'dark' : 'light'} />
             </div>
           </div>
 
           {/* Sparkline Card 2 */}
           <div className="bg-white dark:bg-[#151923] p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col justify-between h-48">
-             <div>
+            <div>
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Новые лиды</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white">843</h3>
@@ -219,7 +296,7 @@ const ClassicKPISection: React.FC<ClassicKPISectionProps> = ({ isDarkMode }) => 
               </div>
             </div>
             <div className="h-16 -mx-2">
-               <EChartComponent options={miniBarChartOption} height="100%" theme={isDarkMode ? 'dark' : 'light'} />
+              <EChartComponent options={miniBarChartOption} height="100%" theme={isDarkMode ? 'dark' : 'light'} />
             </div>
           </div>
         </div>
