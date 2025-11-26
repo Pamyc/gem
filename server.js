@@ -11,6 +11,8 @@ const port = process.env.PORT || 3000;
 // Раздаём статические файлы из dist (после vite build)
 app.use(express.static(path.join(__dirname, "dist")));
 
+app.use("/static", express.static(path.join(__dirname, "public")));
+
 // Для всех маршрутов отдаём index.html (SPA)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
