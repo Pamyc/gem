@@ -7,7 +7,7 @@ interface ExamplePageProps {
 const ExamplePage: React.FC<ExamplePageProps> = () => {
   // Используем прямой путь к файлу в корне
   // В Vite файлы в корне (public dir или root) доступны по "/"
-  const oktbrParkImg = '/oktbr_park.jpg';
+  const oktbrParkImg = '/pho.avif';
 
   return (
     <div className="w-full max-w-[1152px] mx-auto space-y-8 p-6">
@@ -15,7 +15,7 @@ const ExamplePage: React.FC<ExamplePageProps> = () => {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           Тест изображения
           <span className="px-3 py-1 text-xs font-normal bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 rounded-full">
-            /oktbr_park.jpg
+            /pho.avif
           </span>
         </h2>
         
@@ -35,7 +35,7 @@ const ExamplePage: React.FC<ExamplePageProps> = () => {
                     />
                     {/* Overlay Gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-end p-4">
-                        <p className="text-white font-medium text-sm">oktbr_park.jpg</p>
+                        <p className="text-white font-medium text-sm">pho.avif</p>
                     </div>
                  </div>
               </div>
@@ -45,7 +45,7 @@ const ExamplePage: React.FC<ExamplePageProps> = () => {
                  <div>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1">Файл из корня проекта</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                       Попытка загрузить изображение по адресу <code>/oktbr_park.jpg</code>.
+                       Попытка загрузить изображение по адресу <code>/pho.avif</code>.
                        Если изображение физически находится в корневой папке проекта (рядом с index.html), оно должно отобразиться.
                     </p>
                  </div>
