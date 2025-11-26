@@ -70,7 +70,7 @@ const ClassicCard: React.FC<ClassicCardProps> = ({ config, data, containerStyle 
 
   return (
     <div 
-      className="bg-white dark:bg-[#151923] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col gap-3 transition-all duration-300"
+      className="bg-white dark:bg-[#151923] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-white/5 flex flex-col gap-3 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
       style={{ ...containerStyle, ...customBgStyle, ...customBorderStyle }}
     >
       <div className="flex justify-between items-start h-full">

@@ -50,8 +50,8 @@ const AppContent: React.FC = () => {
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
-    // Скрываем конструктор и KPI для всех, кроме integrat
-    if (user?.username !== 'integrat') {
+    // Скрываем конструктор и KPI для всех, кроме i
+    if (user?.username !== 'i') {
       return items.filter(item => 
         item.id !== 'constructor' && 
         
@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
     const restrictedTabs = ['constructor', 'card-constructor', 'filter-test'];
-    if (restrictedTabs.includes(activeTab) && user?.username !== 'integrat') {
+    if (restrictedTabs.includes(activeTab) && user?.username !== 'i') {
       setActiveTab('stats');
     }
   }, [activeTab, user]);
@@ -91,9 +91,9 @@ const AppContent: React.FC = () => {
         {activeTab === 'home' && <HomePage />}
         
         {/* Рендерим админские страницы только если пользователь имеет доступ */}
-        {activeTab === 'constructor' && user.username === 'integrat' && <ConstructorPage isDarkMode={isDarkMode} />}
-        {activeTab === 'card-constructor' && user.username === 'integrat' && <CardConstructorPage isDarkMode={isDarkMode} />}
-        {activeTab === 'filter-test' && user.username === 'integrat' && <FilterTestPage isDarkMode={isDarkMode} />}
+        {activeTab === 'constructor' && user.username === 'i' && <ConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'card-constructor' && user.username === 'i' && <CardConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'filter-test' && user.username === 'i' && <FilterTestPage isDarkMode={isDarkMode} />}
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'example' && <ExamplePage isDarkMode={isDarkMode} />}

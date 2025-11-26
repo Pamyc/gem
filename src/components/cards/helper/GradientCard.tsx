@@ -49,7 +49,7 @@ const GradientCard: React.FC<GradientCardProps> = ({ config, data, containerStyl
 
   return (
       <div 
-        className="rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-all duration-300"
+        className="rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
         style={{ 
             ...containerStyle, 
             ...bgStyle, 

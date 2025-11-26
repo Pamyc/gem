@@ -144,7 +144,7 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
       <div 
         style={baseStyle} 
         onDoubleClick={() => setIsModalOpen(true)}
-        className="group hover:shadow-md transition-all duration-300"
+        className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
         title="Двойной клик для просмотра деталей"
       >
         {config.elements.map(el => (

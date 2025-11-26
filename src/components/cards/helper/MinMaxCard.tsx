@@ -49,7 +49,7 @@ const MinMaxCard: React.FC<MinMaxCardProps> = ({ config, data, containerStyle })
 
   return (
       <div 
-         className="rounded-2xl p-6 text-white shadow-lg relative overflow-hidden border border-white/10 transition-all duration-300"
+         className="rounded-2xl p-6 text-white shadow-lg relative overflow-hidden border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
          style={{ 
              ...containerStyle, 
              ...bgStyle, 

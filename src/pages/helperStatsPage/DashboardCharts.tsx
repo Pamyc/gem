@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical } from 'lucide-react';
 import GeneralTab from './GeneralTab';
@@ -5,12 +6,13 @@ import TestTab from './TestTab';
 import LiftsTab from './LiftsTab';
 import FinanceTab from './FinanceTab';
 import MontagTab from './MontagTab';
+import ElevatorTab from './ElevatorTab';
 
 interface DashboardChartsProps {
   isDarkMode: boolean;
 }
 
-type TabType = 'general' | 'test' | 'lifts' | 'finance' | 'montag';
+type TabType = 'general' | 'elevator_tab' | 'test' | 'lifts' | 'finance' | 'montag';
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
@@ -22,6 +24,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       icon: LayoutDashboard,
       gradient: 'from-violet-600 to-indigo-600 shadow-indigo-500/30',
       inactiveStyle: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
+    },
+    { 
+      id: 'elevator_tab', 
+      label: 'Elevator Tab', 
+      icon: LayoutDashboard,
+      gradient: 'from-purple-600 to-pink-600 shadow-purple-500/30',
+      inactiveStyle: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
     },
     // { 
     //   id: 'test', 
@@ -85,6 +94,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       {/* Tab Content Area */}
       <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'general' && <GeneralTab isDarkMode={isDarkMode} />}
+        {activeTab === 'elevator_tab' && <ElevatorTab isDarkMode={isDarkMode} />}
         {activeTab === 'test' && <TestTab isDarkMode={isDarkMode} />}
         {activeTab === 'lifts' && <LiftsTab isDarkMode={isDarkMode} />}
         {activeTab === 'finance' && <FinanceTab isDarkMode={isDarkMode} />}
