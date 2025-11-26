@@ -85,26 +85,58 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
     userSelect: 'none'
   };
 
-  // Calculate Effective Config for Modal
-  // If global config has no sheetKey, try to find ANY element that has a sheetKey defined.
-  const effectiveModalConfig = useMemo(() => {
-    // 1. If global sheetKey exists, use it.
-    if (config.sheetKey) return config;
+  // Calculate Data Contexts for Modal (Support multiple data sources like Min/Max)
+  const dataContexts = useMemo(() => {
+    const contexts: Array<{ name: string, config: CardConfig }> = [];
 
-    // 2. Find the first element that has a sheetKey defined. Prioritize 'value' types but accept any.
-    const dataElement = config.elements.find(el => el.dataSettings?.sheetKey);
-    
-    if (dataElement && dataElement.dataSettings?.sheetKey) {
-        return {
-            ...config,
-            sheetKey: dataElement.dataSettings.sheetKey,
-            filters: dataElement.dataSettings.filters || config.filters || [],
-            // Inherit other data props just in case, though mainly sheetKey/filters matter for list view
-            dataColumn: dataElement.dataSettings.dataColumn || config.dataColumn,
-            aggregation: dataElement.dataSettings.aggregation || config.aggregation
-        };
+    // 1. Scan elements for data bindings
+    config.elements.forEach((el, idx) => {
+        // We are interested in elements that define a data source (Value type)
+        if (el.type === 'value') {
+             const sheetKey = el.dataSettings?.sheetKey || config.sheetKey;
+             const dataColumn = el.dataSettings?.dataColumn || config.dataColumn;
+             
+             if (sheetKey && dataColumn) {
+                 const mergedConfig: CardConfig = {
+                     ...config,
+                     sheetKey,
+                     dataColumn,
+                     aggregation: el.dataSettings?.aggregation || config.aggregation,
+                     filters: el.dataSettings?.filters || config.filters
+                 };
+                 
+                 let name = el.dataBind ? el.dataBind.toUpperCase() : `Значение ${idx + 1}`;
+                 
+                 // Formatting friendly names
+                 if (el.dataBind === 'min') name = 'Минимум';
+                 else if (el.dataBind === 'max') name = 'Максимум';
+                 else if (el.dataBind === 'value' || !el.dataBind) {
+                    // Use column name if generic value
+                    name = dataColumn; 
+                 }
+
+                 // Check if we already have a context with this exact config to avoid duplicates
+                 // Simple check based on JSON stringify of key props
+                 const isDuplicate = contexts.some(ctx => 
+                    ctx.config.sheetKey === mergedConfig.sheetKey && 
+                    ctx.config.dataColumn === mergedConfig.dataColumn &&
+                    ctx.config.aggregation === mergedConfig.aggregation &&
+                    JSON.stringify(ctx.config.filters) === JSON.stringify(mergedConfig.filters)
+                 );
+
+                 if (!isDuplicate) {
+                    contexts.push({ name, config: mergedConfig });
+                 }
+             }
+        }
+    });
+
+    // 2. If no element-specific contexts found, check global config
+    if (contexts.length === 0 && config.sheetKey && config.dataColumn) {
+         contexts.push({ name: 'Общие данные', config: config });
     }
-    return config;
+    
+    return contexts;
   }, [config]);
 
   return (
@@ -130,7 +162,8 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
       <DetailsModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        config={effectiveModalConfig} 
+        config={config} // Default fallback
+        dataContexts={dataContexts}
       />
     </>
   );

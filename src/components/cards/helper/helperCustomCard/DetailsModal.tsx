@@ -1,6 +1,6 @@
 
-import React, { useMemo, useState } from 'react';
-import { X, Table, AlertCircle, Loader2, ListFilter, FileSpreadsheet } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { X, Table, AlertCircle, Loader2, ListFilter, FileSpreadsheet, Layers } from 'lucide-react';
 import { CardConfig } from '../../../../types/card';
 import { useDataStore } from '../../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../../utils/chartUtils';
@@ -9,21 +9,41 @@ interface DetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   config: CardConfig;
+  dataContexts?: Array<{ name: string, config: CardConfig }>;
 }
 
 type TabType = 'summary' | 'source';
 
-const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) => {
+const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config, dataContexts = [] }) => {
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [activeTab, setActiveTab] = useState<TabType>('summary');
+  const [activeContextIdx, setActiveContextIdx] = useState(0);
+
+  // Reset context when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveContextIdx(0);
+      setActiveTab('summary');
+    }
+  }, [isOpen]);
+
+  // Determine which contexts to use
+  const effectiveContexts = useMemo(() => {
+    if (dataContexts.length > 0) return dataContexts;
+    return [{ name: 'Данные', config }];
+  }, [dataContexts, config]);
+
+  // Current Active Config based on selection
+  const currentContext = effectiveContexts[activeContextIdx] || effectiveContexts[0];
+  const currentConfig = currentContext.config;
 
   const { headers, rows, filteredRows, summaryData } = useMemo(() => {
-    if (!config.sheetKey || !googleSheets[config.sheetKey as keyof typeof googleSheets]) {
+    if (!currentConfig.sheetKey || !googleSheets[currentConfig.sheetKey as keyof typeof googleSheets]) {
       return { headers: [], rows: [], filteredRows: [], summaryData: [] };
     }
 
-    const sheetData = googleSheets[config.sheetKey as keyof typeof googleSheets];
-    const sheetConfig = sheetConfigs.find(c => c.key === config.sheetKey);
+    const sheetData = googleSheets[currentConfig.sheetKey as keyof typeof googleSheets];
+    const sheetConfig = sheetConfigs.find(c => c.key === currentConfig.sheetKey);
     const headerRowsCount = sheetConfig?.headerRows || 1;
     
     if (!sheetData?.headers || !sheetData?.rows) return { headers: [], rows: [], filteredRows: [], summaryData: [] };
@@ -33,9 +53,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
     
     // Perform Filtering
     let resultRows = sheetData.rows;
-    if (config.filters && config.filters.length > 0) {
+    if (currentConfig.filters && currentConfig.filters.length > 0) {
         resultRows = sheetData.rows.filter(row => {
-            for (const filter of config.filters) {
+            for (const filter of currentConfig.filters) {
                 const fColIdx = mergedHeaders.indexOf(filter.column);
                 if (fColIdx === -1) continue;
 
@@ -57,8 +77,8 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
 
     // Calculate Summary Data (Group by Data Column)
     let summary: { value: string; count: number }[] = [];
-    if (config.dataColumn) {
-        const colIndex = mergedHeaders.indexOf(config.dataColumn);
+    if (currentConfig.dataColumn) {
+        const colIndex = mergedHeaders.indexOf(currentConfig.dataColumn);
         if (colIndex !== -1) {
             const counts = new Map<string, number>();
             resultRows.forEach(row => {
@@ -76,11 +96,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
     }
 
     return { headers: mergedHeaders, rows: sheetData.rows, filteredRows: resultRows, summaryData: summary };
-  }, [config.sheetKey, config.filters, config.dataColumn, googleSheets, sheetConfigs]);
+  }, [currentConfig, googleSheets, sheetConfigs]);
 
   if (!isOpen) return null;
 
-  const hasDataColumn = !!config.dataColumn && summaryData.length > 0;
+  const hasDataColumn = !!currentConfig.dataColumn && summaryData.length > 0;
 
   return (
     <div 
@@ -92,19 +112,27 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 pt-6 pb-0 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#151923]">
-            <div className="flex items-start justify-between mb-6">
+        <div className="px-6 pt-6 pb-0 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#151923] flex flex-col gap-4">
+            
+            {/* Top Row: Title & Close */}
+            <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-indigo-100 dark:bg-indigo-500/20 rounded-2xl text-indigo-600 dark:text-indigo-400">
                         <Table size={24} />
                     </div>
                     <div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            Детализация: {config.title}
+                            {config.title}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {filteredRows.length.toLocaleString()} строк найдено из {rows.length.toLocaleString()}
-                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            <span>{filteredRows.length.toLocaleString()} строк найдено из {rows.length.toLocaleString()}</span>
+                            {effectiveContexts.length > 1 && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                    <span className="text-indigo-600 dark:text-indigo-400 font-medium">{currentContext.name}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
                 
@@ -116,8 +144,27 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
                 </button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-6">
+            {/* Data Context Tabs (If multiple) */}
+            {effectiveContexts.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                    {effectiveContexts.map((ctx, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setActiveContextIdx(idx)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                                activeContextIdx === idx
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                                    : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/5'
+                            }`}
+                        >
+                            {ctx.name}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* View Tabs (Summary/Source) */}
+            <div className="flex gap-6 mt-2">
                 <button
                     onClick={() => setActiveTab('summary')}
                     disabled={!hasDataColumn}
@@ -128,7 +175,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
                     }`}
                 >
                     <ListFilter size={16} />
-                    Значения {hasDataColumn && <span className="bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-xs ml-1">{summaryData.length}</span>}
+                    Группировка {hasDataColumn && <span className="bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-xs ml-1">{summaryData.length}</span>}
                 </button>
                 
                 <button
@@ -140,7 +187,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
                     }`}
                 >
                     <FileSpreadsheet size={16} />
-                    Подробнее
+                    Исходные данные
                 </button>
             </div>
         </div>
@@ -153,7 +200,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
                 </div>
             ) : null}
 
-            {!config.sheetKey ? (
+            {!currentConfig.sheetKey ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-400">
                     <AlertCircle size={48} className="mb-2 opacity-20" />
                     <p>Источник данных не выбран</p>
@@ -172,7 +219,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, config }) 
                             <thead className="sticky top-0 bg-gray-50 dark:bg-[#1e2433] z-10 shadow-sm">
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-white/10 w-full">
-                                        Значение ({config.dataColumn})
+                                        Значение ({currentConfig.dataColumn})
                                     </th>
                                     <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-white/10 text-right whitespace-nowrap">
                                         Кол-во строк

@@ -97,6 +97,12 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode }) => {
         column: "Без разбивки на литеры (Да/Нет)",
         operator: "equals",
         value: "Да"
+      },
+      {
+        id: "c4bslnolw",
+        column: "Сдан да/нет",
+        operator: "equals",
+        value: "Да"
       }
     ]
   }), []);

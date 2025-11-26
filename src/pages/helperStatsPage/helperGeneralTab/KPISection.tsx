@@ -220,9 +220,9 @@ const KPISection: React.FC = () => {
       dataColumn: "",
       aggregation: "sum",
       filters: [],
-      valuePrefix: "₽ ",
-      valueSuffix: "",
-      compactNumbers: true,
+      valuePrefix: "",
+      valueSuffix: " ₽",
+      compactNumbers: false,
       icon: "Activity",
       showIcon: true,
       showTrend: false,
@@ -280,7 +280,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 70,
             left: 70,
-            fontSize: 22,
+            fontSize: 20,
             color: "#ffffff",
             fontWeight: "bold"
           },
@@ -344,7 +344,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 110,
             left: 70,
-            fontSize: 22,
+            fontSize: 20,
             color: "#ffffff",
             fontWeight: "bold"
           },
