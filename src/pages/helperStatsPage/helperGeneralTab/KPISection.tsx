@@ -26,7 +26,7 @@ const KPISection: React.FC = () => {
       height: "150px",
       colorTheme: "blue",
       gradientFrom: "cyan",
-      gradientTo: "emerald",
+      gradientTo: "red",
       elements: [
         {
           id: "value-q6cne",
@@ -34,7 +34,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 70,
             left: 25,
-            fontSize: 37,
+            fontSize: 23,
             color: "#ffffff",
             fontWeight: "bold"
           },
@@ -93,7 +93,7 @@ const KPISection: React.FC = () => {
       height: "150px",
       colorTheme: "blue",
       gradientFrom: "red",
-      gradientTo: "slate",
+      gradientTo: "orange",
       elements: [
         {
           id: "value-q6cne",
@@ -101,7 +101,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 70,
             left: 25,
-            fontSize: 37,
+            fontSize: 23,
             color: "#ffffff",
             fontWeight: "bold"
           },
@@ -142,7 +142,7 @@ const KPISection: React.FC = () => {
     },
     {
       template: "custom",
-      title: "Рентабельность по завершенным",
+      title: "Рентабельность по закр.",
       sheetKey: "",
       dataColumn: "",
       aggregation: "sum",
@@ -167,7 +167,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 70,
             left: 25,
-            fontSize: 37,
+            fontSize: 23,
             color: "#ffffff",
             fontWeight: "bold"
           },
@@ -232,7 +232,7 @@ const KPISection: React.FC = () => {
       height: "150px",
       colorTheme: "violet",
       gradientFrom: "violet",
-      gradientTo: "fuchsia",
+      gradientTo: "blue",
       elements: [
         {
           id: "card-title",
@@ -240,7 +240,7 @@ const KPISection: React.FC = () => {
           style: {
             top: 25,
             left: 25,
-            fontSize: 25,
+            fontSize: 23,
             color: "rgba(255,255,255,0.9)",
             fontWeight: "600"
           }
@@ -379,146 +379,274 @@ const KPISection: React.FC = () => {
     },
     // Row 2
     {
-      template: "gradient",
-      title: "Всего лифтов",
-      sheetKey: "clientGrowth",
-      dataColumn: "Кол-во лифтов",
+      template: "custom",
+      title: "Кол-во лифтов",
+      sheetKey: "",
+      dataColumn: "",
       aggregation: "sum",
-      filters: [
-        {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
-        },
-        {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        }
-      ],
+      filters: [],
       valuePrefix: "",
-      valueSuffix: " шт",
-      icon: "ArrowUpFromLine",
+      valueSuffix: " шт.",
+      compactNumbers: false,
+      icon: "Users",
       showIcon: true,
       showTrend: false,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "emerald",
-      gradientFrom: "emerald",
-      gradientTo: "teal",
-      elements: []
-    },
-    {
-      template: "gradient",
-      title: "Всего этажей",
-      sheetKey: "clientGrowth",
-      dataColumn: "Кол-во этажей",
-      aggregation: "sum",
-      filters: [
-        {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
-        },
-        {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        }
-      ],
-      valuePrefix: "",
-      valueSuffix: " шт",
-      icon: "ArrowUpFromLine",
-      showIcon: true,
-      showTrend: false,
-      trendValue: "",
-      trendDirection: "up",
-      width: "100%",
-      height: "auto",
-      colorTheme: "emerald",
-      gradientFrom: "emerald",
-      gradientTo: "teal",
-      elements: []
-    },
-    {
-      template: "gradient",
-      title: "Всего городов",
-      sheetKey: "clientGrowth",
-      dataColumn: "Город",
-      aggregation: "unique",
-      filters: [
-        {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
-        },
-        {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        }
-      ],
-      valuePrefix: "",
-      valueSuffix: "",
-      icon: "MapPin",
-      showIcon: true,
-      showTrend: false,
-      trendValue: "",
+      trendValue: "0%",
       trendDirection: "neutral",
       width: "100%",
-      height: "auto",
+      height: "150px",
       colorTheme: "blue",
       gradientFrom: "blue",
-      gradientTo: "cyan",
-      elements: []
-    },
-    {
-      template: "gradient",
-      title: "Всего закрытых договоров",
-      sheetKey: "clientGrowth",
-      dataColumn: "Сдан да/нет",
-      aggregation: "count",
-      filters: [
+      gradientTo: "orange",
+      elements: [
         {
-          id: "0qyvlzape",
-          column: "Итого (Да/Нет)",
-          operator: "equals",
-          value: "Нет"
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 23,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Кол-во лифтов",
+            aggregation: "sum",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
         },
         {
-          id: "7jz2j15j5",
-          column: "Без разбивки на литеры (Да/Нет)",
-          operator: "equals",
-          value: "Да"
-        },
-        {
-          id: "8jz2j15j5",
-          column: "Сдан да/нет",
-          operator: "equals",
-          value: "Да"
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
         }
       ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+    {
+      template: "custom",
+      title: "Кол-во этажей",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "sum",
+      filters: [],
       valuePrefix: "",
-      valueSuffix: "",
-      icon: "Building",
+      valueSuffix: " этажей",
+      compactNumbers: false,
+      icon: "Users",
       showIcon: true,
       showTrend: false,
-      trendValue: "",
-      trendDirection: "up",
+      trendValue: "0%",
+      trendDirection: "neutral",
       width: "100%",
-      height: "auto",
-      colorTheme: "violet",
-      gradientFrom: "violet",
-      gradientTo: "purple",
-      elements: []
+      height: "150px",
+      colorTheme: "blue",
+      gradientFrom: "orange",
+      gradientTo: "emerald",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 23,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Кол-во этажей",
+            aggregation: "sum",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+    {
+      template: "custom",
+      title: "Всего городов",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "unique",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: "",
+      compactNumbers: false,
+      icon: "Users",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "150px",
+      colorTheme: "blue",
+      gradientFrom: "emerald",
+      gradientTo: "red",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 23,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Город",
+            aggregation: "unique",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
+    },
+    {
+      template: "custom",
+      title: "Закрытых договоров",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "count",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: "",
+      compactNumbers: false,
+      icon: "Users",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "150px",
+      colorTheme: "blue",
+      gradientFrom: "red",
+      gradientTo: "violet",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 23,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Сдан да/нет",
+            aggregation: "count",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "784qb4n5p",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "Да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
     },
 
   ], []);
