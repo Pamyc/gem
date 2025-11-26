@@ -232,7 +232,7 @@ const KPISection: React.FC = () => {
       height: "150px",
       colorTheme: "violet",
       gradientFrom: "violet",
-      gradientTo: "blue",
+      gradientTo: "emerald",
       elements: [
         {
           id: "card-title",
@@ -242,7 +242,7 @@ const KPISection: React.FC = () => {
             left: 25,
             fontSize: 23,
             color: "rgba(255,255,255,0.9)",
-            fontWeight: "600"
+            fontWeight: "700"
           }
         },
         {

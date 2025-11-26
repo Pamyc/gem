@@ -8,7 +8,7 @@ import { calculateCardMetrics, CalculationResult } from '../../utils/cardCalcula
 import ClassicCard from './helper/ClassicCard';
 import GradientCard from './helper/GradientCard';
 import MinMaxCard from './helper/MinMaxCard';
-import CustomCard from './helper/CustomCard';
+import CustomCard from './helper/helperCustomCard/CustomCard';
 
 interface DynamicCardProps {
   config: CardConfig;

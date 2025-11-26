@@ -1,0 +1,139 @@
+
+import React, { useMemo, useState } from 'react';
+import { CardConfig } from '../../../../types/card';
+import { CalculationResult } from '../../DynamicCard';
+import { useDataStore } from '../../../../contexts/DataContext';
+import CardElementRenderer from './CardElementRenderer';
+import DetailsModal from './DetailsModal';
+
+interface CustomCardProps {
+  config: CardConfig;
+  globalData: CalculationResult;
+  containerStyle: React.CSSProperties;
+}
+
+const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerStyle }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { googleSheets, sheetConfigs } = useDataStore();
+  
+  // Helper for gradients
+  const getColor = (c: string) => {
+     const map: any = { blue: '#3b82f6', violet: '#8b5cf6', pink: '#ec4899', orange: '#f97316', emerald: '#10b981', red: '#ef4444', cyan: '#06b6d4', slate: '#64748b', fuchsia: '#d946ef', amber: '#f59e0b', teal: '#14b8a6', purple: '#a855f7' };
+     return map[c] || c || '#3b82f6';
+  };
+
+  // Determine Background
+  let backgroundStyle = config.backgroundColor || '#ffffff';
+  if (config.gradientFrom && config.gradientTo && (!config.backgroundColor || config.backgroundColor === '#ffffff')) {
+      backgroundStyle = `linear-gradient(135deg, ${getColor(config.gradientFrom)}, ${getColor(config.gradientTo)})`;
+  }
+
+  // Calculate Auto Height for Absolute Layout
+  const computedHeight = useMemo(() => {
+    if (config.height !== 'auto') return undefined;
+    if (!config.elements || config.elements.length === 0) return 150; // Default min height
+
+    let maxBottom = 0;
+    
+    config.elements.forEach(el => {
+      const top = el.style.top || 0;
+      let height = 0;
+      
+      // Try to determine height
+      if (typeof el.style.height === 'number') {
+        height = el.style.height;
+      } else {
+        // Estimation for auto-height elements based on content type
+        if (el.type === 'icon') {
+            const width = typeof el.style.width === 'number' ? el.style.width : 0;
+            const fontSize = el.style.fontSize || 24;
+            const baseSize = width || fontSize;
+            const padding = el.style.padding || 0;
+            height = baseSize + (padding * 2);
+        } else {
+            // Text / Value / Title / Trend
+            const fontSize = el.style.fontSize || 14;
+            // Line height approximation (~1.4x)
+            const padding = el.style.padding || 0;
+            height = (fontSize * 1.4) + (padding * 2);
+        }
+      }
+      
+      if (top + height > maxBottom) {
+        maxBottom = top + height;
+      }
+    });
+
+    // Add some bottom padding
+    return Math.max(maxBottom + 24, 100); 
+  }, [config.elements, config.height]);
+
+
+  // Base Container Style
+  const baseStyle: React.CSSProperties = {
+    ...containerStyle,
+    position: 'relative',
+    overflow: 'hidden',
+    background: backgroundStyle, // Use background shorthand to support gradients
+    border: config.borderColor ? `1px solid ${config.borderColor}` : undefined,
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    borderRadius: '1rem',
+    // Apply computed height if auto is requested
+    height: computedHeight ? `${computedHeight}px` : containerStyle.height,
+    minHeight: computedHeight ? `${computedHeight}px` : containerStyle.minHeight,
+    cursor: 'pointer', // Indicate clickable
+    userSelect: 'none'
+  };
+
+  // Calculate Effective Config for Modal
+  // If global config has no sheetKey, try to find ANY element that has a sheetKey defined.
+  const effectiveModalConfig = useMemo(() => {
+    // 1. If global sheetKey exists, use it.
+    if (config.sheetKey) return config;
+
+    // 2. Find the first element that has a sheetKey defined. Prioritize 'value' types but accept any.
+    const dataElement = config.elements.find(el => el.dataSettings?.sheetKey);
+    
+    if (dataElement && dataElement.dataSettings?.sheetKey) {
+        return {
+            ...config,
+            sheetKey: dataElement.dataSettings.sheetKey,
+            filters: dataElement.dataSettings.filters || config.filters || [],
+            // Inherit other data props just in case, though mainly sheetKey/filters matter for list view
+            dataColumn: dataElement.dataSettings.dataColumn || config.dataColumn,
+            aggregation: dataElement.dataSettings.aggregation || config.aggregation
+        };
+    }
+    return config;
+  }, [config]);
+
+  return (
+    <>
+      <div 
+        style={baseStyle} 
+        onDoubleClick={() => setIsModalOpen(true)}
+        className="group hover:shadow-md transition-all duration-300"
+        title="Двойной клик для просмотра деталей"
+      >
+        {config.elements.map(el => (
+          <CardElementRenderer 
+            key={el.id} 
+            element={el} 
+            config={config} 
+            globalData={globalData} 
+            googleSheets={googleSheets}
+            sheetConfigs={sheetConfigs}
+          />
+        ))}
+      </div>
+
+      <DetailsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        config={effectiveModalConfig} 
+      />
+    </>
+  );
+};
+
+export default CustomCard;
