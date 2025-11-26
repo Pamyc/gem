@@ -23,13 +23,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       gradient: 'from-violet-600 to-indigo-600 shadow-indigo-500/30',
       inactiveStyle: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
     },
-    { 
-      id: 'test', 
-      label: 'Тест', 
-      icon: FlaskConical,
-      gradient: 'from-pink-500 to-rose-500 shadow-rose-500/30',
-      inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
-    },
+    // { 
+    //   id: 'test', 
+    //   label: 'Тест', 
+    //   icon: FlaskConical,
+    //   gradient: 'from-pink-500 to-rose-500 shadow-rose-500/30',
+    //   inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
+    // },
     { 
       id: 'lifts', 
       label: 'Лифты', 
