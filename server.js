@@ -8,12 +8,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Раздаём статические файлы из dist (после vite build)
+// 1) Основные статические файлы из dist (vite build)
 app.use(express.static(path.join(__dirname, "dist")));
 
-app.use("/static", express.static(path.join(__dirname, "public")));
+// 2) Дополнительно раздаём public, чтобы /oktbr_park.jpg точно был доступен
+app.use(express.static(path.join(__dirname, "public")));
 
-// Для всех маршрутов отдаём index.html (SPA)
+// 3) Для всех остальных маршрутов — index.html (SPA)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
