@@ -6,6 +6,7 @@ import ChartsSection from './helperElevatorTab/ChartsSection';
 import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
+import ElevatorsByLiterChart from './helperElevatorTab/ElevatorsByLiterChart';
 
 interface ElevatorTabProps {
   isDarkMode: boolean;
@@ -65,8 +66,17 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         selectedYear={selectedYear}
       />
 
-      {/* KPI Section with filtering */}
+      {/* KPI Section 2 with filtering */}
       <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
+
+      {/* Elevators by Liter Chart (New) */}
+      <div className="w-full">
+        <ElevatorsByLiterChart 
+          isDarkMode={isDarkMode} 
+          selectedCity={selectedCity} 
+          selectedYear={selectedYear} 
+        />
+      </div>
 
       {/* Charts Grid with filtering */}
       <ChartsSection 

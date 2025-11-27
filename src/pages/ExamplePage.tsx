@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, BarChart3 } from 'lucide-react';
 import { getImgByName } from '../utils/driveUtils';
 import { googleFileLinks } from '../utils/linkForGoogleFiles';
+import ElevatorsByLiterChart from './helperExamplePage/ElevatorsByLiterChart';
 
 interface ExamplePageProps {
   isDarkMode: boolean;
 }
 
-const ExamplePage: React.FC<ExamplePageProps> = () => {
+const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
   // Имя файла в реестре
   const fileNameKey = "oktbr_park";
   
@@ -21,6 +22,23 @@ const ExamplePage: React.FC<ExamplePageProps> = () => {
   return (
     <div className="w-full max-w-[1152px] mx-auto space-y-8 p-6">
       
+      {/* New Chart Section */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
+         <div className="mb-6 flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl text-indigo-600 dark:text-indigo-400">
+               <BarChart3 size={24} />
+            </div>
+            <div>
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Распределение лифтов по литерам</h3>
+               <p className="text-sm text-gray-500 dark:text-gray-400">Цвета сгруппированы по Жилым Комплексам</p>
+            </div>
+         </div>
+         
+         <div className="h-[450px]">
+            <ElevatorsByLiterChart isDarkMode={isDarkMode} />
+         </div>
+      </div>
+
       {/* Preview Section for the specific file */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
