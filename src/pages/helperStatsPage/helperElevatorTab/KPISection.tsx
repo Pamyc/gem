@@ -122,10 +122,10 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
                 value: "Нет"
               },
               {
-                id: "684qb4n5p",
-                column: "Без разбивки на литеры (Да/Нет)",
+                id: "284qb4n5p",
+                column: "Отдельный литер (Да/Нет)",
                 operator: "equals",
-                value: "Нет"
+                value: "Да"
               }
             ]
           }
