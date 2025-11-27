@@ -42,6 +42,10 @@ const CardConstructorPage: React.FC<CardConstructorPageProps> = ({ isDarkMode })
     aggregation: 'sum',
     filters: [],
 
+    // Advanced Calculation defaults
+    variables: [],
+    mainFormula: '',
+
     valuePrefix: '',
     valueSuffix: '',
     compactNumbers: false,

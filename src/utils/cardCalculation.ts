@@ -1,5 +1,5 @@
 
-import { CardConfig, ElementDataSettings } from '../types/card';
+import { CardConfig, ElementDataSettings, CardVariable } from '../types/card';
 import { GoogleSheetsData, SheetConfig } from '../contexts/DataContext';
 import { getMergedHeaders } from './chartUtils';
 import { formatLargeNumber } from './formatUtils';
@@ -12,58 +12,39 @@ export interface CalculationResult {
     rawMax: number;
 }
 
-export const calculateCardMetrics = (
+// Helper to calculate a single numeric value based on settings
+const calculateSingleValue = (
     googleSheets: GoogleSheetsData,
     sheetConfigs: SheetConfig[],
-    globalConfig: CardConfig,
-    elementSettings?: ElementDataSettings
-): CalculationResult => {
-    
-    // Determine effective configuration (Element override > Global)
-    const sheetKey = elementSettings?.sheetKey || globalConfig.sheetKey;
-    const dataColumn = elementSettings?.dataColumn || globalConfig.dataColumn;
-    const aggregation = elementSettings?.aggregation || globalConfig.aggregation;
-    const filters = elementSettings?.filters || globalConfig.filters;
-    
-    // Use global formatting unless we add overrides for that too later
-    const { valuePrefix, valueSuffix, compactNumbers } = globalConfig;
-
-    const emptyResult = { 
-        displayValue: '---', 
-        minValue: '---', 
-        maxValue: '---',
-        rawMin: 0,
-        rawMax: 0
-    };
-
-    if (!sheetKey || !dataColumn) {
-        if (compactNumbers) {
-            const zero = `${formatLargeNumber(0, valuePrefix)}${valueSuffix}`;
-            return { displayValue: zero, minValue: zero, maxValue: zero, rawMin: 0, rawMax: 0 };
-        }
-        const zero = `${valuePrefix}0${valueSuffix}`;
-        return { displayValue: zero, minValue: zero, maxValue: zero, rawMin: 0, rawMax: 0 };
+    settings: {
+        sheetKey: string;
+        dataColumn: string;
+        aggregation: string;
+        filters: any[];
     }
+): { result: number; min: number; max: number } => {
+    
+    if (!settings.sheetKey || !settings.dataColumn) return { result: 0, min: 0, max: 0 };
 
-    const sheetData = googleSheets[sheetKey as keyof typeof googleSheets];
+    const sheetData = googleSheets[settings.sheetKey as keyof typeof googleSheets];
     if (!sheetData || !sheetData.headers || sheetData.headers.length === 0 || !sheetData.rows) {
-       return emptyResult;
+       return { result: 0, min: 0, max: 0 };
     }
 
-    const currentSheetConfig = sheetConfigs.find(c => c.key === sheetKey);
+    const currentSheetConfig = sheetConfigs.find(c => c.key === settings.sheetKey);
     const headerRowsCount = currentSheetConfig?.headerRows || 1;
     const availableColumns = getMergedHeaders(sheetData.headers, headerRowsCount);
     
-    const colIndex = availableColumns.indexOf(dataColumn);
-    if (colIndex === -1) return { ...emptyResult, displayValue: 'Err Col' };
+    const colIndex = availableColumns.indexOf(settings.dataColumn);
+    if (colIndex === -1) return { result: 0, min: 0, max: 0 };
 
     const currentRows = sheetData.rows;
 
     // Filter Data
     let filteredData = currentRows;
-    if (filters && filters.length > 0) {
+    if (settings.filters && settings.filters.length > 0) {
         filteredData = currentRows.filter(row => {
-            for (const filter of filters) {
+            for (const filter of settings.filters) {
                 const fColIdx = availableColumns.indexOf(filter.column);
                 if (fColIdx === -1) continue;
 
@@ -88,7 +69,7 @@ export const calculateCardMetrics = (
     let max = 0;
 
     // Aggregation Logic
-    if (aggregation === 'count') {
+    if (settings.aggregation === 'count') {
       result = filteredData.filter(row => {
           const val = row[colIndex];
           return val !== undefined && val !== null && String(val).trim() !== '';
@@ -96,7 +77,7 @@ export const calculateCardMetrics = (
       min = result; 
       max = result;
     }
-    else if (aggregation === 'unique') {
+    else if (settings.aggregation === 'unique') {
       const uniqueSet = new Set();
       filteredData.forEach(row => {
           const val = row[colIndex];
@@ -118,13 +99,13 @@ export const calculateCardMetrics = (
       });
 
       if (values.length > 0) {
-        if (aggregation === 'sum') {
+        if (settings.aggregation === 'sum') {
             result = values.reduce((a, b) => a + b, 0);
-        } else if (aggregation === 'average') {
+        } else if (settings.aggregation === 'average') {
             result = values.reduce((a, b) => a + b, 0) / values.length;
-        } else if (aggregation === 'max') {
+        } else if (settings.aggregation === 'max') {
             result = Math.max(...values);
-        } else if (aggregation === 'min') {
+        } else if (settings.aggregation === 'min') {
             result = Math.min(...values);
         }
 
@@ -133,19 +114,111 @@ export const calculateCardMetrics = (
       }
     }
 
-    // Formatting
+    return { result, min, max };
+};
+
+export const calculateCardMetrics = (
+    googleSheets: GoogleSheetsData,
+    sheetConfigs: SheetConfig[],
+    globalConfig: CardConfig,
+    elementSettings?: ElementDataSettings
+): CalculationResult => {
+    
+    // Determine effective variables and formula
+    // If elementSettings is provided, we prefer its formula/variables if they exist.
+    // If not, we fall back to global config (though usually element overrides are exclusive).
+    
+    const elementVars = elementSettings?.variables;
+    const elementFormula = elementSettings?.formula;
+    
+    // Check if we should use formula mode
+    // 1. Element has explicit formula and variables
+    const isElementFormula = elementFormula && elementVars && elementVars.length > 0;
+    // 2. Global fallback (only if no element settings, or element wants to use global - not implemented yet)
+    const isGlobalFormula = !elementSettings && globalConfig.mainFormula && globalConfig.variables && globalConfig.variables.length > 0;
+
+    const shouldUseFormula = isElementFormula || isGlobalFormula;
+
+    const { valuePrefix, valueSuffix, compactNumbers } = globalConfig;
     const format = (val: number) => {
+        if (!isFinite(val) || isNaN(val)) return 'Error';
         if (compactNumbers) {
             return `${formatLargeNumber(val, valuePrefix)}${valueSuffix}`;
         }
-        return `${valuePrefix}${val.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}${valueSuffix}`;
+        // If integer, don't show decimals
+        const maximumFractionDigits = Number.isInteger(val) ? 0 : 2;
+        return `${valuePrefix}${val.toLocaleString('ru-RU', { maximumFractionDigits })}${valueSuffix}`;
     };
 
+    let finalResult = 0;
+    let finalMin = 0;
+    let finalMax = 0;
+
+    if (shouldUseFormula) {
+        // --- FORMULA MODE ---
+        const activeVars = isElementFormula ? elementVars : globalConfig.variables;
+        const activeFormulaStr = isElementFormula ? elementFormula : globalConfig.mainFormula;
+        
+        const variableValues: Record<string, number> = {};
+
+        // Calculate each variable
+        activeVars?.forEach(v => {
+            const { result } = calculateSingleValue(googleSheets, sheetConfigs, v);
+            variableValues[v.name] = result;
+        });
+
+        // Parse and Evaluate Formula
+        try {
+            // Replace {varName} with actual values
+            let formulaStr = activeFormulaStr || '';
+            for (const [name, val] of Object.entries(variableValues)) {
+                // Regex to replace {name} globally
+                const regex = new RegExp(`\\{${name}\\}`, 'g');
+                formulaStr = formulaStr.replace(regex, String(val));
+            }
+
+            // Safety check: ensure only numbers and math operators remain
+            // Allow digits, dot, +, -, *, /, (, ), and spaces
+            if (!/^[0-9.+\-*/()\s]+$/.test(formulaStr)) {
+                 console.warn("Formula contains invalid characters:", formulaStr);
+                 finalResult = 0; // Fallback
+            } else {
+                 // Evaluate safely
+                 // eslint-disable-next-line no-new-func
+                 finalResult = new Function(`return (${formulaStr})`)();
+            }
+            
+            // Min/Max doesn't make sense for a formula result usually, just use result
+            finalMin = finalResult;
+            finalMax = finalResult;
+
+        } catch (e) {
+            console.error("Error evaluating formula", e);
+            finalResult = 0;
+        }
+
+    } else {
+        // --- STANDARD SINGLE COLUMN MODE ---
+        // Determine effective configuration (Element override > Global)
+        const sheetKey = elementSettings?.sheetKey || globalConfig.sheetKey;
+        const dataColumn = elementSettings?.dataColumn || globalConfig.dataColumn;
+        const aggregation = elementSettings?.aggregation || globalConfig.aggregation;
+        const filters = elementSettings?.filters || globalConfig.filters;
+
+        const calc = calculateSingleValue(googleSheets, sheetConfigs, {
+            sheetKey, dataColumn, aggregation, filters
+        });
+        
+        finalResult = calc.result;
+        finalMin = calc.min;
+        finalMax = calc.max;
+    }
+
     return {
-        displayValue: format(result),
-        minValue: format(min),
-        maxValue: format(max),
-        rawMin: min,
-        rawMax: max
+        displayValue: format(finalResult),
+        minValue: format(finalMin),
+        maxValue: format(finalMax),
+        rawMin: finalMin,
+        rawMax: finalMax
     };
 };

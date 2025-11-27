@@ -19,11 +19,23 @@ export interface CardElementStyle {
   padding?: number;
 }
 
+export interface CardVariable {
+  id: string;
+  name: string; // The variable name used in formula (e.g. "a", "total_revenue")
+  sheetKey: string;
+  dataColumn: string;
+  aggregation: 'sum' | 'count' | 'average' | 'min' | 'max' | 'unique';
+  filters: ChartFilter[];
+}
+
 export interface ElementDataSettings {
   sheetKey?: string; 
   dataColumn?: string;
   aggregation?: 'sum' | 'count' | 'average' | 'min' | 'max' | 'unique';
   filters?: ChartFilter[];
+  // Advanced Calculation
+  variables?: CardVariable[];
+  formula?: string;
 }
 
 export interface CardElement {
@@ -40,11 +52,15 @@ export interface CardConfig {
   template: 'classic' | 'gradient' | 'minMax' | 'custom';
   title: string;
   
-  // Data Source Configuration
+  // Data Source Configuration (Primary/Legacy)
   sheetKey: string;
   dataColumn: string;
   aggregation: 'sum' | 'count' | 'average' | 'min' | 'max' | 'unique';
   filters: ChartFilter[];
+
+  // --- Advanced Calculation (Global - Legacy/Main) ---
+  variables?: CardVariable[]; // List of hidden calculated fields
+  mainFormula?: string; // Formula string, e.g. "{a} / {b} * 100"
 
   // Formatting
   valuePrefix: string;

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import KPISection from './helperElevatorTab/KPISection';
+import KPISection2 from './helperElevatorTab/KPISection2';
 import ChartsSection from './helperElevatorTab/ChartsSection';
 import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
@@ -63,6 +64,9 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         selectedCity={selectedCity} 
         selectedYear={selectedYear}
       />
+
+      {/* KPI Section with filtering */}
+      <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
 
       {/* Charts Grid with filtering */}
       <ChartsSection 

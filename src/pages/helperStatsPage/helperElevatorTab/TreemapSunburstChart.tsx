@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { LayoutGrid, PieChart } from 'lucide-react';
 import EChartComponent from '../../../components/charts/EChartComponent';
@@ -11,6 +10,7 @@ interface TreemapSunburstChartProps {
   title?: string;
   radius?: string | string[] | number | number[];
   valuePrefix?: string;
+  valueSuffix?: string;
   className?: string;
 }
 
@@ -24,6 +24,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
   title, 
   radius = ['30%', '60%'], 
   valuePrefix = '',
+  valueSuffix = '',
   className = "w-full h-[350px]"
 }) => {
   const [chartType, setChartType] = useState<'treemap' | 'pie'>('treemap');
@@ -48,7 +49,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
       animationDurationUpdate: 1000,
     };
 
-    if (chartType === 'treemap') {
+    if (chartType === 'pie') {
       return {
         backgroundColor: 'transparent',
         title: {
@@ -62,7 +63,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
            textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
            formatter: (params: any) => {
              const val = formatLargeNumber(params.value, valuePrefix);
-             return `${params.marker} ${params.name}: <b>${val}</b>`;
+             return `${params.marker} ${params.name}: <b>${val}${valueSuffix}</b>`;
            }
         },
         series: [
@@ -75,7 +76,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
               show: true, 
               formatter: (params: any) => {
                 const val = formatLargeNumber(params.value, valuePrefix);
-                return `${params.name}\n${val}`;
+                return `${params.name}\n${val}${valueSuffix}`;
               } 
             },
             breadcrumb: { show: false },
@@ -103,7 +104,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
           textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
           formatter: (params: any) => {
             const val = formatLargeNumber(params.value, valuePrefix);
-            return `${params.name}: ${val} (${params.percent}%)`;
+            return `${params.name}: ${val}${valueSuffix} (${params.percent}%)`;
           }
         },
         series: [
@@ -124,7 +125,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
               // Use function to inject formatted value into rich text template
               formatter: (params: any) => {
                 const val = formatLargeNumber(params.value, valuePrefix);
-                return `{per|${params.percent}%} {st|${val}}\n {b|${params.name} }    `;
+                return `{per|${params.percent}%} {st|${val}${valueSuffix}}\n {b|${params.name} }    `;
               },
               backgroundColor: isDarkMode ? '#334155' : '#F6F8FC',
               borderColor: isDarkMode ? '#475569' : '#8C8D8E',
@@ -182,7 +183,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
         ]
       };
     }
-  }, [chartType, processedData, isDarkMode, title, radius, valuePrefix]);
+  }, [chartType, processedData, isDarkMode, title, radius, valuePrefix, valueSuffix]);
 
   return (
     <div className={`${className} relative group`}>

@@ -105,10 +105,10 @@ export default MyKPIWidget;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#151923] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-gray-200 dark:border-white/10 overflow-hidden">
+      <div className="bg-white dark:bg-[#151923] rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col border border-gray-200 dark:border-white/10 overflow-hidden">
         
         {/* Header & Tabs */}
-        <div className="p-0 border-b border-gray-100 dark:border-white/5 flex flex-col bg-gray-50/50 dark:bg-[#151923]">
+        <div className="p-0 border-b border-gray-100 dark:border-white/5 flex flex-col bg-gray-50/50 dark:bg-[#151923] shrink-0">
            <div className="flex items-center justify-between p-6 pb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Исходный код</h3>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
@@ -149,7 +149,7 @@ export default MyKPIWidget;
                </pre>
             </div>
           ) : (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col relative">
                <textarea
                   value={editorContent}
                   onChange={handleEditorChange}
@@ -158,7 +158,7 @@ export default MyKPIWidget;
                   placeholder="Вставьте свойства объекта конфигурации..."
                />
                {error && (
-                 <div className="absolute bottom-4 left-6 right-6 p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-xl flex items-center gap-2 border border-red-200 dark:border-red-500/30 animate-in slide-in-from-bottom-2">
+                 <div className="absolute bottom-4 left-6 right-6 p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-xl flex items-center gap-2 border border-red-200 dark:border-red-500/30 animate-in slide-in-from-bottom-2 shadow-lg">
                     <AlertCircle size={16} /> {error}
                  </div>
                )}
@@ -167,7 +167,7 @@ export default MyKPIWidget;
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#151923]">
+        <div className="p-6 border-t border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#151923] shrink-0">
           
           <div className="text-xs text-gray-400">
              {activeTab === 'js' ? 'Редактируйте объект JS/TSX для обновления конфигурации' : 'Только для чтения'}

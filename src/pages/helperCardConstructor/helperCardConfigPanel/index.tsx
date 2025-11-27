@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Palette, Type, Database, PaintBucket, LayoutTemplate, Scaling } from 'lucide-react';
 import { CardConfig } from '../../../types/card';
 import { SheetConfig } from '../../../contexts/DataContext';
+import { useDataStore } from '../../../contexts/DataContext';
 
 import CollapsibleSection from './CollapsibleSection';
 import PresetSection from './PresetSection';
@@ -26,10 +28,11 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
   availableColumns = [],
   rows = [] 
 }) => {
+  const { googleSheets } = useDataStore();
   
   const [openSections, setOpenSections] = useState({
     preset: true,
-    dimensions: true,
+    dimensions: false,
     source: true,
     text: false,
     visuals: false,
@@ -53,7 +56,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
         <PresetSection config={config} setConfig={setConfig} />
       </CollapsibleSection>
 
-      {/* 2. Dimensions (New) */}
+      {/* 2. Dimensions */}
       <CollapsibleSection 
         title="Размеры" 
         icon={<Scaling size={14} />} 
@@ -65,7 +68,7 @@ const CardConfigPanel: React.FC<CardConfigPanelProps> = ({
 
       {/* 3. Data Source Settings */}
       <CollapsibleSection 
-        title="Источник данных" 
+        title="Основной источник" 
         icon={<Database size={14} />} 
         isOpen={openSections.source} 
         onToggle={() => toggleSection('source')}

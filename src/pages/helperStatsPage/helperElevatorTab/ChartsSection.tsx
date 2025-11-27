@@ -44,55 +44,13 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
   };
 
   // Конфигурация для PieDonutChart
-  const SumElevatorDataConfig = useMemo(() => withFilters({
+  
+
+  const TreemapDataConfig = useMemo(() => withFilters({
     title: 'Кол-во лифтов по ЖК',
     sheetKey: 'clientGrowth',
     xAxisColumn: 'ЖК',
     yAxisColumn: 'Кол-во лифтов',
-    aggregation: 'sum',
-    filters: [
-      {
-        id: "o09z9l2b4",
-        column: "Итого (Да/Нет)",
-        operator: "equals",
-        value: "Нет"
-      },
-      {
-        id: "aagerz8uy",
-        column: "Без разбивки на литеры (Да/Нет)",
-        operator: "equals",
-        value: "Да"
-      }
-    ]
-  }), [selectedCity, selectedYear]);
-
-  const SumFloorDataConfig = useMemo(() => withFilters({
-    title: 'Кол-во этажей по ЖК',
-    sheetKey: 'clientGrowth',
-    xAxisColumn: 'ЖК',
-    yAxisColumn: 'Кол-во этажей',
-    aggregation: 'sum',
-    filters: [
-      {
-        id: "o09z9l2b4",
-        column: "Итого (Да/Нет)",
-        operator: "equals",
-        value: "Нет"
-      },
-      {
-        id: "aagerz8uy",
-        column: "Без разбивки на литеры (Да/Нет)",
-        operator: "equals",
-        value: "Да"
-      }
-    ]
-  }), [selectedCity, selectedYear]);
-
-  const TreemapDataConfig = useMemo(() => withFilters({
-    title: 'Валовая прибыль по ЖК',
-    sheetKey: 'clientGrowth',
-    xAxisColumn: 'ЖК',
-    yAxisColumn: 'Валовая',
     aggregation: 'sum',
     filters: [
       {
@@ -187,39 +145,16 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
       {/* Круговые диаграммы оставляем с лимитом по умолчанию (7), чтобы не было каши */}
-      <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
-        {(data, isExpanded) => (
-          <PieDonutChart 
-            isDarkMode={isDarkMode} 
-            data={data} 
-            title=""
-            valueSuffix=" шт."
-            className={isExpanded ? "w-full h-full" : undefined}
-          />
-        )}
-      </GeneralChartCard>
-
-      <GeneralChartCard config={SumFloorDataConfig} limit={8} showTotal valueSuffix=" шт.">
-        {(data, isExpanded) => (
-          <PieDonutChart 
-            isDarkMode={isDarkMode} 
-            data={data} 
-            radius={['0%', '60%']}
-            title=""
-            valueSuffix=" шт."
-            className={isExpanded ? "w-full h-full" : undefined}
-          />
-        )}
-      </GeneralChartCard>
+      
 
       {/* Treemap можно показать чуть больше, например 10 */}
-      <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valuePrefix="₽ ">
+      <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valueSuffix=" шт.">
         {(data, isExpanded) => (
           <TreemapSunburstChart 
             isDarkMode={isDarkMode} 
             data={data}
             title=""
-            valuePrefix="₽ "
+            valueSuffix=" шт."
             className={isExpanded ? "w-full h-full" : undefined}
           />
         )}
