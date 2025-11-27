@@ -3,7 +3,7 @@ import { useProcessedChartData } from '../../../hooks/useProcessedChartData';
 import { Building, Loader2, MapPin, Calendar, Activity, Layers } from 'lucide-react';
 
 // Используем прямой путь от корня сервера
-const PLACEHOLDER_IMG = '/oktbr_park.jpg';
+const PLACEHOLDER_IMG = '/pho1.avif';
 
 interface HousingComplexSectionProps {
   isDarkMode: boolean;
