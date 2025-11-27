@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical } from 'lucide-react';
 import GeneralTab from './GeneralTab';
 import TestTab from './TestTab';
@@ -16,6 +16,19 @@ type TabType = 'general' | 'elevator_tab' | 'test' | 'lifts' | 'finance' | 'mont
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
+  const [isSticky, setIsSticky] = useState(false);
+
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsSticky(container.scrollTop > 20);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const tabs = [
     { 
@@ -65,29 +78,44 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   return (
     <div className="w-full space-y-8">
       
-      {/* Tab Navigation Menu */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="w-full sm:w-auto bg-white dark:bg-[#151923] p-1.5 rounded-2xl border border-gray-200 dark:border-white/5 flex overflow-x-auto scrollbar-none">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`
-                  flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap
-                  ${isActive 
-                    ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg transform scale-[1.02]` 
-                    : tab.inactiveStyle
-                  }
-                `}
-              >
-                <Icon size={16} className={isActive ? 'text-white' : 'text-current'} />
-                {tab.label}
-              </button>
-            );
-          })}
+      {/* Tab Navigation Menu (Sticky) */}
+      <div 
+        className={`
+          sticky top-0 z-50 transition-all duration-500 ease-in-out origin-top
+          ${isSticky 
+            ? 'py-2 bg-slate-50/90 dark:bg-[#0b0f19]/10 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-white/5 -mx-8 px-8' 
+            : 'py-0'
+          }
+        `}
+      >
+        <div 
+          className={`
+            flex flex-col sm:flex-row items-center justify-between gap-4 transition-transform duration-300 origin-top-left
+            ${isSticky ? 'scale-90 opacity-90 hover:scale-100 hover:opacity-100' : 'scale-100'}
+          `}
+        >
+          <div className="w-full sm:w-auto bg-white dark:bg-[#151923] p-1.5 rounded-2xl border border-gray-200 dark:border-white/5 flex overflow-x-auto scrollbar-none">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className={`
+                    flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap
+                    ${isActive 
+                      ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg transform scale-[1.02]` 
+                      : tab.inactiveStyle
+                    }
+                  `}
+                >
+                  <Icon size={16} className={isActive ? 'text-white' : 'text-current'} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
