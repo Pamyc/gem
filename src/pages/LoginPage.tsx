@@ -30,36 +30,36 @@ const LoginPage: React.FC = () => {
   return (
     <div className="dark font-sans">
       <div className="min-h-screen bg-[#0b0f19] text-gray-100 flex items-center justify-center p-4 relative overflow-hidden">
-         {/* Background Accents */}
-         <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-         <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        {/* Background Accents */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-         {/* LEFT Flanking Logo */}
-<div className="absolute left-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
-  <CCMLogo className="w-full h-full" />
-</div>
+        {/* LEFT Flanking Logo */}
+        <div className="absolute left-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+          <CCMLogo className="w-full h-full" />
+        </div>
 
-{/* RIGHT Flanking Logo */}
-<div className="absolute right-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
-  <CCMLogo className="w-full h-full" />
-</div>
+        {/* RIGHT Flanking Logo */}
+        <div className="absolute right-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+          <CCMLogo className="w-full h-full" />
+        </div>
 
         <div className="bg-[#151923] w-full max-w-md rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative z-10">
-          
+
           {/* Header */}
           <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-10 text-center relative overflow-hidden min-h-[180px] flex flex-col items-center justify-center">
-             {/* Background Watermark Logo inside card */}
-             <div className="absolute top-[70%] left-[50%] -translate-x-1/2 -translate-y-1/2 
+            {/* Background Watermark Logo inside card */}
+            <div className="absolute top-[70%] left-[50%] -translate-x-1/2 -translate-y-1/2 
                 w-[20rem] h-auto opacity-[0.40] pointer-events-none">
-    <CCMLogo className="w-full h-full" />
-</div>
+              <CCMLogo className="w-full h-full" />
+            </div>
 
-             
-             {/* Text Content */}
-             <div className="relative z-10">
-                <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">CCM Elevator</h2>
-                <p className="text-violet-100 mt-2 text-sm font-medium opacity-90">Лучшая установка лифтов ЮГА России</p>
-             </div>
+
+            {/* Text Content */}
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">CCM Elevator</h2>
+              <p className="text-violet-100 mt-2 text-sm font-medium opacity-90">Лучшая установка лифтов ЮГА России</p>
+            </div>
           </div>
 
           {/* Form */}
@@ -71,8 +71,8 @@ const LoginPage: React.FC = () => {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">
                     <UserIcon size={20} />
                   </div>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full pl-12 pr-5 py-4 rounded-2xl border border-white/10 bg-[#0b0f19] text-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 transition-all outline-none font-medium placeholder-gray-600"
@@ -87,8 +87,8 @@ const LoginPage: React.FC = () => {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">
                     <Lock size={20} />
                   </div>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-5 py-4 rounded-2xl border border-white/10 bg-[#0b0f19] text-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 transition-all outline-none font-medium placeholder-gray-600"
@@ -103,8 +103,8 @@ const LoginPage: React.FC = () => {
                 </div>
               )}
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/30 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed group cursor-pointer"
               >

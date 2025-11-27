@@ -27,8 +27,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     },
     { 
       id: 'elevator_tab', 
-      label: 'Elevator Tab', 
-      icon: LayoutDashboard,
+      label: 'Лифты', 
+      icon: ArrowUpFromLine,
       gradient: 'from-purple-600 to-pink-600 shadow-purple-500/30',
       inactiveStyle: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
     },
@@ -39,13 +39,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     //   gradient: 'from-pink-500 to-rose-500 shadow-rose-500/30',
     //   inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
     // },
-    { 
-      id: 'lifts', 
-      label: 'Лифты', 
-      icon: ArrowUpFromLine,
-      gradient: 'from-emerald-500 to-teal-600 shadow-emerald-500/30',
-      inactiveStyle: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20'
-    },
+    // { 
+    //   id: 'lifts', 
+    //   label: 'пример', 
+    //   icon: ArrowUpFromLine,
+    //   gradient: 'from-emerald-500 to-teal-600 shadow-emerald-500/30',
+    //   inactiveStyle: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20'
+    // },
     { 
       id: 'finance', 
       label: 'Финансы', 
