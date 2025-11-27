@@ -7,7 +7,7 @@ interface ExamplePageProps {
 const ExamplePage: React.FC<ExamplePageProps> = () => {
   // Используем прямой путь к файлу в корне
   // В Vite файлы в корне (public dir или root) доступны по "/"
-  const oktbrParkImg = '/pho1.avif';
+  const oktbrParkImg = '/oktbr_park.jpg';
 
   return (
     <div className="w-full max-w-[1152px] mx-auto space-y-8 p-6">
