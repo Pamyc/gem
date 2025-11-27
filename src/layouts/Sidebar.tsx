@@ -38,10 +38,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Background Watermark Logo */}
 <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
   <div className={`
-  absolute top-[60%] left-[40%] -translate-x-1/2 -translate-y-1/2 
+  absolute top-[60%] left-[50%] -translate-x-1/2 -translate-y-1/2 
   ${isCollapsed
-    ? 'w-[10rem] h-auto opacity-[0.15] pointer-events-none'
-    : 'w-[30rem] h-auto opacity-[0.30] pointer-events-none'
+    ? 'w-[5rem] h-auto opacity-[0.15] pointer-events-none'
+    : 'w-[15rem] h-auto opacity-[0.30] pointer-events-none'
   }
 `}>
   <CCMLogo className="w-full h-full opacity-100" />

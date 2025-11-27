@@ -35,12 +35,12 @@ const LoginPage: React.FC = () => {
          <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
          {/* LEFT Flanking Logo */}
-<div className="absolute left-0 top-1/2 -translate-y-1/2 w-[38vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+<div className="absolute left-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
   <CCMLogo className="w-full h-full" />
 </div>
 
 {/* RIGHT Flanking Logo */}
-<div className="absolute right-0 top-1/2 -translate-y-1/2 w-[38vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+<div className="absolute right-[7%] top-1/2 -translate-y-1/2 w-[20vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
   <CCMLogo className="w-full h-full" />
 </div>
 
@@ -49,8 +49,8 @@ const LoginPage: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-10 text-center relative overflow-hidden min-h-[180px] flex flex-col items-center justify-center">
              {/* Background Watermark Logo inside card */}
-             <div className="absolute top-[80%] left-[40%] -translate-x-1/2 -translate-y-1/2 
-                w-[40rem] h-auto opacity-[0.40] pointer-events-none">
+             <div className="absolute top-[70%] left-[50%] -translate-x-1/2 -translate-y-1/2 
+                w-[20rem] h-auto opacity-[0.40] pointer-events-none">
     <CCMLogo className="w-full h-full" />
 </div>
 
