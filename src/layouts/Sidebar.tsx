@@ -27,17 +27,29 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside 
-      className={`
-        ${isCollapsed ? 'w-20' : 'w-72'} 
-        bg-[#1e293b] dark:bg-[#151923] text-white transition-all duration-300 ease-in-out relative flex flex-col shadow-2xl h-full border-r border-gray-200 dark:border-white/5 z-20
-      `}
-    >
+  className={`
+    ${isCollapsed ? 'w-20' : 'w-72'} 
+    bg-[#1e293b] dark:bg-[#151923] text-white transition-all duration-300 ease-in-out 
+    relative flex flex-col shadow-2xl h-screen border-r border-gray-200 dark:border-white/5 z-20
+  `}
+>
+
+
       {/* Background Watermark Logo */}
-      <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
-         <div className={`transition-all duration-500 ease-in-out text-[#C5A059] ${isCollapsed ? 'w-[80%] opacity-[0.07]' : 'w-[90%] opacity-[0.23]'}`}>
-            <CCMLogo className="w-full h-full opacity-100" />
-         </div>
-      </div>
+<div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
+  <div className={`
+  absolute top-[60%] left-[40%] -translate-x-1/2 -translate-y-1/2 
+  ${isCollapsed
+    ? 'w-[10rem] h-auto opacity-[0.15] pointer-events-none'
+    : 'w-[30rem] h-auto opacity-[0.30] pointer-events-none'
+  }
+`}>
+  <CCMLogo className="w-full h-full opacity-100" />
+</div>
+
+</div>
+
+
 
       {/* Toggle Button (Top Layer) */}
       <button 

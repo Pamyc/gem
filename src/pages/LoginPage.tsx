@@ -35,23 +35,25 @@ const LoginPage: React.FC = () => {
          <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
          {/* LEFT Flanking Logo */}
-         <div className="absolute left-10 lg:left-20 top-1/2 -translate-y-1/2 h-[70vh] w-auto aspect-[1/2] text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
-            <CCMLogo className="w-full h-full" />
-         </div>
+<div className="absolute left-0 top-1/2 -translate-y-1/2 w-[38vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+  <CCMLogo className="w-full h-full" />
+</div>
 
-         {/* RIGHT Flanking Logo */}
-         <div className="absolute right-10 lg:right-20 top-1/2 -translate-y-1/2 h-[70vh] w-auto aspect-[1/2] text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
-            <CCMLogo className="w-full h-full" />
-         </div>
+{/* RIGHT Flanking Logo */}
+<div className="absolute right-0 top-1/2 -translate-y-1/2 w-[38vw] h-auto text-[#C5A059] opacity-[0.37] pointer-events-none hidden xl:block">
+  <CCMLogo className="w-full h-full" />
+</div>
 
         <div className="bg-[#151923] w-full max-w-md rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative z-10">
           
           {/* Header */}
           <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-10 text-center relative overflow-hidden min-h-[180px] flex flex-col items-center justify-center">
              {/* Background Watermark Logo inside card */}
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-96 text-white opacity-[0.15] pointer-events-none transform scale-125">
-                <CCMLogo className="w-full h-full" />
-             </div>
+             <div className="absolute top-[80%] left-[40%] -translate-x-1/2 -translate-y-1/2 
+                w-[40rem] h-auto opacity-[0.40] pointer-events-none">
+    <CCMLogo className="w-full h-full" />
+</div>
+
              
              {/* Text Content */}
              <div className="relative z-10">

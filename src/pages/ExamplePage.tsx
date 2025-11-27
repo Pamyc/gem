@@ -1,73 +1,65 @@
+
 import React from 'react';
+import { ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { getImgByName } from '../utils/driveUtils';
+import { googleFileLinks } from '../utils/linkForGoogleFiles';
 
 interface ExamplePageProps {
   isDarkMode: boolean;
 }
 
 const ExamplePage: React.FC<ExamplePageProps> = () => {
-  // Используем прямой путь к файлу в корне
-  // В Vite файлы в корне (public dir или root) доступны по "/"
-  const oktbrParkImg = '/oktbr_park.jpg';
+  // Имя файла в реестре
+  const fileNameKey = "oktbr_park";
+  
+  // Получаем ссылку на изображение по имени (для основного просмотра)
+  const imageUrl = getImgByName(fileNameKey, 'w2000') || '';
+  
+  // Получаем оригинальную ссылку из реестра для отображения в UI
+  const sourceLink = googleFileLinks[fileNameKey];
 
   return (
     <div className="w-full max-w-[1152px] mx-auto space-y-8 p-6">
-      <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          Тест изображения
-          <span className="px-3 py-1 text-xs font-normal bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 rounded-full">
-            /oktbr_park.jpg
-          </span>
-        </h2>
-        
-        <div className="p-8 bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm">
-           <div className="flex flex-col md:flex-row gap-8 items-start">
-              
-              {/* Image Container */}
-              <div className="w-full md:w-1/2 relative group">
-                 <div className="aspect-video w-full overflow-hidden rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 bg-gray-100 dark:bg-black/20 relative">
-                    <img 
-                      src={oktbrParkImg} 
-                      alt="Oktbr Park" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Image+Not+Found';
-                      }}
-                    />
-                    {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-end p-4">
-                        <p className="text-white font-medium text-sm">oktbr_park.jpg</p>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Info Panel */}
-              <div className="w-full md:w-1/2 space-y-4">
-                 <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1">Файл из корня проекта</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                       Попытка загрузить изображение по адресу <code>/oktbr_park.jpg</code>.
-                       Если изображение физически находится в корневой папке проекта (рядом с index.html), оно должно отобразиться.
-                    </p>
-                 </div>
-
-                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#0b0f19] border border-gray-200 dark:border-white/5 font-mono text-xs text-gray-600 dark:text-gray-300 break-all">
-                    <span className="text-gray-400 select-none">Src URL: </span>
-                    {oktbrParkImg}
-                 </div>
-
-                 <a 
-                   href={oktbrParkImg} 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20"
-                 >
-                    Открыть оригинал
-                 </a>
-              </div>
-
-           </div>
-        </div>
+      
+      {/* Preview Section for the specific file */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
+         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            <ImageIcon size={20} className="text-purple-500" /> 
+            Просмотр файла по ключу: <span className="text-indigo-500 font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 rounded">"{fileNameKey}"</span>
+         </h3>
+         
+         <div className="relative w-full h-96 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#0b0f19] group border border-gray-200 dark:border-white/5">
+            {imageUrl ? (
+              <img 
+                 src={imageUrl} 
+                 alt="oktbr_park.jpg" 
+                 className="w-full h-full object-contain"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">Не удалось загрузить изображение</div>
+            )}
+            
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+               <a 
+                 href={sourceLink} 
+                 target="_blank" 
+                 rel="noreferrer"
+                 className="bg-white text-gray-900 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform"
+               >
+                 Открыть оригинал <ExternalLink size={16} />
+               </a>
+            </div>
+         </div>
+         <div className="mt-4 flex flex-col gap-2">
+            <div className="text-xs text-gray-400 font-mono break-all bg-gray-50 dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-white/5">
+                <span className="font-bold text-gray-500">Registry Source:</span> {sourceLink}
+            </div>
+            <div className="text-xs text-gray-400 font-mono break-all bg-gray-50 dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-white/5">
+                <span className="font-bold text-indigo-500">Generated URL:</span> {imageUrl}
+            </div>
+         </div>
       </div>
+      
     </div>
   );
 };
