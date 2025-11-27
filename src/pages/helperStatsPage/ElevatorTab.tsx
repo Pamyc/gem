@@ -35,10 +35,10 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         className={`
           sticky top-[60px] z-40 flex flex-col items-start gap-1 transition-all duration-500 ease-in-out origin-top-left
           ${isSticky 
-            ? 'bg-transparent backdrop-blur-none p-4 -mx-4 px-8 transform scale-75 translate-y-[-10px] w-[133%]' 
+            ? 'bg-slate-50/90 dark:bg-[#0b0f19]/0 backdrop-blur-md p-4 -mx-4 px-8 rounded-b-2xl shadow-md border-b border-gray-200/10 transform scale-75 translate-y-[-10px] w-[133%]' 
             : 'w-full'
           }
-          hover:scale-100 hover:translate-y-0 hover:w-full hover:bg-slate-50/95 hover:dark:bg-[#0b0f19] hover:shadow-md hover:backdrop-blur-md
+          hover:scale-100 hover:translate-y-0 hover:w-full hover:bg-slate-50/95 hover:dark:bg-[#0b0f19]/0
         `}
       >
         {/* Transparent Container with City Selector (Large Header) */}

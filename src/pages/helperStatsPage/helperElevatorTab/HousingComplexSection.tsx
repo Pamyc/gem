@@ -58,6 +58,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
     const idxFloors = headers.indexOf('Кол-во этажей');
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
     const idxNoBreakdown = headers.indexOf('Без разбивки на литеры (Да/Нет)');
+    const idxOneLiter = headers.indexOf('Отдельный литер (Да/Нет)');
 
     if (idxJK === -1) return [];
 
@@ -66,7 +67,11 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
     // 1. Filter and Group
     sheetData.rows.forEach(row => {
       // Base Filter: Итого = Нет (Exclude grand totals)
-      if (idxTotal !== -1 && String(row[idxTotal]) === 'Да') return;
+      // STRICT FILTER: Match modal logic (equals "Нет")
+      if (idxTotal !== -1) {
+         const val = String(row[idxTotal]).trim().toLowerCase();
+         if (val !== 'нет') return;
+      }
 
       // Context Filters
       if (selectedCity && idxCity !== -1 && String(row[idxCity]) !== selectedCity) return;
@@ -95,20 +100,30 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       }
 
       // Logic for Liters:
-      // Count rows where "Без разбивки на литеры" is "Нет".
-      const detailRows = idxNoBreakdown !== -1
-        ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет')
-        : rows;
+      // Try to use "Отдельный литер (Да/Нет)" column first (as per modal fix)
+      let liters = 0;
+      if (idxOneLiter !== -1) {
+         liters = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да').length;
+      } else {
+         // Fallback logic
+         const detailRows = idxNoBreakdown !== -1
+            ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет')
+            : rows;
+         liters = detailRows.length;
+      }
 
-      // If there are detail rows, count them. If 0, but we have data for the JK, assume 1 (the main building/complex itself).
-      let liters = detailRows.length;
+      // If count is 0 but we have data for the JK, assume 1 (the main building/complex itself).
       if (liters === 0 && rows.length > 0) {
         liters = 1;
       }
 
-      // Summing metrics - use all relevant rows for elevators/floors (excluding Total rows handled above)
-      const elevators = rows.reduce((sum, r) => sum + (parseFloat(String(r[idxElevators]).replace(',', '.')) || 0), 0);
-      const floors = rows.reduce((sum, r) => sum + (parseFloat(String(r[idxFloors]).replace(',', '.')) || 0), 0);
+      // Summing metrics - use rows where "Без разбивки на литеры" is "Да" to match Modal/KPI logic
+      const sumRows = idxNoBreakdown !== -1 
+        ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'да')
+        : rows;
+
+      const elevators = sumRows.reduce((sum, r) => sum + (parseFloat(String(r[idxElevators]).replace(',', '.')) || 0), 0);
+      const floors = sumRows.reduce((sum, r) => sum + (parseFloat(String(r[idxFloors]).replace(',', '.')) || 0), 0);
 
       result.push({
         name: jkName,
@@ -131,7 +146,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
     // Common filters for this JK
     const baseFilters: ChartFilter[] = [
       { id: 'f_jk', column: 'ЖК', operator: 'equals', value: selectedJK.name },
-      { id: 'f_total', column: 'Итого (Да/Нет)', operator: 'equals', value: 'Нет' }
+      { id: 'f_total', column: 'Итого (Да/Нет)', operator: 'equals', value: 'Нет' },
     ];
 
     if (selectedCity) {
@@ -182,7 +197,9 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
           title: 'Лифты',
           dataColumn: 'Кол-во лифтов',
           aggregation: 'sum',
-          filters: [...baseFilters]
+          filters: [...baseFilters,
+            { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
+          ]
         }
       },
       {
@@ -190,12 +207,13 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
         config: {
           ...defaultConfig,
           title: 'Литеры',
-          dataColumn: 'ЖК', // Just to show the rows
+          dataColumn: 'Литер', // Just to show the rows
           aggregation: 'count',
           // Filter specifically for liters view
           filters: [
             ...baseFilters,
-            { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Нет' }
+            { id: 'f_oneliter', column: 'Отдельный литер (Да/Нет)', operator: 'equals', value: 'Да' },
+            
           ]
         }
       },
@@ -206,7 +224,9 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
           title: 'Этажи',
           dataColumn: 'Кол-во этажей',
           aggregation: 'sum',
-          filters: [...baseFilters]
+          filters: [...baseFilters,
+            { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
+          ]
         }
       }
     ];

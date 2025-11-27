@@ -79,26 +79,22 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     <div className="w-full space-y-8">
       
       {/* Tab Navigation Menu (Sticky) */}
-      <div
-    className={`
-      sticky top-0 z-50 transition-all duration-500 ease-in-out origin-top
-      ${isSticky 
-        ? 'py-2 bg-transparent backdrop-blur-none shadow-none border-none -mx-8 px-8' 
-        : 'py-0'
-      }
-    `}
-  >
-    <div
-      className={`
-        flex flex-col sm:flex-row items-center justify-between gap-4 
-        transition-transform duration-300 origin-top-left
-        ${isSticky
-          ? 'scale-90 opacity-90 hover:scale-100 hover:opacity-100'
-          : 'scale-100'
-        }
-      `}
-    >
-          <div className="w-full sm:w-auto bg-white dark:bg-transparent p-1.5 rounded-2xl border border-gray-200 dark:border-transparent flex overflow-x-auto scrollbar-none">
+      <div 
+        className={`
+          sticky top-0 z-50 transition-all duration-500 ease-in-out origin-top
+          ${isSticky 
+            ? 'py-2 bg-slate-50/90 dark:bg-[#0b0f19]/10 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-white/5 -mx-8 px-8' 
+            : 'py-0'
+          }
+        `}
+      >
+        <div 
+          className={`
+            flex flex-col sm:flex-row items-center justify-between gap-4 transition-transform duration-300 origin-top-left
+            ${isSticky ? 'scale-90 opacity-90 hover:scale-100 hover:opacity-100' : 'scale-100'}
+          `}
+        >
+          <div className="w-full sm:w-auto bg-white dark:bg-[#151923] p-1.5 rounded-2xl border border-gray-200 dark:border-white/5 flex overflow-x-auto scrollbar-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
