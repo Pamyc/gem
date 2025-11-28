@@ -7,6 +7,7 @@ import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
 import ElevatorsByLiterChart from './helperElevatorTab/ElevatorsByLiterChart';
+import ComplexComparisons from './helperElevatorTab/ComplexComparisons';
 
 interface ElevatorTabProps {
   isDarkMode: boolean;
@@ -68,6 +69,15 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
 
       {/* KPI Section 2 with filtering */}
       <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
+
+      {/* NEW: Complex Comparisons (Elevators/Floors per Liter) */}
+      <div className="w-full">
+        <ComplexComparisons 
+          isDarkMode={isDarkMode}
+          selectedCity={selectedCity}
+          selectedYear={selectedYear}
+        />
+      </div>
 
       {/* Elevators by Liter Chart (New) */}
       <div className="w-full">

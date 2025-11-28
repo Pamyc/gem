@@ -3,12 +3,12 @@ import React, { useMemo } from 'react';
 import DynamicCard from '../../../components/cards/DynamicCard';
 import { CardConfig } from '../../../types/card';
 
-interface KPISectionProps {
+interface KPISection2Props {
   selectedCity: string;
   selectedYear: string;
 }
 
-const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) => {
+const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear }) => {
   // --- KPI CONFIGURATIONS ---
   const baseConfigs = useMemo<CardConfig[]>(() => [
     // Row 1
@@ -199,4 +199,4 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
   );
 };
 
-export default KPISection;
+export default KPISection2;
