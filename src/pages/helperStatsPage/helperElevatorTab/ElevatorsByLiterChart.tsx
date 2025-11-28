@@ -33,12 +33,12 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
   // Ref to access the ECharts instance
   const chartRef = useRef<EChartInstance>(null);
 
-  const { chartData, sunburstData, xLabels, uniqueJKs, jkSummary } = useMemo(() => {
+  const { chartData, sunburstData, xLabels, uniqueJKs, jkSummary, totalElevators } = useMemo(() => {
     const sheetKey = 'clientGrowth';
     const sheetData = googleSheets[sheetKey];
 
     if (!sheetData || !sheetData.headers || !sheetData.rows) {
-      return { chartData: [], sunburstData: [], xLabels: [], uniqueJKs: [], jkSummary: [] };
+      return { chartData: [], sunburstData: [], xLabels: [], uniqueJKs: [], jkSummary: [], totalElevators: 0 };
     }
 
     const config = sheetConfigs.find(c => c.key === sheetKey);
@@ -56,7 +56,7 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
     const idxNoBreakdown = headers.indexOf('Отдельный литер (Да/Нет)');
 
-    if (idxJK === -1 || idxElevators === -1) return { chartData: [], sunburstData: [], xLabels: [], uniqueJKs: [], jkSummary: [] };
+    if (idxJK === -1 || idxElevators === -1) return { chartData: [], sunburstData: [], xLabels: [], uniqueJKs: [], jkSummary: [], totalElevators: 0 };
 
     // 1. Сбор сырых данных
     const rawItems = sheetData.rows.map(row => {
@@ -111,7 +111,7 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
     const jkMap = new Map<string, { total: number, liters: { name: string, value: number }[] }>();
 
     // Считаем общий итог для процентов
-    const totalElevators = rawItems.reduce((acc, curr) => acc + curr.value, 0);
+    const totalElevatorsCalc = rawItems.reduce((acc, curr) => acc + curr.value, 0);
 
     rawItems.forEach(item => {
       if (!jkMap.has(item.jk)) {
@@ -126,7 +126,7 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
       .map(([name, data]) => ({
         name,
         value: data.total,
-        percent: totalElevators > 0 ? ((data.total / totalElevators) * 100).toFixed(1) : '0',
+        percent: totalElevatorsCalc > 0 ? ((data.total / totalElevatorsCalc) * 100).toFixed(1) : '0',
         liters: data.liters
           .map(l => ({
             ...l,
@@ -176,7 +176,8 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
       sunburstData: sunburstHierarchy,
       xLabels: labels,
       uniqueJKs: uniqueJKsList,
-      jkSummary
+      jkSummary,
+      totalElevators: totalElevatorsCalc
     };
   }, [googleSheets, sheetConfigs, selectedCity, selectedYear]);
 
@@ -413,9 +414,19 @@ const ElevatorsByLiterChart: React.FC<ElevatorsByLiterChartProps> = ({ isDarkMod
         {/* Custom Side List for Sunburst with Accordion (Moved to LEFT) */}
         {chartType === 'sunburst' && (
           <div className="w-1/3 min-w-[220px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-4 pl-2 py-2 animate-in slide-in-from-left-4 duration-500">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 sticky top-0 bg-white dark:bg-[#151923] py-2 z-10">
-              Рейтинг ЖК
-            </h4>
+            <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-[#151923] py-2 z-10 mb-2 border-b border-gray-100 dark:border-white/5">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Рейтинг ЖК
+                </h4>
+                {totalElevators > 0 && (
+                  <div className="flex items-center gap-1">
+                     <span className="text-[10px] font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md font-mono">
+                        {totalElevators}
+                     </span>
+                  </div>
+                )}
+            </div>
+            
             <div className="space-y-1">
               {jkSummary.map((item) => {
                 const isExpanded = expandedJK === item.name;
