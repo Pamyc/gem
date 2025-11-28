@@ -103,11 +103,11 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       // Try to use "Отдельный литер (Да/Нет)" column first (as per modal fix)
       let liters = 0;
       if (idxOneLiter !== -1) {
-         liters = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да').length;
+         liters = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да'.toLowerCase()).length;
       } else {
          // Fallback logic
          const detailRows = idxNoBreakdown !== -1
-            ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет')
+            ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет'.toLowerCase())
             : rows;
          liters = detailRows.length;
       }
