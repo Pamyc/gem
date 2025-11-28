@@ -1,10 +1,19 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import * as echarts from 'echarts';
 import { ChartProps } from '../../types';
 
-const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", theme, merge = false }) => {
+export interface EChartInstance {
+  getInstance: () => echarts.ECharts | null;
+}
+
+const EChartComponent = forwardRef<EChartInstance, ChartProps>(({ options, height = "300px", theme, merge = false }, ref) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
+
+  // Expose the instance to the parent via ref
+  useImperativeHandle(ref, () => ({
+    getInstance: () => chartInstance.current
+  }));
 
   // Эффект для инициализации и смены темы
   useEffect(() => {
@@ -56,6 +65,6 @@ const EChartComponent: React.FC<ChartProps> = ({ options, height = "300px", them
   }, [options, merge]);
 
   return <div ref={chartRef} style={{ width: '100%', height, overflow: 'hidden' }} />;
-};
+});
 
 export default EChartComponent;
