@@ -16,10 +16,26 @@ interface HousingComplexSectionProps {
 
 // Массив соответствия названия ЖК и ключа картинки
 const jkImageMapping = [
-  {
-    name: "Октябрь парк",
-    id: "oktbr_park",
-  },
+  
+  { name: "Октябрь парк", id: "oktbr_park" },
+  { name: "Архитектор", id: "arhi" },
+  { name: "Цитрус", id: "citrus" },
+  { name: "Долина", id: "dolina" },
+  { name: "Движение", id: "dvigenie" },
+  { name: "Эстет", id: "estet" },
+  { name: "1777", id: "kvartal1777" },
+  { name: "Левобережье", id: "levober" },
+  { name: "Лучший", id: "luchshiy" },
+  { name: "Моне", id: "mone" },
+  { name: "Основа", id: "osnova" },
+  { name: "Печерин", id: "pecherin" },
+  { name: "Персона", id: "persona" },
+  { name: "Полет", id: "polet" },
+  { name: "Сияние", id: "sijanie" },
+  { name: "Софи", id: "sofi" },
+  { name: "Усадьба", id: "usadba" },
+  { name: "Высота", id: "visota" },
+  { name: "Золотой берег", id: "zolotoi" }
 ];
 
 interface JKAggregatedData {
