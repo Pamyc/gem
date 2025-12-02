@@ -4,13 +4,14 @@ import { useDataStore } from '../../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../../utils/chartUtils';
 import { 
   COLORS, STATUS_COLORS, SEPARATOR, ALL_YEARS, ROOT_ID,
-  ColorMode, RawItem, CitySummaryItem 
+  ColorMode, RawItem, CitySummaryItem, MetricKey
 } from './types';
 
 interface UseChartDataProps {
   selectedYear: string;
   selectedCity?: string;
   colorMode: ColorMode;
+  activeMetric: MetricKey;
 }
 
 // Helper to safely parse float
@@ -21,7 +22,7 @@ const parseFloatSafe = (val: any) => {
     return isNaN(num) ? 0 : num;
 };
 
-export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChartDataProps) => {
+export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetric }: UseChartDataProps) => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
   return useMemo(() => {
@@ -35,9 +36,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
         xLabels: [],
         uniqueJKs: [],
         citySummary: [],
-        totalElevators: 0,
-        totalFloors: 0,
-        totalProfit: 0,
+        totalValue: 0,
         years: [ALL_YEARS],
       };
     }
@@ -51,7 +50,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
     const idxLiter = headers.indexOf('Литер');
     const idxElevators = headers.indexOf('Кол-во лифтов');
     const idxFloors = headers.indexOf('Кол-во этажей');
-    const idxProfit = headers.indexOf('Валовая'); // Or "Валовая + Валовая + Валовая" if logic changes, currently simple match works due to header merging logic usually picking unique
+    const idxProfit = headers.indexOf('Валовая'); 
     
     const idxCity = headers.indexOf('Город');
     const idxYear = headers.indexOf('Год');
@@ -60,7 +59,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
     const idxNoBreakdown = headers.indexOf('Отдельный литер (Да/Нет)');
 
     // --- New Financial Columns ---
-    // Using strict match based on user prompt convention "Row1 + Row2 + Row3"
     const idxIncomeFact = headers.indexOf('Доходы + Итого + Факт');
     const idxExpenseFact = headers.indexOf('Расходы + Итого + факт');
     
@@ -74,7 +72,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
     const idxExpenseMont = headers.indexOf('Расходы + Монтаж ЛО + Факт');
     
     // Averages
-    const idxRentability = headers.indexOf('Рентабельность'); 
     const idxProfitPerLift = headers.indexOf('Прибыль с 1 лифта');
 
     if (idxJK === -1 || idxElevators === -1 || idxCity === -1) {
@@ -84,9 +81,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
         xLabels: [],
         uniqueJKs: [],
         citySummary: [],
-        totalElevators: 0,
-        totalFloors: 0,
-        totalProfit: 0,
+        totalValue: 0,
         years: [ALL_YEARS],
       };
     }
@@ -129,7 +124,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
       const incomeMont = idxIncomeMont !== -1 ? parseFloatSafe(row[idxIncomeMont]) : 0;
       const expenseMont = idxExpenseMont !== -1 ? parseFloatSafe(row[idxExpenseMont]) : 0;
       
-      const rentability = idxRentability !== -1 ? parseFloatSafe(row[idxRentability]) : 0;
       const profitPerLift = idxProfitPerLift !== -1 ? parseFloatSafe(row[idxProfitPerLift]) : 0;
 
       if (!jk || !liter || value === 0) return;
@@ -140,7 +134,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
           incomeLO, expenseLO,
           incomeObr, expenseObr,
           incomeMont, expenseMont,
-          rentability, profitPerLift
+          profitPerLift
       });
     });
 
@@ -152,9 +146,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
         xLabels: [],
         uniqueJKs: [],
         citySummary: [],
-        totalElevators: 0,
-        totalFloors: 0,
-        totalProfit: 0,
+        totalValue: 0,
         years: [ALL_YEARS, ...yearsArr],
       };
     }
@@ -167,46 +159,49 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
 
     const uniqueJKsList = Array.from(new Set(rawItems.map(i => i.jk)));
     
-    // Grand Totals
-    const totalElevatorsCalc = rawItems.reduce((acc, curr) => acc + curr.value, 0);
-    const totalFloorsCalc = rawItems.reduce((acc, curr) => acc + curr.floors, 0);
-    const totalProfitCalc = rawItems.reduce((acc, curr) => acc + curr.profit, 0);
+    // --- Determine active values for nodes and total based on selected metric ---
+    // Helper to extract value from a RawItem dynamically
+    const getValue = (item: RawItem, metric: MetricKey): number => {
+        // Direct access since RawItem keys match MetricKey
+        return item[metric];
+    };
+
+    // Calculate Grand Total for the ACTIVE METRIC to use in percentages
+    const totalMetricValue = rawItems.reduce((acc, curr) => acc + getValue(curr, activeMetric), 0);
 
     // --- Aggregation Structures ---
     type Aggregator = {
-        count: number; // for averages
-        total: number;
-        totalFloors: number;
-        totalProfit: number;
-        
-        incomeFact: number;
-        expenseFact: number;
-        incomeLO: number;
-        expenseLO: number;
-        incomeObr: number;
-        expenseObr: number;
-        incomeMont: number;
-        expenseMont: number;
-        
-        sumRentability: number;
+        count: number;
+        // We aggregate EVERYTHING so we can switch views or show tooltips
+        value: number; // Elevators
+        floors: number;
+        profit: number;
+        incomeFact: number; expenseFact: number;
+        incomeLO: number; expenseLO: number;
+        incomeObr: number; expenseObr: number;
+        incomeMont: number; expenseMont: number;
         sumProfitPerLift: number;
+        
+        // This is the aggregated value of the currently selected metric
+        activeMetricSum: number; 
     }
 
     const createAggregator = (): Aggregator => ({
         count: 0,
-        total: 0, totalFloors: 0, totalProfit: 0,
+        value: 0, floors: 0, profit: 0,
         incomeFact: 0, expenseFact: 0,
         incomeLO: 0, expenseLO: 0,
         incomeObr: 0, expenseObr: 0,
         incomeMont: 0, expenseMont: 0,
-        sumRentability: 0, sumProfitPerLift: 0
+        sumProfitPerLift: 0,
+        activeMetricSum: 0
     });
 
     const accumulate = (acc: Aggregator, item: RawItem) => {
         acc.count += 1;
-        acc.total += item.value;
-        acc.totalFloors += item.floors;
-        acc.totalProfit += item.profit;
+        acc.value += item.value;
+        acc.floors += item.floors;
+        acc.profit += item.profit;
         
         acc.incomeFact += item.incomeFact;
         acc.expenseFact += item.expenseFact;
@@ -217,8 +212,10 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
         acc.incomeMont += item.incomeMont;
         acc.expenseMont += item.expenseMont;
         
-        acc.sumRentability += item.rentability;
         acc.sumProfitPerLift += item.profitPerLift;
+
+        // Accumulate active metric specifically
+        acc.activeMetricSum += getValue(item, activeMetric);
     };
 
     const cityMap = new Map<string, { 
@@ -244,42 +241,52 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
     const citySummary: CitySummaryItem[] = Array.from(cityMap.entries())
       .map(([cityName, data], idx) => {
         const cityColor = COLORS[idx % COLORS.length];
-        
+        const cityActiveValue = data.agg.activeMetricSum;
+
         const jksArray = Array.from(data.jks.entries())
           .map(([jkName, jkData]) => {
-             // Map liters for this JK
-             const litersArray = jkData.liters.map(l => ({
-                 name: l.liter,
-                 value: l.value,
-                 floors: l.floors,
-                 profit: l.profit,
-                 isHandedOver: l.isHandedOver,
-                 percent: jkData.agg.total > 0 ? ((l.value / jkData.agg.total) * 100).toFixed(1) : '0',
-                 percentFloors: jkData.agg.totalFloors > 0 ? ((l.floors / jkData.agg.totalFloors) * 100).toFixed(1) : '0',
-                 percentProfit: jkData.agg.totalProfit > 0 ? ((l.profit / jkData.agg.totalProfit) * 100).toFixed(1) : '0',
-                 
-                 // Pass through raw for liter (no averaging needed really, it's a single item)
-                 incomeFact: l.incomeFact,
-                 expenseFact: l.expenseFact,
-                 incomeLO: l.incomeLO,
-                 expenseLO: l.expenseLO,
-                 incomeObr: l.incomeObr,
-                 expenseObr: l.expenseObr,
-                 incomeMont: l.incomeMont,
-                 expenseMont: l.expenseMont,
-                 rentability: l.rentability,
-                 profitPerLift: l.profitPerLift,
+             const jkActiveValue = jkData.agg.activeMetricSum;
 
-             })).sort((a, b) => b.value - a.value);
+             // Map liters for this JK
+             const litersArray = jkData.liters.map(l => {
+                 const literActiveValue = getValue(l, activeMetric);
+                 return {
+                    name: l.liter,
+                    // DYNAMIC VALUE FOR CHART
+                    value: literActiveValue, 
+                    
+                    // DYNAMIC PERCENT based on JK Total of active metric (or handle 0)
+                    percent: jkActiveValue > 0 ? ((literActiveValue / jkActiveValue) * 100).toFixed(1) : '0',
+                    
+                    // Static props for tooltip
+                    elevators: l.value,
+                    floors: l.floors,
+                    profit: l.profit,
+                    isHandedOver: l.isHandedOver,
+                    
+                    incomeFact: l.incomeFact,
+                    expenseFact: l.expenseFact,
+                    incomeLO: l.incomeLO,
+                    expenseLO: l.expenseLO,
+                    incomeObr: l.incomeObr,
+                    expenseObr: l.expenseObr,
+                    incomeMont: l.incomeMont,
+                    expenseMont: l.expenseMont,
+                    profitPerLift: l.profitPerLift,
+                 };
+             }).sort((a, b) => b.value - a.value);
 
              return {
                 name: jkName,
-                value: jkData.agg.total,
-                floors: jkData.agg.totalFloors,
-                profit: jkData.agg.totalProfit,
-                percent: data.agg.total > 0 ? ((jkData.agg.total / data.agg.total) * 100).toFixed(1) : '0',
-                percentFloors: data.agg.totalFloors > 0 ? ((jkData.agg.totalFloors / data.agg.totalFloors) * 100).toFixed(1) : '0',
-                percentProfit: data.agg.totalProfit > 0 ? ((jkData.agg.totalProfit / data.agg.totalProfit) * 100).toFixed(1) : '0',
+                // DYNAMIC VALUE FOR CHART
+                value: jkActiveValue,
+                // DYNAMIC PERCENT based on City Total of active metric
+                percent: cityActiveValue > 0 ? ((jkActiveValue / cityActiveValue) * 100).toFixed(1) : '0',
+                
+                // Static props for tooltip
+                elevators: jkData.agg.value,
+                floors: jkData.agg.floors,
+                profit: jkData.agg.profit,
                 liters: litersArray,
 
                 // Aggregated Fields
@@ -291,7 +298,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
                 expenseObr: jkData.agg.expenseObr,
                 incomeMont: jkData.agg.incomeMont,
                 expenseMont: jkData.agg.expenseMont,
-                rentability: jkData.agg.count > 0 ? jkData.agg.sumRentability / jkData.agg.count : 0,
                 profitPerLift: jkData.agg.count > 0 ? jkData.agg.sumProfitPerLift / jkData.agg.count : 0,
              };
           })
@@ -299,14 +305,18 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
 
         return {
           name: cityName,
-          value: data.agg.total,
-          floors: data.agg.totalFloors,
-          profit: data.agg.totalProfit,
-          percent: totalElevatorsCalc > 0 ? ((data.agg.total / totalElevatorsCalc) * 100).toFixed(1) : '0',
-          percentFloors: totalFloorsCalc > 0 ? ((data.agg.totalFloors / totalFloorsCalc) * 100).toFixed(1) : '0',
-          percentProfit: totalProfitCalc > 0 ? ((data.agg.totalProfit / totalProfitCalc) * 100).toFixed(1) : '0',
+          // DYNAMIC VALUE FOR CHART
+          value: cityActiveValue,
+          // DYNAMIC PERCENT based on Grand Total of active metric
+          percent: totalMetricValue > 0 ? ((cityActiveValue / totalMetricValue) * 100).toFixed(1) : '0',
+          
           color: cityColor,
           jks: jksArray,
+
+          // Static props
+          elevators: data.agg.value,
+          floors: data.agg.floors,
+          profit: data.agg.profit,
 
           // City Aggregates
           incomeFact: data.agg.incomeFact,
@@ -317,7 +327,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
           expenseObr: data.agg.expenseObr,
           incomeMont: data.agg.incomeMont,
           expenseMont: data.agg.expenseMont,
-          rentability: data.agg.count > 0 ? data.agg.sumRentability / data.agg.count : 0,
           profitPerLift: data.agg.count > 0 ? data.agg.sumProfitPerLift / data.agg.count : 0,
         };
       })
@@ -328,11 +337,9 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
       return COLORS[uniqueJKsList.indexOf(jkName) % COLORS.length];
     };
 
-    // Bar Data
+    // Bar Data - Use Active Metric for Value
     const chartData = rawItems.map(item => ({
-      value: item.value,
-      floors: item.floors,
-      profit: item.profit,
+      value: getValue(item, activeMetric), // DYNAMIC VALUE
       name: `${item.city} / ${item.jk} / ${item.liter}`,
       jkName: item.jk,
       cityName: item.city,
@@ -342,7 +349,10 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
         color: getItemColor(item.jk, item.isHandedOver),
         borderRadius: [3, 3, 0, 0],
       },
-      // Pass all extra fields to bar items too for consistent tooltip
+      // Pass all original fields for tooltip
+      elevators: item.value,
+      floors: item.floors,
+      profit: item.profit,
       incomeFact: item.incomeFact,
       expenseFact: item.expenseFact,
       incomeLO: item.incomeLO,
@@ -351,7 +361,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
       expenseObr: item.expenseObr,
       incomeMont: item.incomeMont,
       expenseMont: item.expenseMont,
-      rentability: item.rentability,
       profitPerLift: item.profitPerLift,
     }));
     const xLabels = chartData.map(i => i.name);
@@ -363,14 +372,15 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
       return {
         id: cityId,
         name: city.name,
-        value: city.value,
-        floors: city.floors,
-        profit: city.profit,
+        value: city.value, // Uses Active Metric
         // Embed calculated percentages and ALL financials
         data: {
-            percent: city.percent,
-            percentFloors: city.percentFloors,
-            percentProfit: city.percentProfit,
+            percent: city.percent, // Already relative to active metric total
+            
+            // Raw values for tooltip
+            elevators: city.elevators,
+            floors: city.floors,
+            profit: city.profit,
             
             incomeFact: city.incomeFact,
             expenseFact: city.expenseFact,
@@ -380,7 +390,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
             expenseObr: city.expenseObr,
             incomeMont: city.incomeMont,
             expenseMont: city.expenseMont,
-            rentability: city.rentability,
             profitPerLift: city.profitPerLift
         },
         itemStyle: { color: city.color },
@@ -391,13 +400,13 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
           return {
             id: jkId,
             name: `${city.name}${SEPARATOR}${jk.name}`,
-            value: jk.value,
-            floors: jk.floors,
-            profit: jk.profit,
+            value: jk.value, // Uses Active Metric
             data: {
                 percent: jk.percent,
-                percentFloors: jk.percentFloors,
-                percentProfit: jk.percentProfit,
+
+                elevators: jk.elevators,
+                floors: jk.floors,
+                profit: jk.profit,
 
                 incomeFact: jk.incomeFact,
                 expenseFact: jk.expenseFact,
@@ -407,7 +416,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
                 expenseObr: jk.expenseObr,
                 incomeMont: jk.incomeMont,
                 expenseMont: jk.expenseMont,
-                rentability: jk.rentability,
                 profitPerLift: jk.profitPerLift
             },
             itemStyle: { color: jkColor },
@@ -416,13 +424,13 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
               return {
                 id: literId,
                 name: `${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${lit.name}`,
-                value: lit.value,
-                floors: lit.floors,
-                profit: lit.profit,
+                value: lit.value, // Uses Active Metric
                 data: {
                     percent: lit.percent,
-                    percentFloors: lit.percentFloors,
-                    percentProfit: lit.percentProfit,
+
+                    elevators: lit.elevators,
+                    floors: lit.floors,
+                    profit: lit.profit,
 
                     incomeFact: lit.incomeFact,
                     expenseFact: lit.expenseFact,
@@ -432,7 +440,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
                     expenseObr: lit.expenseObr,
                     incomeMont: lit.incomeMont,
                     expenseMont: lit.expenseMont,
-                    rentability: lit.rentability,
                     profitPerLift: lit.profitPerLift
                 },
                 itemStyle: {
@@ -461,10 +468,8 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode }: UseChart
       xLabels,
       uniqueJKs: uniqueJKsList,
       citySummary,
-      totalElevators: totalElevatorsCalc,
-      totalFloors: totalFloorsCalc,
-      totalProfit: totalProfitCalc,
+      totalValue: totalMetricValue, // Total of active metric
       years: [ALL_YEARS, ...yearsArr],
     };
-  }, [googleSheets, sheetConfigs, selectedYear, selectedCity, colorMode]);
+  }, [googleSheets, sheetConfigs, selectedYear, selectedCity, colorMode, activeMetric]);
 };

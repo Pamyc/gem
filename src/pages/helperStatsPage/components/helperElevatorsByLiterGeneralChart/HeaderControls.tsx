@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { BarChart2, PieChart, Palette, CheckCircle2, Home, ChevronRight as ChevronRightIcon } from 'lucide-react';
-import { ChartType, ColorMode } from './types';
+import { BarChart2, PieChart, Palette, CheckCircle2, Home, ChevronRight as ChevronRightIcon, TrendingUp } from 'lucide-react';
+import { ChartType, ColorMode, MetricKey, METRIC_OPTIONS } from './types';
 
 interface HeaderControlsProps {
   colorMode: ColorMode;
@@ -13,6 +13,8 @@ interface HeaderControlsProps {
   years: string[];
   breadcrumbs: string[];
   onResetZoom: () => void;
+  activeMetric: MetricKey;
+  setActiveMetric: (metric: MetricKey) => void;
 }
 
 const HeaderControls: React.FC<HeaderControlsProps> = ({
@@ -24,28 +26,46 @@ const HeaderControls: React.FC<HeaderControlsProps> = ({
   setSelectedYear,
   years,
   breadcrumbs,
-  onResetZoom
+  onResetZoom,
+  activeMetric,
+  setActiveMetric
 }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-          Количество лифтов по городам / ЖК / литерам
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight flex items-center gap-2">
+          {breadcrumbs.length > 0 ? (
+             <span className="text-indigo-500">{breadcrumbs[breadcrumbs.length - 1]}</span>
+          ) : (
+             "Общая статистика"
+          )}
           {colorMode === 'status' && (
-            <span className="text-emerald-500 ml-2">(Статус сдачи)</span>
+            <span className="text-emerald-500 text-sm font-normal">(Статус сдачи)</span>
           )}
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
           Sunburst: Город → ЖК → Литер.
-          {' '}
-          {colorMode === 'status'
-            ? 'Цвет: Зеленый (Сдан) / Красный (В работе)'
-            : 'Цвет: группировка по ЖК.'}
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2 items-center">
         
+        {/* Metric Selector */}
+        <div className="flex items-center bg-indigo-50 dark:bg-indigo-500/10 rounded-lg px-2 py-1 border border-indigo-100 dark:border-indigo-500/20">
+           <TrendingUp size={14} className="text-indigo-600 dark:text-indigo-400 mr-2" />
+           <select
+            className="bg-transparent text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none cursor-pointer min-w-[120px] max-w-[180px]"
+            value={activeMetric}
+            onChange={e => setActiveMetric(e.target.value as MetricKey)}
+          >
+            {METRIC_OPTIONS.map(m => (
+              <option key={m.key} value={m.key} className="bg-white dark:bg-[#151923] text-gray-900 dark:text-white">
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Breadcrumbs */}
         {chartType === 'sunburst' && (
           <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">
@@ -107,7 +127,7 @@ const HeaderControls: React.FC<HeaderControlsProps> = ({
             title="Цвет по статусу сдачи"
           >
             <CheckCircle2 size={14} />
-            Сдан да/нет
+            Сдан
           </button>
         </div>
 
@@ -133,7 +153,7 @@ const HeaderControls: React.FC<HeaderControlsProps> = ({
             }`}
           >
             <PieChart size={14} />
-            Sunburst
+            Sun
           </button>
         </div>
       </div>

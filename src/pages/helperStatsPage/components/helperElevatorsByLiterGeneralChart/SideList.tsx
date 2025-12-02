@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Building } from 'lucide-react';
-import { CitySummaryItem, ColorMode, SEPARATOR, STATUS_COLORS, TooltipData, JKItem, LiterItem } from './types';
+import { CitySummaryItem, ColorMode, SEPARATOR, STATUS_COLORS, TooltipData, JKItem, LiterItem, MetricKey, METRIC_OPTIONS } from './types';
 import { getTooltipHtml } from './useChartOptions';
 
 interface SideListProps {
   citySummary: CitySummaryItem[];
-  totalElevators: number;
+  totalValue: number;
   expandedCity: string | null;
   toggleCity: (name: string) => void;
   expandedJK: string | null;
@@ -14,20 +14,33 @@ interface SideListProps {
   onHoverItem: (name: string) => void;
   onLeaveItem: (name: string) => void;
   colorMode: ColorMode;
+  activeMetric: MetricKey;
 }
 
 const SideList: React.FC<SideListProps> = ({
   citySummary,
-  totalElevators,
+  totalValue,
   expandedCity,
   toggleCity,
   expandedJK,
   toggleJK,
   onHoverItem,
   onLeaveItem,
-  colorMode
+  colorMode,
+  activeMetric
 }) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
+
+  // Get active metric label info
+  const metricInfo = METRIC_OPTIONS.find(m => m.key === activeMetric);
+  const metricSuffix = metricInfo?.suffix || '';
+  const metricPrefix = metricInfo?.prefix || '';
+
+  const formatValue = (val: number) => {
+      // Use simpler format for list
+      const n = Math.round(val); // List values are usually integers or rounded
+      return `${metricPrefix}${n.toLocaleString('ru-RU')}${metricSuffix}`;
+  };
 
   const handleMouseMove = (
       e: React.MouseEvent, 
@@ -36,12 +49,12 @@ const SideList: React.FC<SideListProps> = ({
   ) => {
     
     const data: TooltipData = {
-        value: item.value,
+        value: item.elevators, // Use RAW Elevators for tooltip display consistency
         floors: item.floors,
         profit: item.profit,
+        
+        // Percent is dynamically calculated relative to active metric
         percent: item.percent,
-        percentFloors: item.percentFloors,
-        percentProfit: item.percentProfit,
         
         incomeFact: item.incomeFact,
         expenseFact: item.expenseFact,
@@ -51,25 +64,19 @@ const SideList: React.FC<SideListProps> = ({
         expenseObr: item.expenseObr,
         incomeMont: item.incomeMont,
         expenseMont: item.expenseMont,
-        rentability: item.rentability,
         profitPerLift: item.profitPerLift,
     };
 
-    const htmlContent = getTooltipHtml(title, data, true);
+    const htmlContent = getTooltipHtml(title, data, true, activeMetric);
 
-    // --- Dynamic Positioning Logic ---
-    const tooltipHeight = 450; // Estimated height for expanded tooltip
+    const tooltipHeight = 450;
     const windowHeight = window.innerHeight;
     const clientY = e.clientY;
 
     let top = clientY + 10;
     
-    // Check if tooltip overflows bottom of screen
     if (clientY + tooltipHeight + 20 > windowHeight) {
-       // Flip to top
        top = clientY - tooltipHeight - 10;
-       
-       // Safety: Ensure it doesn't go off top edge
        if (top < 10) top = 10;
     }
 
@@ -88,16 +95,20 @@ const SideList: React.FC<SideListProps> = ({
     <>
       <div className="w-1/3 min-w-[220px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-4 pl-2 py-2 animate-in slide-in-from-left-4 duration-500 relative">
         <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-[#151923] py-2 z-10 mb-2 border-b border-gray-100 dark:border-white/5">
-          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Рейтинг городов
-          </h4>
-          {totalElevators > 0 && (
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md font-mono">
-                {totalElevators}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-col">
+             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+               Рейтинг городов
+             </h4>
+             <span className="text-[10px] text-indigo-500 font-bold truncate max-w-[120px]">
+               {metricInfo?.label}
+             </span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md font-mono">
+              {formatValue(totalValue)}
+            </span>
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -133,7 +144,7 @@ const SideList: React.FC<SideListProps> = ({
                       {city.percent}%
                     </span>
                     <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
-                      {city.value}
+                      {formatValue(city.value)}
                     </span>
                     <div className="text-gray-400 group-hover:text-indigo-500 transition-colors">
                       {isCityExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -171,7 +182,7 @@ const SideList: React.FC<SideListProps> = ({
                                 {jk.percent}%
                               </span>
                               <span className="text-[11px] font-mono text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 px-1.5 rounded border border-gray-100 dark:border-white/10">
-                                {jk.value}
+                                {formatValue(jk.value)}
                               </span>
                             </div>
                           </div>
@@ -203,7 +214,7 @@ const SideList: React.FC<SideListProps> = ({
                                       {liter.percent}%
                                     </span>
                                     <span className="text-[10px] font-mono text-gray-600 dark:text-gray-400">
-                                      {liter.value}
+                                      {formatValue(liter.value)}
                                     </span>
                                   </div>
                                 </div>

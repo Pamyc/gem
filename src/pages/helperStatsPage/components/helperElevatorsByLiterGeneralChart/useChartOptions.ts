@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
-import { SEPARATOR, ROOT_ID, ChartType, TooltipData } from './types';
+import { SEPARATOR, ROOT_ID, ChartType, TooltipData, MetricKey } from './types';
+import { formatLargeNumber } from '../../../../utils/formatUtils';
 
 interface UseChartOptionsProps {
   isDarkMode: boolean;
@@ -8,10 +9,11 @@ interface UseChartOptionsProps {
   sunburstRootId: string;
   chartData: any[];
   fullSunburstData: any[];
+  activeMetric: MetricKey;
 }
 
 // --- SINGLE SOURCE OF TRUTH FOR TOOLTIP HTML ---
-export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boolean) => {
+export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boolean, activeMetric: MetricKey) => {
   const textColor = '#ffffff'; 
   const labelColor = '#94a3b8'; // Slate-400
   const valColor = '#ffffff';
@@ -21,74 +23,103 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
   const fmt = (n?: number) => (n !== undefined ? n.toLocaleString('ru-RU') : '0');
   const fmtMoney = (n?: number) => (n !== undefined ? n.toLocaleString('ru-RU') + ' ₽' : '0 ₽');
   
-  // Row with optional Arrow
-  const row = (label: string, val: string, pct?: string, arrowHtml: string = '') => `
-    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 4px;">
-      <span style="color: ${labelColor}; font-size: 13px; font-weight: 500;">${label}:</span>
+  // Generic row creator
+  const row = (label: string, val: string, pct?: string, arrowHtml: string = '', isPrimary: boolean = false, valueColorOverride?: string) => {
+    const finalValueColor = valueColorOverride ? valueColorOverride : (isPrimary ? '#fff' : valColor);
+    
+    return `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 4px; ${isPrimary ? 'background: rgba(139, 92, 246, 0.15); padding: 4px 8px; margin: 4px -4px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);' : ''}">
+      <span style="color: ${isPrimary ? '#c4b5fd' : labelColor}; font-size: ${isPrimary ? '14px' : '13px'}; font-weight: ${isPrimary ? '700' : '500'};">${label}:</span>
       <div style="text-align: right; white-space: nowrap;">
-        <span style="color: ${valColor}; font-size: 14px; font-weight: 700; margin-right: ${pct ? '8px' : '0'};">${val}</span>
+        <span style="color: ${finalValueColor}; font-size: ${isPrimary ? '16px' : '14px'}; font-weight: 700; margin-right: ${pct ? '8px' : '0'};">${val}</span>
         ${arrowHtml}
         ${pct ? `<span style="color: ${percentColor}; font-size: 12px; font-weight: 600;">(${pct}%)</span>` : ''}
       </div>
     </div>
   `;
+  };
 
-  // Helper to render a pair of Income/Expense with comparison arrows
-  // Logic: Mark the higher value. Green Up for Income, Red Down (Warning) for Expense.
-  const renderPair = (l1: string, v1: number | undefined, l2: string, v2: number | undefined) => {
-      const val1 = v1 || 0;
-      const val2 = v2 || 0;
+  // Render a pair of values
+  const renderPair = (key1: MetricKey, label1: string, val1: number | undefined, key2: MetricKey, label2: string, val2: number | undefined) => {
+      const v1 = val1 || 0;
+      const v2 = val2 || 0;
       
-      // If Income > Expense: Green Arrow Up on Income
-      const arrow1 = val1 > val2 ? '<span style="color: #4ade80; margin-left: 6px; font-size: 12px;">▲</span>' : '';
-      
-      // If Expense > Income: Red Arrow Down on Expense (User request: "red arrow down")
-      // Visualizing "Expense is heavier/dragging down" or simply distinction.
-      const arrow2 = val2 > val1 ? '<span style="color: #f87171; margin-left: 6px; font-size: 12px;">▼</span>' : '';
+      const isIncomeHigher = v1 > v2;
+      const isExpenseHigher = v2 > v1;
+
+      const arrow1 = isIncomeHigher ? '<span style="color: #4ade80; margin-left: 6px; font-size: 12px;">▲</span>' : '';
+      const arrow2 = isExpenseHigher ? '<span style="color: #f87171; margin-left: 6px; font-size: 12px;">▼</span>' : '';
+
+      const color1 = isIncomeHigher ? '#4ade80' : undefined;
+      const color2 = isExpenseHigher ? '#f87171' : undefined;
+
+      // Check if one of these is active. If so, only highlight THAT one.
+      const isPrimary1 = activeMetric === key1;
+      const isPrimary2 = activeMetric === key2;
 
       return `
-        ${row(l1, fmtMoney(v1), undefined, arrow1)}
-        ${row(l2, fmtMoney(v2), undefined, arrow2)}
+        ${row(label1, fmtMoney(v1), undefined, arrow1, isPrimary1, color1)}
+        ${row(label2, fmtMoney(v2), undefined, arrow2, isPrimary2, color2)}
       `;
   };
 
   const divider = `<div style="height: 1px; background-color: rgba(255,255,255,0.1); margin: 8px 0;"></div>`;
-
   const titleHtml = `<div style="font-size: 16px; font-weight: 800; color: ${textColor}; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${title}</div>`;
+
+  // --- Logic to reorder items based on selection ---
+  const allRows = [
+      () => row('Лифтов', fmt(data.value), activeMetric === 'value' ? data.percent : undefined, '', activeMetric === 'value'),
+      () => row('Этажей', fmt(data.floors), activeMetric === 'floors' ? data.percent : undefined, '', activeMetric === 'floors'),
+      () => row('Валовая', fmtMoney(data.profit), activeMetric === 'profit' ? data.percent : undefined, '', activeMetric === 'profit'),
+      
+      () => `
+        ${divider}
+        ${renderPair('incomeFact', 'Доходы (Факт)', data.incomeFact, 'expenseFact', 'Расходы (Факт)', data.expenseFact)}
+      `,
+      () => `
+        ${divider}
+        ${renderPair('incomeLO', 'Доходы (ЛО)', data.incomeLO, 'expenseLO', 'Расходы (ЛО)', data.expenseLO)}
+      `,
+      () => `
+        ${divider}
+        ${renderPair('incomeObr', 'Доходы (Обр.)', data.incomeObr, 'expenseObr', 'Расходы (Обр.)', data.expenseObr)}
+      `,
+      () => `
+        ${divider}
+        ${renderPair('incomeMont', 'Доходы (Монтаж)', data.incomeMont, 'expenseMont', 'Расходы (Монтаж)', data.expenseMont)}
+      `
+  ];
+
+  let primaryHtml = '';
+  const remainingRows: (() => string)[] = [];
+
+  // Helper to check if a metric is inside a block
+  const isMetricInBlock = (blockIndex: number, metric: MetricKey) => {
+      if (blockIndex === 0 && metric === 'value') return true;
+      if (blockIndex === 1 && metric === 'floors') return true;
+      if (blockIndex === 2 && metric === 'profit') return true;
+      if (blockIndex === 3 && (metric === 'incomeFact' || metric === 'expenseFact')) return true;
+      if (blockIndex === 4 && (metric === 'incomeLO' || metric === 'expenseLO')) return true;
+      if (blockIndex === 5 && (metric === 'incomeObr' || metric === 'expenseObr')) return true;
+      if (blockIndex === 6 && (metric === 'incomeMont' || metric === 'expenseMont')) return true;
+      return false;
+  };
+
+  allRows.forEach((renderFn, idx) => {
+      if (isMetricInBlock(idx, activeMetric)) {
+          primaryHtml = renderFn(); // Capture the block containing the active metric
+      } else {
+          remainingRows.push(renderFn);
+      }
+  });
 
   return `
     <div style="font-family: sans-serif; min-width: 320px; padding: 4px;">
       ${titleHtml}
-      
-      ${row('Лифтов', fmt(data.value), data.percent)}
-      ${row('Этажей', fmt(data.floors), data.percentFloors)}
-      ${row('Рентабельность', (data.rentability?.toFixed(1) || '0') + '%')}
-      ${row('Валовая', fmtMoney(data.profit), data.percentProfit)}
-      
-      ${divider}
-      
-      ${renderPair('Доходы (Факт)', data.incomeFact, 'Расходы (Факт)', data.expenseFact)}
-      
-      ${divider}
-      
-      ${renderPair('Доходы (ЛО)', data.incomeLO, 'Расходы (ЛО)', data.expenseLO)}
-      
-      ${divider}
-      
-      ${renderPair('Доходы (Обр.)', data.incomeObr, 'Расходы (Обр.)', data.expenseObr)}
-      
-      ${divider}
-      
-      ${renderPair('Доходы (Монтаж)', data.incomeMont, 'Расходы (Монтаж)', data.expenseMont)}
-      
-      ${divider}
-      
-      
-      
+      ${primaryHtml} 
+      ${remainingRows.map(fn => fn()).join('')}
     </div>
   `;
-
-  //${row('Прибыль с 1 лифта', fmtMoney(data.profitPerLift))}
 };
 
 export const useChartOptions = ({
@@ -96,7 +127,8 @@ export const useChartOptions = ({
   chartType,
   sunburstRootId,
   chartData,
-  fullSunburstData
+  fullSunburstData,
+  activeMetric
 }: UseChartOptionsProps) => {
 
   const viewLevel = useMemo(() => {
@@ -155,7 +187,7 @@ export const useChartOptions = ({
         textStyle: { color: '#f8fafc' },
         padding: 12,
         extraCssText: 'box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); border-radius: 16px; backdrop-filter: blur(8px); z-index: 9999;',
-        confine: true, // Helps keep ECharts tooltip within container/view
+        confine: true, 
     };
 
     // --- SUNBURST CONFIG ---
@@ -178,12 +210,14 @@ export const useChartOptions = ({
             const extra = params.data.data || {}; 
 
             const tooltipData: TooltipData = {
-                value: raw.value || 0,
-                floors: raw.floors || 0,
-                profit: raw.profit || 0,
+                // value in params.data.value is already the DYNAMIC metric
+                // But we need all raw metrics for the tooltip rows
+                value: extra.elevators || 0, // Get raw elevators from data object
+                floors: extra.floors || 0,
+                profit: extra.profit || 0,
+                
+                // Percent is pre-calculated for the ACTIVE metric
                 percent: extra.percent,
-                percentFloors: extra.percentFloors,
-                percentProfit: extra.percentProfit,
                 
                 incomeFact: extra.incomeFact,
                 expenseFact: extra.expenseFact,
@@ -193,11 +227,10 @@ export const useChartOptions = ({
                 expenseObr: extra.expenseObr,
                 incomeMont: extra.incomeMont,
                 expenseMont: extra.expenseMont,
-                rentability: extra.rentability,
                 profitPerLift: extra.profitPerLift,
             };
 
-            return getTooltipHtml(label, tooltipData, isDarkMode);
+            return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
           },
         },
         series: [
@@ -284,9 +317,11 @@ export const useChartOptions = ({
           const title = `${data.cityName} / ${data.jkName} / ${data.literName}`;
           
           const tooltipData: TooltipData = {
-              value: data.value || 0,
+              value: data.elevators || 0,
               floors: data.floors || 0,
               profit: data.profit || 0,
+              
+              percent: undefined, 
               
               incomeFact: data.incomeFact,
               expenseFact: data.expenseFact,
@@ -296,11 +331,10 @@ export const useChartOptions = ({
               expenseObr: data.expenseObr,
               incomeMont: data.incomeMont,
               expenseMont: data.expenseMont,
-              rentability: data.rentability,
               profitPerLift: data.profitPerLift,
           };
           
-          return getTooltipHtml(title, tooltipData, isDarkMode);
+          return getTooltipHtml(title, tooltipData, isDarkMode, activeMetric);
         },
       },
       grid: { left: '1%', right: '1%', bottom: '2%', top: '5%', containLabel: true },
@@ -322,7 +356,11 @@ export const useChartOptions = ({
       yAxis: {
         show: true,
         type: 'value',
-        axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: 10 },
+        axisLabel: { 
+            color: isDarkMode ? '#94a3b8' : '#64748b', 
+            fontSize: 10,
+            formatter: (value: number) => formatLargeNumber(value)
+        },
         splitLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0', type: 'dashed' } }
       },
       dataZoom: [
@@ -331,7 +369,7 @@ export const useChartOptions = ({
       ],
       series: [
         {
-          name: 'Лифты',
+          name: 'Metric',
           type: 'bar',
           data: dataForBar,
           barMaxWidth: 300,
@@ -342,10 +380,11 @@ export const useChartOptions = ({
             color: isDarkMode ? '#e2e8f0' : '#1e293b',
             fontSize: dynamicLabelFontSize,
             fontWeight: 'bold',
-            distance: 2
+            distance: 2,
+            formatter: (params: any) => formatLargeNumber(params.value)
           }
         }
       ]
     };
-  }, [visibleBarData, visibleSunburstData, isDarkMode, chartType, sunburstRootId, viewLevel]);
+  }, [visibleBarData, visibleSunburstData, isDarkMode, chartType, sunburstRootId, viewLevel, activeMetric]);
 };

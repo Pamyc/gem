@@ -23,13 +23,39 @@ export const ROOT_ID = 'root';
 export type ChartType = 'bar' | 'sunburst';
 export type ColorMode = 'jk' | 'status';
 
+// Keys match the properties in RawItem/TooltipData
+export type MetricKey = 
+  | 'value' // Elevators
+  | 'floors'
+  | 'profit'
+  | 'incomeFact'
+  | 'expenseFact'
+  | 'incomeLO'
+  | 'expenseLO'
+  | 'incomeMont'
+  | 'expenseMont'
+  | 'incomeObr'
+  | 'expenseObr';
+
+export const METRIC_OPTIONS: { key: MetricKey; label: string; prefix?: string; suffix?: string }[] = [
+  { key: 'value', label: 'Кол-во лифтов', suffix: ' шт.' },
+  { key: 'floors', label: 'Кол-во этажей', suffix: '' },
+  { key: 'profit', label: 'Валовая прибыль', prefix: '₽ ' },
+  { key: 'incomeFact', label: 'Доходы (Факт)', prefix: '₽ ' },
+  { key: 'expenseFact', label: 'Расходы (Факт)', prefix: '₽ ' },
+  { key: 'incomeLO', label: 'Доходы (ЛО)', prefix: '₽ ' },
+  { key: 'expenseLO', label: 'Расходы (ЛО)', prefix: '₽ ' },
+  { key: 'incomeMont', label: 'Доходы (Монтаж)', prefix: '₽ ' },
+  { key: 'expenseMont', label: 'Расходы (Монтаж)', prefix: '₽ ' },
+  { key: 'incomeObr', label: 'Доходы (Обрамление)', prefix: '₽ ' },
+  { key: 'expenseObr', label: 'Расходы (Обрамление)', prefix: '₽ ' },
+];
+
 export interface TooltipData {
-    value: number;
+    value: number; // Elevators
     floors: number;
     profit: number; // Валовая
-    percent?: string; // Elevators %
-    percentFloors?: string;
-    percentProfit?: string;
+    percent?: string; // Dynamic percent based on active metric
     
     // New Fields
     incomeFact?: number;
@@ -40,7 +66,6 @@ export interface TooltipData {
     expenseObr?: number;
     incomeMont?: number;
     expenseMont?: number;
-    rentability?: number; // Average
     profitPerLift?: number; // Average
 }
 
@@ -62,19 +87,20 @@ export type RawItem = {
   expenseObr: number;
   incomeMont: number;
   expenseMont: number;
-  rentability: number;
   profitPerLift: number;
 };
 
 export type LiterItem = {
   name: string;
-  value: number;
+  // Dynamic "value" for chart rendering
+  value: number; 
+  percent: string; // Dynamic percent
+
+  // Static properties for tooltip
+  elevators: number;
   floors: number;
   profit: number;
   isHandedOver: boolean;
-  percent: string; // Elevators %
-  percentFloors: string;
-  percentProfit: string;
   
   // New Fields
   incomeFact: number;
@@ -85,18 +111,18 @@ export type LiterItem = {
   expenseObr: number;
   incomeMont: number;
   expenseMont: number;
-  rentability: number;
   profitPerLift: number;
 };
 
 export type JKItem = {
   name: string;
-  value: number;
+  value: number; // Dynamic
+  percent: string; // Dynamic
+
+  elevators: number;
   floors: number;
   profit: number;
-  percent: string;
-  percentFloors: string;
-  percentProfit: string;
+  
   liters: LiterItem[];
   
   // New Fields
@@ -108,18 +134,17 @@ export type JKItem = {
   expenseObr: number;
   incomeMont: number;
   expenseMont: number;
-  rentability: number; // Average
   profitPerLift: number; // Average
 };
 
 export type CitySummaryItem = {
   name: string;
-  value: number;
+  value: number; // Dynamic
+  percent: string; // Dynamic
+
+  elevators: number;
   floors: number;
   profit: number;
-  percent: string;
-  percentFloors: string;
-  percentProfit: string;
   color: string;
   jks: JKItem[];
   
@@ -132,6 +157,5 @@ export type CitySummaryItem = {
   expenseObr: number;
   incomeMont: number;
   expenseMont: number;
-  rentability: number; // Average
   profitPerLift: number; // Average
 };

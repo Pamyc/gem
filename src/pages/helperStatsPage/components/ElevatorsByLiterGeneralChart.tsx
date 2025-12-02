@@ -7,7 +7,8 @@ import {
   ROOT_ID, 
   ALL_YEARS,
   ChartType, 
-  ColorMode 
+  ColorMode,
+  MetricKey
 } from './helperElevatorsByLiterGeneralChart/types';
 import { useChartData } from './helperElevatorsByLiterGeneralChart/useChartData';
 import { useChartOptions } from './helperElevatorsByLiterGeneralChart/useChartOptions';
@@ -51,6 +52,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
   // State
   const [chartType, setChartType] = useState<ChartType>('sunburst');
   const [colorMode, setColorMode] = useState<ColorMode>('jk');
+  const [activeMetric, setActiveMetric] = useState<MetricKey>('value'); // Default to Elevators
   
   // Side List Expansion States
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
@@ -92,12 +94,13 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     sunburstData,
     uniqueJKs,
     citySummary,
-    totalElevators,
+    totalValue,
     years,
   } = useChartData({ 
     selectedYear: internalSelectedYear, 
     selectedCity, 
-    colorMode 
+    colorMode,
+    activeMetric
   });
 
   // --- 2. Get Chart Options via Custom Hook ---
@@ -107,6 +110,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     sunburstRootId,
     chartData,
     fullSunburstData: sunburstData,
+    activeMetric
   });
 
   // --- 3. Handlers ---
@@ -242,6 +246,8 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         years={years}
         breadcrumbs={breadcrumbs}
         onResetZoom={handleResetZoom}
+        activeMetric={activeMetric}
+        setActiveMetric={setActiveMetric}
       />
 
       {/* Main Content Area */}
@@ -251,7 +257,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         {chartType === 'sunburst' && (
           <SideList 
             citySummary={citySummary}
-            totalElevators={totalElevators}
+            totalValue={totalValue}
             expandedCity={expandedCity}
             toggleCity={toggleCity}
             expandedJK={expandedJK}
@@ -259,6 +265,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
             onHoverItem={handleItemHover}
             onLeaveItem={handleItemLeave}
             colorMode={colorMode}
+            activeMetric={activeMetric}
           />
         )}
 
