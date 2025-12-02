@@ -1,9 +1,11 @@
+
 import React, { useMemo } from 'react';
 import GeneralChartCard from './GeneralChartCard';
 import PieDonutChart from './PieDonutChart';
 import TreemapSunburstChart from './TreemapSunburstChart';
 import HorizontalBarChart from './HorizontalBarChart';
 import LineChart from './LineChart';
+import ElevatorsByLiterGeneralChart from '../components/ElevatorsByLiterGeneralChart';
 import { ChartConfig } from '../../../types/chart';
 
 interface ChartsSectionProps {
@@ -231,6 +233,11 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode }) => {
           />
         )}
       </GeneralChartCard>
+
+      {/* New General Sunburst Chart spanning full width or 2 cols */}
+      <div className="col-span-1 lg:col-span-2 2xl:col-span-3">
+         <ElevatorsByLiterGeneralChart isDarkMode={isDarkMode} />
+      </div>
     </div>
   );
 };

@@ -6,8 +6,8 @@ import ChartsSection from './helperElevatorTab/ChartsSection';
 import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
-import ElevatorsByLiterChart from './helperElevatorTab/ElevatorsByLiterChart';
 import ComplexComparisons from './helperElevatorTab/ComplexComparisons';
+import ElevatorsByLiterGeneralChart from './components/ElevatorsByLiterGeneralChart';
 
 interface ElevatorTabProps {
   isDarkMode: boolean;
@@ -79,13 +79,13 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         />
       </div>
 
-      {/* Elevators by Liter Chart (New) */}
+      {/* General Sunburst Chart */}
       <div className="w-full">
-        <ElevatorsByLiterChart 
-          isDarkMode={isDarkMode} 
-          selectedCity={selectedCity} 
-          selectedYear={selectedYear} 
-        />
+         <ElevatorsByLiterGeneralChart 
+            isDarkMode={isDarkMode} 
+            selectedCity={selectedCity}
+            selectedYear={selectedYear}
+         />
       </div>
 
       {/* Charts Grid with filtering */}
@@ -94,6 +94,8 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         selectedCity={selectedCity} 
         selectedYear={selectedYear} 
       />
+
+      
     </div>
   );
 };

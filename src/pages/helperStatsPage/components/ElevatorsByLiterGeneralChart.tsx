@@ -1,0 +1,316 @@
+
+import React, { useState, useRef, useEffect } from 'react';
+import EChartComponent, { EChartInstance } from '../../../components/charts/EChartComponent';
+import { 
+  COLORS, 
+  STATUS_COLORS, 
+  ROOT_ID, 
+  ALL_YEARS,
+  ChartType, 
+  ColorMode 
+} from './helperElevatorsByLiterGeneralChart/types';
+import { useChartData } from './helperElevatorsByLiterGeneralChart/useChartData';
+import { useChartOptions } from './helperElevatorsByLiterGeneralChart/useChartOptions';
+import HeaderControls from './helperElevatorsByLiterGeneralChart/HeaderControls';
+import SideList from './helperElevatorsByLiterGeneralChart/SideList';
+
+interface ElevatorsByLiterGeneralChartProps {
+  isDarkMode: boolean;
+  selectedCity?: string;
+  selectedYear?: string;
+}
+
+// Helper to parse ID to Breadcrumbs
+const getBreadcrumbs = (id: string | null) => {
+  if (!id || id === ROOT_ID) return [];
+  const parts = id.split('|');
+  const path: string[] = [];
+  
+  parts.forEach(part => {
+    const [type, name] = part.split(':');
+    if (name) path.push(name);
+  });
+  
+  return path;
+};
+
+// Helper to get parent ID
+const getParentId = (id: string | null) => {
+    if (!id || id === ROOT_ID) return null; // No parent for root
+    const parts = id.split('|');
+    if (parts.length === 1) return ROOT_ID; // Parent of City is Root
+    parts.pop();
+    return parts.join('|');
+};
+
+const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> = ({ 
+  isDarkMode, 
+  selectedCity, 
+  selectedYear: externalSelectedYear 
+}) => {
+  // State
+  const [chartType, setChartType] = useState<ChartType>('sunburst');
+  const [colorMode, setColorMode] = useState<ColorMode>('jk');
+  
+  // Side List Expansion States
+  const [expandedCity, setExpandedCity] = useState<string | null>(null);
+  const [expandedJK, setExpandedJK] = useState<string | null>(null);
+
+  const [internalSelectedYear, setInternalSelectedYear] = useState<string>(ALL_YEARS);
+  
+  // Drill-down State
+  const [sunburstRootId, setSunburstRootId] = useState<string>(ROOT_ID);
+  const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+
+  const chartRef = useRef<EChartInstance>(null);
+
+  // Sync external year prop with internal state if provided
+  useEffect(() => {
+    // If external prop is defined (even empty string), sync it. 
+    // If empty string, treat as ALL_YEARS.
+    if (externalSelectedYear !== undefined) {
+      setInternalSelectedYear(externalSelectedYear || ALL_YEARS);
+    }
+  }, [externalSelectedYear]);
+
+  // Handler needed for useEffect below
+  const handleResetZoom = () => {
+    setSunburstRootId(ROOT_ID);
+    setBreadcrumbs([]);
+    setExpandedCity(null);
+    setExpandedJK(null);
+  };
+
+  // Reset Zoom/State when city filter changes (externally)
+  useEffect(() => {
+    handleResetZoom();
+  }, [selectedCity]);
+
+  // --- 1. Get Data via Custom Hook ---
+  const {
+    chartData,
+    sunburstData,
+    uniqueJKs,
+    citySummary,
+    totalElevators,
+    years,
+  } = useChartData({ 
+    selectedYear: internalSelectedYear, 
+    selectedCity, 
+    colorMode 
+  });
+
+  // --- 2. Get Chart Options via Custom Hook ---
+  const option = useChartOptions({
+    isDarkMode,
+    chartType,
+    sunburstRootId,
+    chartData,
+    fullSunburstData: sunburstData,
+  });
+
+  // --- 3. Handlers ---
+
+  const handleItemHover = (name: string) => {
+    const instance = chartRef.current?.getInstance();
+    if (instance) {
+      instance.dispatchAction({ type: 'highlight', name });
+    }
+  };
+
+  const handleItemLeave = (name: string) => {
+    const instance = chartRef.current?.getInstance();
+    if (instance) {
+      instance.dispatchAction({ type: 'downplay', name });
+    }
+  };
+
+  // Sync side list selection with Chart Drill-down
+  const toggleCity = (cityName: string) => {
+    if (expandedCity === cityName) {
+      // Collapse City -> Go to Root
+      setExpandedCity(null);
+      setExpandedJK(null);
+      
+      setSunburstRootId(ROOT_ID);
+      setBreadcrumbs([]);
+    } else {
+      // Expand City -> Drill into City
+      setExpandedCity(cityName);
+      setExpandedJK(null);
+      
+      const nextId = `city:${cityName}`;
+      setSunburstRootId(nextId);
+      setBreadcrumbs(getBreadcrumbs(nextId));
+    }
+  };
+
+  const toggleJK = (jkName: string) => {
+    if (expandedJK === jkName) {
+      // Collapse JK -> Go back to City level
+      setExpandedJK(null);
+      if (expandedCity) {
+          const parentId = `city:${expandedCity}`;
+          setSunburstRootId(parentId);
+          setBreadcrumbs(getBreadcrumbs(parentId));
+      } else {
+          // Fallback if state drifted
+          setSunburstRootId(ROOT_ID);
+          setBreadcrumbs([]);
+      }
+    } else {
+      // Expand JK -> Drill into JK
+      setExpandedJK(jkName);
+      if (expandedCity) {
+          const nextId = `city:${expandedCity}|jk:${jkName}`;
+          setSunburstRootId(nextId);
+          setBreadcrumbs(getBreadcrumbs(nextId));
+      }
+    }
+  };
+
+  // Click Handler for manual drill-down/up in Sunburst via Chart Click
+  useEffect(() => {
+    const instance = chartRef.current?.getInstance();
+    if (!instance) return;
+
+    const handleClick = (params: any) => {
+      const clickedId = params.data?.id;
+      if (!clickedId) return;
+
+      let nextRootId = clickedId;
+      
+      // If we clicked the node that is currently the root (the center), go UP
+      if (clickedId === sunburstRootId) {
+          const parent = getParentId(clickedId);
+          if (parent) nextRootId = parent;
+      } 
+      // Otherwise, we clicked a child, so go DOWN (set it as root)
+      else {
+          nextRootId = clickedId;
+      }
+
+      setSunburstRootId(nextRootId);
+      setBreadcrumbs(getBreadcrumbs(nextRootId));
+
+      // Sync side panel expansion based on chart click
+      if (nextRootId && nextRootId !== ROOT_ID) {
+          const parts = nextRootId.split('|');
+          const cityPart = parts.find(p => p.startsWith('city:'));
+          
+          if (cityPart) {
+              const cityName = cityPart.split(':')[1];
+              setExpandedCity(cityName);
+              
+              // If drill down goes to JK level, expand that too
+              const jkPart = parts.find(p => p.startsWith('jk:'));
+              if (jkPart) {
+                  setExpandedJK(jkPart.split(':')[1]);
+              } else {
+                  setExpandedJK(null);
+              }
+          } else {
+              setExpandedCity(null);
+              setExpandedJK(null);
+          }
+      } else {
+          setExpandedCity(null);
+          setExpandedJK(null);
+      }
+    };
+
+    instance.on('click', handleClick);
+    return () => {
+      instance.off('click', handleClick);
+    };
+  }, [sunburstRootId]);
+
+  return (
+    <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-5 flex flex-col gap-2 w-full relative group">
+      
+      {/* Header Controls */}
+      <HeaderControls 
+        colorMode={colorMode}
+        setColorMode={setColorMode}
+        chartType={chartType}
+        setChartType={setChartType}
+        selectedYear={internalSelectedYear}
+        setSelectedYear={(y) => {
+            setInternalSelectedYear(y);
+            handleResetZoom();
+        }}
+        years={years}
+        breadcrumbs={breadcrumbs}
+        onResetZoom={handleResetZoom}
+      />
+
+      {/* Main Content Area */}
+      <div className="h-[580px] w-full flex flex-row relative">
+        
+        {/* Side List (Only for Sunburst) */}
+        {chartType === 'sunburst' && (
+          <SideList 
+            citySummary={citySummary}
+            totalElevators={totalElevators}
+            expandedCity={expandedCity}
+            toggleCity={toggleCity}
+            expandedJK={expandedJK}
+            toggleJK={toggleJK}
+            onHoverItem={handleItemHover}
+            onLeaveItem={handleItemLeave}
+            colorMode={colorMode}
+          />
+        )}
+
+        {/* Chart */}
+        <div className="flex-1 h-full min-w-0">
+          <EChartComponent
+            ref={chartRef}
+            options={option}
+            theme={isDarkMode ? 'dark' : 'light'}
+            height="100%"
+            merge={true}
+          />
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center px-2 pb-1 border-t border-gray-100 dark:border-white/5 pt-3">
+        {colorMode === 'status' ? (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs">
+              <div
+                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                style={{ backgroundColor: STATUS_COLORS.yes }}
+              />
+              <span className="text-gray-600 dark:text-gray-400 font-bold">Сдан (Да)</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <div
+                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                style={{ backgroundColor: STATUS_COLORS.no }}
+              />
+              <span className="text-gray-600 dark:text-gray-400 font-bold">Не сдан / В работе</span>
+            </div>
+          </div>
+        ) : (
+          chartType === 'bar' &&
+          uniqueJKs.length > 0 &&
+          uniqueJKs.map((jk, idx) => (
+            <div key={jk} className="flex items-center gap-1.5 text-[10px]">
+              <div
+                className="w-2.5 h-2.5 rounded-full shadow-sm shrink-0"
+                style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+              />
+              <span className="text-gray-600 dark:text-gray-400 font-bold whitespace-nowrap">
+                {jk}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ElevatorsByLiterGeneralChart;
