@@ -8,6 +8,7 @@ import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
 import ComplexComparisons from './helperElevatorTab/ComplexComparisons';
 import ElevatorsByLiterGeneralChart from './components/ElevatorsByLiterGeneralChart';
+import ElevatorDynamicsSection from './helperElevatorTab/ElevatorDynamicsSection';
 
 interface ElevatorTabProps {
   isDarkMode: boolean;
@@ -95,6 +96,13 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         selectedYear={selectedYear} 
       />
 
+      {/* Dynamics Section (New) */}
+      <div className="w-full">
+        <ElevatorDynamicsSection 
+          isDarkMode={isDarkMode}
+          selectedCity={selectedCity}
+        />
+      </div>
       
     </div>
   );
