@@ -43,7 +43,8 @@ export const useProcessedChartData = (config: Partial<ChartConfig>) => {
       showLabels: true,
       showDataZoomSlider: false,
       showLegend: true,
-      filters: config.filters || []
+      filters: config.filters || [],
+      uniqueTarget: config.uniqueTarget // Прокидываем параметр цели уникальности
     };
 
     // 4. Используем существующую утилиту prepareChartData для фильтрации и группировки
@@ -59,7 +60,7 @@ export const useProcessedChartData = (config: Partial<ChartConfig>) => {
     // ВАРИАНТ А: Если есть segmentColumn, то "Имена" — это сегменты (ключи groupedData)
     if (fullConfig.segmentColumn) {
       groupedData.forEach((segmentMap, segmentName) => {
-        let allValues: number[] = [];
+        let allValues: any[] = [];
         // Собираем все значения из всех X для этого сегмента
         for (const vals of segmentMap.values()) {
           allValues.push(...vals);
@@ -74,7 +75,7 @@ export const useProcessedChartData = (config: Partial<ChartConfig>) => {
     // ВАРИАНТ Б (Чаще всего нужен для Pie): Имена — это значения оси X (Категории)
     else {
       xValues.forEach(xLabel => {
-        let allValuesForCategory: number[] = [];
+        let allValuesForCategory: any[] = [];
 
         // Пробегаем по всем сегментам (обычно он один - "Все данные") и собираем значения для этого X
         groupedData.forEach(segmentMap => {
@@ -98,17 +99,17 @@ export const useProcessedChartData = (config: Partial<ChartConfig>) => {
   return { data: processedData, isLoading };
 };
 
-// Хелпер для подсчета математики
-function calculateAggregation(values: number[], type: string): number {
+// Хелпер для подсчета математики. Принимает any[], чтобы работать с unique строк.
+function calculateAggregation(values: any[], type: string): number {
   if (values.length === 0) return 0;
   
   switch (type) {
-    case 'sum': return values.reduce((a, b) => a + b, 0);
+    case 'sum': return values.reduce((a, b) => a + (Number(b) || 0), 0);
     case 'count': return values.length;
-    case 'average': return values.reduce((a, b) => a + b, 0) / values.length;
-    case 'max': return Math.max(...values);
-    case 'min': return Math.min(...values);
-    case 'unique': return new Set(values).size;
+    case 'average': return values.reduce((a, b) => a + (Number(b) || 0), 0) / values.length;
+    case 'max': return Math.max(...values.map(v => Number(v) || 0));
+    case 'min': return Math.min(...values.map(v => Number(v) || 0));
+    case 'unique': return new Set(values).size; // Работает и с числами, и со строками
     default: return 0;
   }
 }

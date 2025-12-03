@@ -3,9 +3,10 @@ import React, { useMemo } from 'react';
 import GeneralChartCard from './GeneralChartCard';
 import PieDonutChart from './PieDonutChart';
 import TreemapSunburstChart from './TreemapSunburstChart';
-import HorizontalBarChart from './HorizontalBarChart';
 import LineChart from './LineChart';
 import { ChartConfig } from '../../../types/chart';
+import ElevatorsByCustomerChart from './ElevatorsByCustomerChart';
+import { Briefcase } from 'lucide-react';
 
 interface ChartsSectionProps {
   isDarkMode: boolean;
@@ -18,7 +19,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
   // Helper to inject filters
   const withFilters = (config: Partial<ChartConfig>) => {
     const newFilters = [...(config.filters || [])];
-    
+
     if (selectedCity) {
       newFilters.push({
         id: "city-filter-dynamic",
@@ -44,7 +45,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
   };
 
   // Конфигурация для PieDonutChart
-  
+
 
   const TreemapDataConfig = useMemo(() => withFilters({
     title: 'Кол-во лифтов по ЖК',
@@ -68,90 +69,62 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
     ]
   }), [selectedCity, selectedYear]);
 
-  const AverageProfitConfig = useMemo(() => withFilters({
-    title: 'Средняя прибыль с 1 лифта по ЖК',
+  const SumElevatorDataConfig = useMemo(() => withFilters({
+    title: 'Кол-во сданных лифтов да/нет',
     sheetKey: 'clientGrowth',
-    xAxisColumn: 'ЖК',
-    yAxisColumn: 'Прибыль с 1 лифта',
-    aggregation: 'average',
+    xAxisColumn: 'Сдан да/нет',
+    yAxisColumn: 'Кол-во лифтов',
+    aggregation: 'sum',
     filters: [
       {
-        id: "l33xzfgdy",
+        id: "o09z9l2b4",
         column: "Итого (Да/Нет)",
         operator: "equals",
         value: "Нет"
       },
       {
-        id: "c5bslnolw",
+        id: "aagerz8uy",
         column: "Без разбивки на литеры (Да/Нет)",
-        operator: "equals",
-        value: "Да"
-      },
-      {
-        id: "c4bslnolw",
-        column: "Сдан да/нет",
         operator: "equals",
         value: "Да"
       }
     ]
   }), [selectedCity, selectedYear]);
 
-  // Новая конфигурация: Валовая прибыль по ЖК (Line Chart)
-  const GrossProfitByJKConfig = useMemo(() => withFilters({ 
-    title: 'Валовая прибыль по ЖК',
-    sheetKey: 'clientGrowth', 
-    xAxisColumn: 'ЖК', 
-    yAxisColumn: 'Валовая', 
-    aggregation: 'sum',
+  // Новая конфигурация: Кол-во ЖК по заказчикам
+  const SumJkClientDataConfig = useMemo(() => withFilters({
+    title: 'Кол-во ЖК по заказчикам',
+    sheetKey: 'clientGrowth',
+    xAxisColumn: 'Клиент',
+    yAxisColumn: 'ЖК',
+    aggregation: 'unique',
+    uniqueTarget: 'yAxis', // ВАЖНО: Явно указываем считать уникальные значения из столбца Y (ЖК)
     filters: [
       {
-        id: "l33xzfgdy",
+        id: "o09z9l2b4",
         column: "Итого (Да/Нет)",
         operator: "equals",
         value: "Нет"
       },
       {
-        id: "c5bslnolw",
+        id: "aagerz8uy",
         column: "Без разбивки на литеры (Да/Нет)",
         operator: "equals",
         value: "Да"
       }
-    ] 
-  }), [selectedCity, selectedYear]);
-
-  // Новая конфигурация: Средняя прибыль с 1 лифта по ЖК (Line Chart)
-  const AvgProfitPerLiftByJKConfig = useMemo(() => withFilters({ 
-    title: 'Средняя прибыль с 1 лифта по ЖК',
-    sheetKey: 'clientGrowth', 
-    xAxisColumn: 'ЖК', 
-    yAxisColumn: 'Прибыль с 1 лифта', 
-    aggregation: 'average',
-    filters: [
-      {
-        id: "l33xzfgdy",
-        column: "Итого (Да/Нет)",
-        operator: "equals",
-        value: "Нет"
-      },
-      {
-        id: "c5bslnolw",
-        column: "Без разбивки на литеры (Да/Нет)",
-        operator: "equals",
-        value: "Да"
-      }
-    ] 
+    ]
   }), [selectedCity, selectedYear]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
       {/* Круговые диаграммы оставляем с лимитом по умолчанию (7), чтобы не было каши */}
-      
+
 
       {/* Treemap можно показать чуть больше, например 10 */}
       <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valueSuffix=" шт.">
         {(data, isExpanded) => (
-          <TreemapSunburstChart 
-            isDarkMode={isDarkMode} 
+          <TreemapSunburstChart
+            isDarkMode={isDarkMode}
             data={data}
             title=""
             valueSuffix=" шт."
@@ -161,42 +134,54 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
       </GeneralChartCard>
 
       {/* Для горизонтального бара увеличим до 15 */}
-      <GeneralChartCard config={AverageProfitConfig} limit={7} showTotal valuePrefix="₽ ">
+      <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
         {(data, isExpanded) => (
-          <HorizontalBarChart 
-            isDarkMode={isDarkMode} 
+          <PieDonutChart
+            isDarkMode={isDarkMode}
             data={data}
             title=""
-            valuePrefix="₽ "
+            valueSuffix=" шт."
             className={isExpanded ? "w-full h-full" : undefined}
           />
         )}
       </GeneralChartCard>
 
       {/* Для линейных графиков ставим limit={0}, чтобы показать ВСЕ данные, так как там есть скролл/зум */}
-      <GeneralChartCard config={GrossProfitByJKConfig} limit={7} showTotal valuePrefix="₽ ">
+      <GeneralChartCard config={SumJkClientDataConfig} limit={7} showTotal valuePrefix="" valueSuffix="">
         {(data, isExpanded) => (
-          <LineChart 
-            isDarkMode={isDarkMode} 
+          <PieDonutChart
+            isDarkMode={isDarkMode}
             data={data}
             title=""
-            valuePrefix="₽ "
+            valueSuffix=""
             className={isExpanded ? "w-full h-full" : undefined}
           />
         )}
       </GeneralChartCard>
 
-      <GeneralChartCard config={AvgProfitPerLiftByJKConfig} limit={7} showTotal valuePrefix="₽ ">
-        {(data, isExpanded) => (
-          <LineChart 
-            isDarkMode={isDarkMode} 
-            data={data}
-            title=""
-            valuePrefix="₽ "
-            className={isExpanded ? "w-full h-full" : undefined}
+      {/* Custom Chart Card: Elevators By Customer */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
+        <div className="flex items-center justify-between mb-6 shrink-0">
+          <div className="flex items-center gap-3">
+            
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                Статус по заказчикам
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Сданы / В работе
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 w-full min-h-[350px]">
+          <ElevatorsByCustomerChart 
+              isDarkMode={isDarkMode} 
+              selectedCity={selectedCity}
           />
-        )}
-      </GeneralChartCard>
+        </div>
+      </div>
     </div>
   );
 };

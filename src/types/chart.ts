@@ -38,4 +38,6 @@ export interface ChartConfig {
   showDataZoomSlider: boolean;
   showLegend: boolean;
   filters: ChartFilter[];
+  // Дополнительный параметр для указания цели уникальности (по умолчанию xAxis/строки, если yAxis - берем значения столбца Y)
+  uniqueTarget?: 'xAxis' | 'yAxis';
 }
