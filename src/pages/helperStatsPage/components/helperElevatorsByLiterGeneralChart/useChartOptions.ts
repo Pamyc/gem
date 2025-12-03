@@ -12,6 +12,60 @@ interface UseChartOptionsProps {
   activeMetric: MetricKey;
 }
 
+// Helper to render a text field with expand logic if too many items
+const renderTextList = (label: string, items: string[]) => {
+    if (!items || items.length === 0) return '';
+    
+    // Sort and remove duplicates (just in case)
+    const unique = Array.from(new Set(items)).filter(Boolean).sort();
+    
+    if (unique.length === 0) return '';
+
+    // Apply specific coloring for Status values
+    const formattedItems = unique.map(item => {
+        if (item === 'В работе') return `<span style="color: #ef4444;">${item}</span>`;
+        if (item === 'Сдан') return `<span style="color: #22c55e;">${item}</span>`;
+        return item;
+    });
+
+    const labelStyle = 'color: #94a3b8; font-size: 13px; font-weight: 500; min-width: 80px;';
+    const valueStyle = 'color: #fff; font-size: 13px; font-weight: 600; text-align: right;';
+    const rowStyle = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 2px; gap: 10px;';
+
+    const maxItems = 2;
+    const isExpandable = unique.length > maxItems;
+
+    let content = '';
+
+    if (isExpandable) {
+        // Show first 2 + details
+        const visible = formattedItems.slice(0, maxItems).join(', ');
+        const hidden = formattedItems.join(', '); // All items for expanded view
+        const remainingCount = unique.length - maxItems;
+        
+        // We use <details> native HTML element for interactivity inside tooltip
+        content = `
+            <details style="width: 100%;">
+                <summary style="cursor: pointer; outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="text-align: right; color: #fff; font-weight: 600;">${visible}, ... <span style="color: #a78bfa; font-size: 11px;">(+${remainingCount})</span></span>
+                </summary>
+                <div style="margin-top: 4px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 12px; color: #e2e8f0; white-space: normal;">
+                    ${hidden}
+                </div>
+            </details>
+        `;
+    } else {
+        content = `<span>${formattedItems.join(', ')}</span>`;
+    }
+
+    return `
+        <div style="${rowStyle}">
+            <span style="${labelStyle}">${label}:</span>
+            <div style="${valueStyle}; flex: 1;">${content}</div>
+        </div>
+    `;
+};
+
 // --- SINGLE SOURCE OF TRUTH FOR TOOLTIP HTML ---
 export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boolean, activeMetric: MetricKey) => {
   const textColor = '#ffffff'; 
@@ -53,7 +107,6 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
       const color1 = isIncomeHigher ? '#4ade80' : undefined;
       const color2 = isExpenseHigher ? '#f87171' : undefined;
 
-      // Check if one of these is active. If so, only highlight THAT one.
       const isPrimary1 = activeMetric === key1;
       const isPrimary2 = activeMetric === key2;
 
@@ -67,7 +120,7 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
   const titleHtml = `<div style="font-size: 16px; font-weight: 800; color: ${textColor}; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${title}</div>`;
 
   // --- Logic to reorder items based on selection ---
-  const allRows = [
+  const metricRows = [
       () => row('Лифтов', fmt(data.value), activeMetric === 'value' ? data.percent : undefined, '', activeMetric === 'value'),
       () => row('Этажей', fmt(data.floors), activeMetric === 'floors' ? data.percent : undefined, '', activeMetric === 'floors'),
       () => row('Валовая', fmtMoney(data.profit), activeMetric === 'profit' ? data.percent : undefined, '', activeMetric === 'profit'),
@@ -93,7 +146,6 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
   let primaryHtml = '';
   const remainingRows: (() => string)[] = [];
 
-  // Helper to check if a metric is inside a block
   const isMetricInBlock = (blockIndex: number, metric: MetricKey) => {
       if (blockIndex === 0 && metric === 'value') return true;
       if (blockIndex === 1 && metric === 'floors') return true;
@@ -105,19 +157,37 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
       return false;
   };
 
-  allRows.forEach((renderFn, idx) => {
+  metricRows.forEach((renderFn, idx) => {
       if (isMetricInBlock(idx, activeMetric)) {
-          primaryHtml = renderFn(); // Capture the block containing the active metric
+          primaryHtml = renderFn(); 
       } else {
           remainingRows.push(renderFn);
       }
   });
 
+  // Text metadata section
+  const textMetadataHtml = `
+    ${divider}
+    ${renderTextList('Клиент', data.clients)}
+    ${renderTextList('Город', data.cities)}
+    ${renderTextList('ЖК', data.jks)}
+    ${renderTextList('Статус', data.statuses)}
+    ${renderTextList('Тип', data.objectTypes)}
+    ${renderTextList('Год', data.years)}
+    ${divider}
+  `;
+
+  // Wrapper with max-height and scroll
+  // Pointer-events auto is CRITICAL for <details> interaction
   return `
-    <div style="font-family: sans-serif; min-width: 320px; padding: 4px;">
+    <div style="font-family: sans-serif; min-width: 320px; max-width: 350px; padding: 4px; max-height: 400px; overflow-y: auto; overflow-x: hidden; pointer-events: auto;">
+      
+      
       ${titleHtml}
-      ${primaryHtml} 
+      ${primaryHtml}
+      ${textMetadataHtml} 
       ${remainingRows.map(fn => fn()).join('')}
+      
     </div>
   `;
 };
@@ -180,14 +250,71 @@ export const useChartOptions = ({
       title: { show: false },
     };
 
+    // Enhanced tooltip config with interaction enabled
     const tooltipCommon = {
         trigger: 'item',
-        backgroundColor: 'rgba(30, 41, 59, 0.95)', 
+        enterable: true, // IMPORTANT: Allows mouse to enter the tooltip for scrolling/clicking
+        appendToBody: true, // Prevents z-index clipping
+        backgroundColor: 'rgba(30, 41, 59, 0.98)', 
         borderColor: '#334155',
         textStyle: { color: '#f8fafc' },
         padding: 12,
-        extraCssText: 'box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); border-radius: 16px; backdrop-filter: blur(8px); z-index: 9999;',
+        extraCssText: 'box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6); border-radius: 16px; backdrop-filter: blur(10px); z-index: 99999; pointer-events: auto;',
         confine: true, 
+    };
+
+    const formatTooltip = (params: any) => {
+        // Handle axis trigger (array of params) or single item
+        const p = Array.isArray(params) ? params[0] : params;
+        
+        // Safety check for p and p.data
+        if (!p || !p.data) return '';
+
+        // Handle Sunburst root skipping
+        if (p.data.id === sunburstRootId) return '';
+        
+        let label = '';
+        let extra: any = {};
+
+        // Determine source of data (Sunburst node vs Bar item)
+        if (p.seriesType === 'sunburst') {
+            const parts = p.name.split(SEPARATOR);
+            label = parts[parts.length - 1];
+            extra = p.data.data || {};
+        } else {
+            // Bar chart
+            const data = p.data;
+            label = `${data.cityName} / ${data.jkName} / ${data.literName}`;
+            extra = data; // Bar data structure is flat
+        }
+
+        const tooltipData: TooltipData = {
+            value: extra.value || extra.elevators || 0, // Fallback logic
+            floors: extra.floors || 0,
+            profit: extra.profit || 0,
+            
+            percent: extra.percent,
+            
+            incomeFact: extra.incomeFact,
+            expenseFact: extra.expenseFact,
+            incomeLO: extra.incomeLO,
+            expenseLO: extra.expenseLO,
+            incomeObr: extra.incomeObr,
+            expenseObr: extra.expenseObr,
+            incomeMont: extra.incomeMont,
+            expenseMont: extra.expenseMont,
+            profitPerLift: extra.profitPerLift,
+
+            // Text Arrays
+            clients: extra.clients || [],
+            cities: extra.cities || [],
+            jks: extra.jks || [],
+            statuses: extra.statuses || [],
+            objectTypes: extra.objectTypes || [],
+            years: extra.years || []
+        };
+
+        return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
     };
 
     // --- SUNBURST CONFIG ---
@@ -201,37 +328,7 @@ export const useChartOptions = ({
         legend: { show: false },
         tooltip: {
           ...tooltipCommon,
-          formatter: (params: any) => {
-            if (params.data.id === sunburstRootId) return '';
-            const parts = params.name.split(SEPARATOR);
-            const label = parts[parts.length - 1];
-            
-            const raw = params.data;
-            const extra = params.data.data || {}; 
-
-            const tooltipData: TooltipData = {
-                // value in params.data.value is already the DYNAMIC metric
-                // But we need all raw metrics for the tooltip rows
-                value: extra.elevators || 0, // Get raw elevators from data object
-                floors: extra.floors || 0,
-                profit: extra.profit || 0,
-                
-                // Percent is pre-calculated for the ACTIVE metric
-                percent: extra.percent,
-                
-                incomeFact: extra.incomeFact,
-                expenseFact: extra.expenseFact,
-                incomeLO: extra.incomeLO,
-                expenseLO: extra.expenseLO,
-                incomeObr: extra.incomeObr,
-                expenseObr: extra.expenseObr,
-                incomeMont: extra.incomeMont,
-                expenseMont: extra.expenseMont,
-                profitPerLift: extra.profitPerLift,
-            };
-
-            return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
-          },
+          formatter: formatTooltip,
         },
         series: [
           {
@@ -311,31 +408,7 @@ export const useChartOptions = ({
         ...tooltipCommon,
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (params: any) => {
-          const item = params[0];
-          const data = item.data;
-          const title = `${data.cityName} / ${data.jkName} / ${data.literName}`;
-          
-          const tooltipData: TooltipData = {
-              value: data.elevators || 0,
-              floors: data.floors || 0,
-              profit: data.profit || 0,
-              
-              percent: undefined, 
-              
-              incomeFact: data.incomeFact,
-              expenseFact: data.expenseFact,
-              incomeLO: data.incomeLO,
-              expenseLO: data.expenseLO,
-              incomeObr: data.incomeObr,
-              expenseObr: data.expenseObr,
-              incomeMont: data.incomeMont,
-              expenseMont: data.expenseMont,
-              profitPerLift: data.profitPerLift,
-          };
-          
-          return getTooltipHtml(title, tooltipData, isDarkMode, activeMetric);
-        },
+        formatter: formatTooltip, // Use shared formatter
       },
       grid: { left: '1%', right: '1%', bottom: '2%', top: '5%', containLabel: true },
       xAxis: {

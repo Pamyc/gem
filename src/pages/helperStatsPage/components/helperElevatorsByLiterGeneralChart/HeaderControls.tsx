@@ -1,16 +1,17 @@
 
 import React from 'react';
 import { BarChart2, PieChart, Palette, CheckCircle2, Home, ChevronRight as ChevronRightIcon, TrendingUp } from 'lucide-react';
-import { ChartType, ColorMode, MetricKey, METRIC_OPTIONS } from './types';
+import { ChartType, ColorMode, MetricKey, METRIC_OPTIONS, FilterState, FilterOptions } from './types';
+import MultiFilterMenu from './MultiFilterMenu';
 
 interface HeaderControlsProps {
   colorMode: ColorMode;
   setColorMode: (mode: ColorMode) => void;
   chartType: ChartType;
   setChartType: (type: ChartType) => void;
-  selectedYear: string;
-  setSelectedYear: (year: string) => void;
-  years: string[];
+  filters: FilterState;
+  setFilters: (filters: FilterState) => void;
+  filterOptions: FilterOptions;
   breadcrumbs: string[];
   onResetZoom: () => void;
   activeMetric: MetricKey;
@@ -22,9 +23,9 @@ const HeaderControls: React.FC<HeaderControlsProps> = ({
   setColorMode,
   chartType,
   setChartType,
-  selectedYear,
-  setSelectedYear,
-  years,
+  filters,
+  setFilters,
+  filterOptions,
   breadcrumbs,
   onResetZoom,
   activeMetric,
@@ -87,21 +88,12 @@ const HeaderControls: React.FC<HeaderControlsProps> = ({
           </div>
         )}
 
-        {/* Year Filter */}
-        <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-lg px-2 py-1 border border-gray-200 dark:border-white/10">
-          <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Год:</span>
-          <select
-            className="bg-transparent text-xs text-gray-700 dark:text-gray-100 outline-none cursor-pointer"
-            value={selectedYear}
-            onChange={e => setSelectedYear(e.target.value)}
-          >
-            {years.map(y => (
-              <option key={y} value={y} className="bg-white dark:bg-[#151923]">
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Multi Filter Menu (Replaces simple Year selector) */}
+        <MultiFilterMenu 
+            filters={filters} 
+            onChange={setFilters} 
+            options={filterOptions} 
+        />
 
         {/* Color Mode */}
         <div className="flex bg-gray-100 dark:bg-white/5 rounded-lg p-1 gap-1 border border-gray-200 dark:border-white/10">

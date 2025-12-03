@@ -4,12 +4,11 @@ import { useDataStore } from '../../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../../utils/chartUtils';
 import { 
   COLORS, STATUS_COLORS, SEPARATOR, ALL_YEARS, ROOT_ID,
-  ColorMode, RawItem, CitySummaryItem, MetricKey
+  ColorMode, RawItem, CitySummaryItem, MetricKey, FilterState, FilterOptions
 } from './types';
 
 interface UseChartDataProps {
-  selectedYear: string;
-  selectedCity?: string;
+  filters: FilterState;
   colorMode: ColorMode;
   activeMetric: MetricKey;
 }
@@ -22,23 +21,31 @@ const parseFloatSafe = (val: any) => {
     return isNaN(num) ? 0 : num;
 };
 
-export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetric }: UseChartDataProps) => {
+// Helper to clean strings
+const cleanStr = (val: any) => String(val || '').trim();
+
+export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataProps) => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
   return useMemo(() => {
     const sheetKey = 'clientGrowth';
     const sheetData = googleSheets[sheetKey];
 
-    if (!sheetData || !sheetData.headers || !sheetData.rows) {
-      return {
+    // Default return
+    const emptyResult = {
         chartData: [],
         sunburstData: [],
         xLabels: [],
         uniqueJKs: [],
         citySummary: [],
         totalValue: 0,
-        years: [ALL_YEARS],
-      };
+        filterOptions: {
+            years: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: []
+        } as FilterOptions
+    };
+
+    if (!sheetData || !sheetData.headers || !sheetData.rows) {
+      return emptyResult;
     }
 
     const config = sheetConfigs.find(c => c.key === sheetKey);
@@ -58,6 +65,10 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
     const idxNoBreakdown = headers.indexOf('Отдельный литер (Да/Нет)');
 
+    // Text Fields
+    const idxClient = headers.indexOf('Клиент');
+    const idxObjectType = headers.indexOf('Тип объекта');
+
     // --- New Financial Columns ---
     const idxIncomeFact = headers.indexOf('Доходы + Итого + Факт');
     const idxExpenseFact = headers.indexOf('Расходы + Итого + факт');
@@ -75,46 +86,65 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
     const idxProfitPerLift = headers.indexOf('Прибыль с 1 лифта');
 
     if (idxJK === -1 || idxElevators === -1 || idxCity === -1) {
-      return {
-        chartData: [],
-        sunburstData: [],
-        xLabels: [],
-        uniqueJKs: [],
-        citySummary: [],
-        totalValue: 0,
-        years: [ALL_YEARS],
-      };
+      return emptyResult;
     }
 
-    const yearSet = new Set<string>();
     const rawItems: RawItem[] = [];
+    
+    // Collectors for Filter Options (Unique values)
+    const optionsSet = {
+        years: new Set<string>(),
+        cities: new Set<string>(),
+        jks: new Set<string>(),
+        clients: new Set<string>(),
+        statuses: new Set<string>(),
+        objectTypes: new Set<string>()
+    };
 
     sheetData.rows.forEach(row => {
       if (idxTotal !== -1 && String(row[idxTotal]).trim().toLowerCase() === 'да') return;
       if (idxNoBreakdown !== -1 && String(row[idxNoBreakdown]).trim().toLowerCase() === 'нет') return;
 
       const rowCity = String(row[idxCity] ?? '').trim();
-      if (!rowCity) return;
-
-      // Filter by City if provided
-      if (selectedCity && rowCity !== selectedCity) return;
-
-      const rowYear = idxYear !== -1 ? String(row[idxYear] ?? '').trim() : '';
-      if (rowYear) yearSet.add(rowYear);
-
-      if (selectedYear !== ALL_YEARS && rowYear && rowYear !== selectedYear) return;
-
       const jk = String(row[idxJK] ?? '').trim();
+      
+      if (!rowCity || !jk) return;
+
       const literRaw = idxLiter !== -1 ? String(row[idxLiter] ?? '').trim() : '';
       const liter = literRaw || jk;
       const statusRaw = idxStatus !== -1 ? String(row[idxStatus] ?? '').trim().toLowerCase() : '';
       const isHandedOver = statusRaw === 'да';
       
+      const client = idxClient !== -1 ? cleanStr(row[idxClient]) : '';
+      const objectType = idxObjectType !== -1 ? cleanStr(row[idxObjectType]) : '';
+      const rowYear = idxYear !== -1 ? String(row[idxYear] ?? '').trim() : '';
+
       const value = parseFloatSafe(row[idxElevators]);
+      
+      if (value === 0) return; // Skip zero value rows
+
+      // --- Collect Options (Before Filtering) ---
+      if (rowYear) optionsSet.years.add(rowYear);
+      if (rowCity) optionsSet.cities.add(rowCity);
+      if (jk) optionsSet.jks.add(jk);
+      if (client) optionsSet.clients.add(client);
+      if (objectType) optionsSet.objectTypes.add(objectType);
+      optionsSet.statuses.add(isHandedOver ? 'Сдан' : 'В работе');
+
+      // --- Apply Filters ---
+      if (filters.years.length > 0 && !filters.years.includes(rowYear)) return;
+      if (filters.cities.length > 0 && !filters.cities.includes(rowCity)) return;
+      if (filters.jks.length > 0 && !filters.jks.includes(jk)) return;
+      if (filters.clients.length > 0 && !filters.clients.includes(client)) return;
+      if (filters.objectTypes.length > 0 && !filters.objectTypes.includes(objectType)) return;
+      
+      const statusStr = isHandedOver ? 'Сдан' : 'В работе';
+      if (filters.statuses.length > 0 && !filters.statuses.includes(statusStr)) return;
+
+      // --- Process Metrics ---
       const floors = idxFloors !== -1 ? parseFloatSafe(row[idxFloors]) : 0;
       const profit = idxProfit !== -1 ? parseFloatSafe(row[idxProfit]) : 0;
 
-      // New Financials
       const incomeFact = idxIncomeFact !== -1 ? parseFloatSafe(row[idxIncomeFact]) : 0;
       const expenseFact = idxExpenseFact !== -1 ? parseFloatSafe(row[idxExpenseFact]) : 0;
       const incomeLO = idxIncomeLO !== -1 ? parseFloatSafe(row[idxIncomeLO]) : 0;
@@ -126,10 +156,10 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
       
       const profitPerLift = idxProfitPerLift !== -1 ? parseFloatSafe(row[idxProfitPerLift]) : 0;
 
-      if (!jk || !liter || value === 0) return;
-
       rawItems.push({ 
-          city: rowCity, jk, liter, value, floors, profit, isHandedOver,
+          city: rowCity, jk, liter, 
+          client, objectType, year: rowYear,
+          value, floors, profit, isHandedOver,
           incomeFact, expenseFact,
           incomeLO, expenseLO,
           incomeObr, expenseObr,
@@ -138,16 +168,20 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
       });
     });
 
+    // Prepare Filter Options Object
+    const filterOptions: FilterOptions = {
+        years: Array.from(optionsSet.years).sort().reverse(),
+        cities: Array.from(optionsSet.cities).sort(),
+        jks: Array.from(optionsSet.jks).sort(),
+        clients: Array.from(optionsSet.clients).sort(),
+        statuses: Array.from(optionsSet.statuses).sort(),
+        objectTypes: Array.from(optionsSet.objectTypes).sort()
+    };
+
     if (rawItems.length === 0) {
-      const yearsArr = Array.from(yearSet).sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
       return {
-        chartData: [],
-        sunburstData: [],
-        xLabels: [],
-        uniqueJKs: [],
-        citySummary: [],
-        totalValue: 0,
-        years: [ALL_YEARS, ...yearsArr],
+        ...emptyResult,
+        filterOptions
       };
     }
 
@@ -160,10 +194,9 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
     const uniqueJKsList = Array.from(new Set(rawItems.map(i => i.jk)));
     
     // --- Determine active values for nodes and total based on selected metric ---
-    // Helper to extract value from a RawItem dynamically
     const getValue = (item: RawItem, metric: MetricKey): number => {
         // Direct access since RawItem keys match MetricKey
-        return item[metric];
+        return (item as any)[metric] || 0;
     };
 
     // Calculate Grand Total for the ACTIVE METRIC to use in percentages
@@ -182,6 +215,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
         incomeMont: number; expenseMont: number;
         sumProfitPerLift: number;
         
+        // Sets for text aggregation
+        clients: Set<string>;
+        cities: Set<string>;
+        jks: Set<string>;
+        statuses: Set<string>;
+        objectTypes: Set<string>;
+        years: Set<string>;
+
         // This is the aggregated value of the currently selected metric
         activeMetricSum: number; 
     }
@@ -194,6 +235,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
         incomeObr: 0, expenseObr: 0,
         incomeMont: 0, expenseMont: 0,
         sumProfitPerLift: 0,
+        
+        clients: new Set(),
+        cities: new Set(),
+        jks: new Set(),
+        statuses: new Set(),
+        objectTypes: new Set(),
+        years: new Set(),
+
         activeMetricSum: 0
     });
 
@@ -213,6 +262,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
         acc.expenseMont += item.expenseMont;
         
         acc.sumProfitPerLift += item.profitPerLift;
+
+        // Text Aggregation
+        if (item.client) acc.clients.add(item.client);
+        if (item.city) acc.cities.add(item.city);
+        if (item.jk) acc.jks.add(item.jk);
+        if (item.objectType) acc.objectTypes.add(item.objectType);
+        if (item.year) acc.years.add(item.year);
+        acc.statuses.add(item.isHandedOver ? 'Сдан' : 'В работе');
 
         // Accumulate active metric specifically
         acc.activeMetricSum += getValue(item, activeMetric);
@@ -273,6 +330,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
                     incomeMont: l.incomeMont,
                     expenseMont: l.expenseMont,
                     profitPerLift: l.profitPerLift,
+
+                    // Text Metadata
+                    clients: l.client ? [l.client] : [],
+                    cities: [l.city],
+                    jks: [l.jk],
+                    statuses: [l.isHandedOver ? 'Сдан' : 'В работе'],
+                    objectTypes: l.objectType ? [l.objectType] : [],
+                    years: l.year ? [l.year] : []
                  };
              }).sort((a, b) => b.value - a.value);
 
@@ -299,6 +364,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
                 incomeMont: jkData.agg.incomeMont,
                 expenseMont: jkData.agg.expenseMont,
                 profitPerLift: jkData.agg.count > 0 ? jkData.agg.sumProfitPerLift / jkData.agg.count : 0,
+
+                // Text Aggregates
+                clients: Array.from(jkData.agg.clients),
+                cities: Array.from(jkData.agg.cities),
+                jks: Array.from(jkData.agg.jks),
+                statuses: Array.from(jkData.agg.statuses),
+                objectTypes: Array.from(jkData.agg.objectTypes),
+                years: Array.from(jkData.agg.years),
              };
           })
           .sort((a, b) => b.value - a.value);
@@ -311,7 +384,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
           percent: totalMetricValue > 0 ? ((cityActiveValue / totalMetricValue) * 100).toFixed(1) : '0',
           
           color: cityColor,
-          jks: jksArray,
+          childrenJKs: jksArray,
 
           // Static props
           elevators: data.agg.value,
@@ -328,6 +401,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
           incomeMont: data.agg.incomeMont,
           expenseMont: data.agg.expenseMont,
           profitPerLift: data.agg.count > 0 ? data.agg.sumProfitPerLift / data.agg.count : 0,
+
+          // Text Aggregates
+          clients: Array.from(data.agg.clients),
+          cities: Array.from(data.agg.cities),
+          jks: Array.from(data.agg.jks),
+          statuses: Array.from(data.agg.statuses),
+          objectTypes: Array.from(data.agg.objectTypes),
+          years: Array.from(data.agg.years),
         };
       })
       .sort((a, b) => b.value - a.value);
@@ -362,6 +443,14 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
       incomeMont: item.incomeMont,
       expenseMont: item.expenseMont,
       profitPerLift: item.profitPerLift,
+
+      // Text Fields for Tooltip (wrapped in arrays)
+      clients: item.client ? [item.client] : [],
+      cities: [item.city],
+      jks: [item.jk],
+      statuses: [item.isHandedOver ? 'Сдан' : 'В работе'],
+      objectTypes: item.objectType ? [item.objectType] : [],
+      years: item.year ? [item.year] : []
     }));
     const xLabels = chartData.map(i => i.name);
 
@@ -390,10 +479,18 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
             expenseObr: city.expenseObr,
             incomeMont: city.incomeMont,
             expenseMont: city.expenseMont,
-            profitPerLift: city.profitPerLift
+            profitPerLift: city.profitPerLift,
+
+            // Text Aggregates
+            clients: city.clients,
+            cities: city.cities,
+            jks: city.jks,
+            statuses: city.statuses,
+            objectTypes: city.objectTypes,
+            years: city.years
         },
         itemStyle: { color: city.color },
-        children: city.jks.map(jk => {
+        children: city.childrenJKs.map(jk => {
           const jkId = `city:${city.name}|jk:${jk.name}`;
           const jkColor = COLORS[uniqueJKsList.indexOf(jk.name) % COLORS.length];
 
@@ -416,7 +513,15 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
                 expenseObr: jk.expenseObr,
                 incomeMont: jk.incomeMont,
                 expenseMont: jk.expenseMont,
-                profitPerLift: jk.profitPerLift
+                profitPerLift: jk.profitPerLift,
+
+                // Text Aggregates
+                clients: jk.clients,
+                cities: jk.cities,
+                jks: jk.jks,
+                statuses: jk.statuses,
+                objectTypes: jk.objectTypes,
+                years: jk.years
             },
             itemStyle: { color: jkColor },
             children: jk.liters.map(lit => {
@@ -440,7 +545,15 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
                     expenseObr: lit.expenseObr,
                     incomeMont: lit.incomeMont,
                     expenseMont: lit.expenseMont,
-                    profitPerLift: lit.profitPerLift
+                    profitPerLift: lit.profitPerLift,
+
+                    // Text Aggregates
+                    clients: lit.clients,
+                    cities: lit.cities,
+                    jks: lit.jks,
+                    statuses: lit.statuses,
+                    objectTypes: lit.objectTypes,
+                    years: lit.years
                 },
                 itemStyle: {
                   color: getItemColor(jk.name, lit.isHandedOver),
@@ -460,8 +573,6 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
         children: sunburstChildren
     }];
 
-    const yearsArr = Array.from(yearSet).sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
-
     return {
       chartData,
       sunburstData,
@@ -469,7 +580,7 @@ export const useChartData = ({ selectedYear, selectedCity, colorMode, activeMetr
       uniqueJKs: uniqueJKsList,
       citySummary,
       totalValue: totalMetricValue, // Total of active metric
-      years: [ALL_YEARS, ...yearsArr],
+      filterOptions // Return collected options for the menu
     };
-  }, [googleSheets, sheetConfigs, selectedYear, selectedCity, colorMode, activeMetric]);
+  }, [googleSheets, sheetConfigs, filters, colorMode, activeMetric]);
 };

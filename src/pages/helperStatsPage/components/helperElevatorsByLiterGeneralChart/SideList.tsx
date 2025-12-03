@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ChevronDown, ChevronRight, Building } from 'lucide-react';
 import { CitySummaryItem, ColorMode, SEPARATOR, STATUS_COLORS, TooltipData, JKItem, LiterItem, MetricKey, METRIC_OPTIONS } from './types';
 import { getTooltipHtml } from './useChartOptions';
@@ -30,6 +30,7 @@ const SideList: React.FC<SideListProps> = ({
   activeMetric
 }) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get active metric label info
   const metricInfo = METRIC_OPTIONS.find(m => m.key === activeMetric);
@@ -42,12 +43,17 @@ const SideList: React.FC<SideListProps> = ({
       return `${metricPrefix}${n.toLocaleString('ru-RU')}${metricSuffix}`;
   };
 
-  const handleMouseMove = (
+  const handleMouseEnterItem = (
       e: React.MouseEvent, 
       title: string, 
       item: CitySummaryItem | JKItem | LiterItem
   ) => {
-    
+    // Clear any pending close
+    if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+    }
+
     const data: TooltipData = {
         value: item.elevators, // Use RAW Elevators for tooltip display consistency
         floors: item.floors,
@@ -65,6 +71,14 @@ const SideList: React.FC<SideListProps> = ({
         incomeMont: item.incomeMont,
         expenseMont: item.expenseMont,
         profitPerLift: item.profitPerLift,
+
+        // Text Arrays
+        clients: item.clients || [],
+        cities: item.cities || [],
+        jks: item.jks || [],
+        statuses: item.statuses || [],
+        objectTypes: item.objectTypes || [],
+        years: item.years || []
     };
 
     const htmlContent = getTooltipHtml(title, data, true, activeMetric);
@@ -75,11 +89,18 @@ const SideList: React.FC<SideListProps> = ({
 
     let top = clientY + 10;
     
+    // Position check
     if (clientY + tooltipHeight + 20 > windowHeight) {
        top = clientY - tooltipHeight - 10;
        if (top < 10) top = 10;
     }
 
+    // Only update position if it's a new tooltip or significant move, 
+    // but for stability, we just set it on Enter and maybe update sparingly.
+    // For interactiveness, let's keep it fixed once shown for the item?
+    // Actually, following mouse makes entering hard. 
+    // Let's position it to the right of the cursor and keep it stable.
+    
     setTooltip({
       x: e.clientX,
       y: top,
@@ -87,8 +108,26 @@ const SideList: React.FC<SideListProps> = ({
     });
   };
 
-  const handleMouseLeave = () => {
-    setTooltip(null);
+  const handleMouseLeaveItem = () => {
+    // Add delay before closing to allow moving into tooltip
+    tooltipTimeoutRef.current = setTimeout(() => {
+        setTooltip(null);
+    }, 150); // 150ms delay
+  };
+
+  const handleTooltipMouseEnter = () => {
+      // If user enters tooltip, cancel close
+      if (tooltipTimeoutRef.current) {
+          clearTimeout(tooltipTimeoutRef.current);
+          tooltipTimeoutRef.current = null;
+      }
+  };
+
+  const handleTooltipMouseLeave = () => {
+      // Close after delay if leaving tooltip
+      tooltipTimeoutRef.current = setTimeout(() => {
+          setTooltip(null);
+      }, 150);
   };
 
   return (
@@ -118,9 +157,8 @@ const SideList: React.FC<SideListProps> = ({
               <div key={city.name} className="flex flex-col">
                 {/* Level 1: City Header */}
                 <div
-                  onMouseEnter={() => onHoverItem(city.name)}
-                  onMouseMove={(e) => handleMouseMove(e, city.name, city)}
-                  onMouseLeave={() => { onLeaveItem(city.name); handleMouseLeave(); }}
+                  onMouseEnter={(e) => { onHoverItem(city.name); handleMouseEnterItem(e, city.name, city); }}
+                  onMouseLeave={() => { onLeaveItem(city.name); handleMouseLeaveItem(); }}
                   onClick={() => toggleCity(city.name)}
                   className={`flex items-center justify-between group p-2 rounded-lg transition-all cursor-pointer ${
                     isCityExpanded
@@ -155,7 +193,7 @@ const SideList: React.FC<SideListProps> = ({
                 {/* Level 2: JK List */}
                 {isCityExpanded && (
                   <div className="pl-3 pr-1 py-1 space-y-0.5 animate-in slide-in-from-top-1 duration-200 border-l border-gray-100 dark:border-white/5 ml-3">
-                    {city.jks.map((jk, idx) => {
+                    {city.childrenJKs.map((jk, idx) => {
                       const isJKExpanded = expandedJK === jk.name;
                       return (
                         <div key={`${city.name}-${jk.name}-${idx}`} className="flex flex-col">
@@ -164,9 +202,8 @@ const SideList: React.FC<SideListProps> = ({
                             className={`flex justify-between items-center px-2 py-1.5 rounded-md transition-colors cursor-pointer group/jk ${
                               isJKExpanded ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'
                             }`}
-                            onMouseEnter={() => onHoverItem(`${city.name}${SEPARATOR}${jk.name}`)}
-                            onMouseMove={(e) => handleMouseMove(e, jk.name, jk)}
-                            onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}`); handleMouseLeave(); }}
+                            onMouseEnter={(e) => { onHoverItem(`${city.name}${SEPARATOR}${jk.name}`); handleMouseEnterItem(e, jk.name, jk); }}
+                            onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}`); handleMouseLeaveItem(); }}
                             onClick={(e) => { e.stopPropagation(); toggleJK(jk.name); }}
                           >
                             <div className="flex items-center gap-2 overflow-hidden flex-1">
@@ -194,9 +231,8 @@ const SideList: React.FC<SideListProps> = ({
                                 <div
                                   key={`${city.name}-${jk.name}-${liter.name}-${lIdx}`}
                                   className="flex justify-between items-center px-2 py-1 rounded-md hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-default"
-                                  onMouseEnter={() => onHoverItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`)}
-                                  onMouseMove={(e) => handleMouseMove(e, liter.name, liter)}
-                                  onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`); handleMouseLeave(); }}
+                                  onMouseEnter={(e) => { onHoverItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`); handleMouseEnterItem(e, liter.name, liter); }}
+                                  onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`); handleMouseLeaveItem(); }}
                                 >
                                   <div className="flex items-center gap-2 overflow-hidden">
                                     {colorMode === 'status' && (
@@ -235,17 +271,19 @@ const SideList: React.FC<SideListProps> = ({
       {/* RENDER THE UNIFIED TOOLTIP */}
       {tooltip && (
         <div
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
           style={{
             position: 'fixed',
             top: tooltip.y,
             left: tooltip.x + 15,
             zIndex: 9999,
-            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            backgroundColor: 'rgba(30, 41, 59, 0.98)',
             border: '1px solid #334155',
             borderRadius: '16px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(8px)',
-            pointerEvents: 'none',
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(12px)',
+            pointerEvents: 'auto', // CRITICAL: Allows interaction with scrollbar/details
           }}
           dangerouslySetInnerHTML={{ __html: tooltip.content }}
         />

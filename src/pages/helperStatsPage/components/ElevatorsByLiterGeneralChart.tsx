@@ -5,10 +5,10 @@ import {
   COLORS, 
   STATUS_COLORS, 
   ROOT_ID, 
-  ALL_YEARS,
   ChartType, 
   ColorMode,
-  MetricKey
+  MetricKey,
+  FilterState
 } from './helperElevatorsByLiterGeneralChart/types';
 import { useChartData } from './helperElevatorsByLiterGeneralChart/useChartData';
 import { useChartOptions } from './helperElevatorsByLiterGeneralChart/useChartOptions';
@@ -58,7 +58,15 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
   const [expandedJK, setExpandedJK] = useState<string | null>(null);
 
-  const [internalSelectedYear, setInternalSelectedYear] = useState<string>(ALL_YEARS);
+  // Filter State
+  const [filters, setFilters] = useState<FilterState>({
+    years: [],
+    cities: [],
+    jks: [],
+    clients: [],
+    statuses: [],
+    objectTypes: []
+  });
   
   // Drill-down State
   const [sunburstRootId, setSunburstRootId] = useState<string>(ROOT_ID);
@@ -68,12 +76,23 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
 
   // Sync external year prop with internal state if provided
   useEffect(() => {
-    // If external prop is defined (even empty string), sync it. 
-    // If empty string, treat as ALL_YEARS.
-    if (externalSelectedYear !== undefined) {
-      setInternalSelectedYear(externalSelectedYear || ALL_YEARS);
+    if (externalSelectedYear && externalSelectedYear !== 'Весь период') {
+        setFilters(prev => ({ ...prev, years: [externalSelectedYear] }));
+    } else {
+        // If "All years" or empty, clear the year filter, but keep others
+        setFilters(prev => ({ ...prev, years: [] }));
     }
   }, [externalSelectedYear]);
+
+  // Sync external city prop
+  useEffect(() => {
+    if (selectedCity) {
+        setFilters(prev => ({ ...prev, cities: [selectedCity] }));
+        handleResetZoom();
+    } else {
+        setFilters(prev => ({ ...prev, cities: [] }));
+    }
+  }, [selectedCity]);
 
   // Handler needed for useEffect below
   const handleResetZoom = () => {
@@ -83,11 +102,6 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     setExpandedJK(null);
   };
 
-  // Reset Zoom/State when city filter changes (externally)
-  useEffect(() => {
-    handleResetZoom();
-  }, [selectedCity]);
-
   // --- 1. Get Data via Custom Hook ---
   const {
     chartData,
@@ -95,10 +109,9 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     uniqueJKs,
     citySummary,
     totalValue,
-    years,
+    filterOptions
   } = useChartData({ 
-    selectedYear: internalSelectedYear, 
-    selectedCity, 
+    filters,
     colorMode,
     activeMetric
   });
@@ -238,12 +251,9 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         setColorMode={setColorMode}
         chartType={chartType}
         setChartType={setChartType}
-        selectedYear={internalSelectedYear}
-        setSelectedYear={(y) => {
-            setInternalSelectedYear(y);
-            handleResetZoom();
-        }}
-        years={years}
+        filters={filters}
+        setFilters={setFilters}
+        filterOptions={filterOptions}
         breadcrumbs={breadcrumbs}
         onResetZoom={handleResetZoom}
         activeMetric={activeMetric}

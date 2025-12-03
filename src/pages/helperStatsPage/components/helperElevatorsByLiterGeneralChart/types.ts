@@ -51,6 +51,24 @@ export const METRIC_OPTIONS: { key: MetricKey; label: string; prefix?: string; s
   { key: 'expenseObr', label: 'Расходы (Обрамление)', prefix: '₽ ' },
 ];
 
+export interface FilterState {
+  years: string[];
+  cities: string[];
+  jks: string[];
+  clients: string[];
+  statuses: string[]; // "Сдан" / "В работе"
+  objectTypes: string[];
+}
+
+export interface FilterOptions {
+  years: string[];
+  cities: string[];
+  jks: string[];
+  clients: string[];
+  statuses: string[];
+  objectTypes: string[];
+}
+
 export interface TooltipData {
     value: number; // Elevators
     floors: number;
@@ -67,12 +85,26 @@ export interface TooltipData {
     incomeMont?: number;
     expenseMont?: number;
     profitPerLift?: number; // Average
+
+    // Text Aggregates (Arrays of unique values)
+    clients: string[];
+    cities: string[];
+    jks: string[];
+    statuses: string[]; // Handed Over "Да"/"Нет"
+    objectTypes: string[];
+    years: string[];
 }
 
 export type RawItem = {
   city: string;
   jk: string;
   liter: string;
+  
+  // Text fields
+  client: string;
+  objectType: string;
+  year: string;
+  
   value: number; // Elevators
   floors: number;
   profit: number;
@@ -102,7 +134,7 @@ export type LiterItem = {
   profit: number;
   isHandedOver: boolean;
   
-  // New Fields
+  // Financials
   incomeFact: number;
   expenseFact: number;
   incomeLO: number;
@@ -112,6 +144,14 @@ export type LiterItem = {
   incomeMont: number;
   expenseMont: number;
   profitPerLift: number;
+
+  // Text Metadata
+  clients: string[];
+  cities: string[];
+  jks: string[];
+  statuses: string[];
+  objectTypes: string[];
+  years: string[];
 };
 
 export type JKItem = {
@@ -125,7 +165,7 @@ export type JKItem = {
   
   liters: LiterItem[];
   
-  // New Fields
+  // Financials
   incomeFact: number;
   expenseFact: number;
   incomeLO: number;
@@ -135,6 +175,14 @@ export type JKItem = {
   incomeMont: number;
   expenseMont: number;
   profitPerLift: number; // Average
+
+  // Text Aggregates
+  clients: string[];
+  cities: string[];
+  jks: string[];
+  statuses: string[];
+  objectTypes: string[];
+  years: string[];
 };
 
 export type CitySummaryItem = {
@@ -146,9 +194,9 @@ export type CitySummaryItem = {
   floors: number;
   profit: number;
   color: string;
-  jks: JKItem[];
+  childrenJKs: JKItem[];
   
-  // New Fields
+  // Financials
   incomeFact: number;
   expenseFact: number;
   incomeLO: number;
@@ -158,4 +206,12 @@ export type CitySummaryItem = {
   incomeMont: number;
   expenseMont: number;
   profitPerLift: number; // Average
+
+  // Text Aggregates
+  clients: string[];
+  cities: string[];
+  jks: string[];
+  statuses: string[];
+  objectTypes: string[];
+  years: string[];
 };
