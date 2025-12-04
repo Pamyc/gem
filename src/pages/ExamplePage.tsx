@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { ExternalLink, Image as ImageIcon, BarChart3 } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, BarChart3, TrendingUp, DollarSign } from 'lucide-react';
 import { getImgByName } from '../utils/driveUtils';
 import { googleFileLinks } from '../utils/linkForGoogleFiles';
 import ElevatorsByLiterChart from './helperExamplePage/ElevatorsByLiterChart';
+import TimelineGDPChart from './helperExamplePage/TimelineGDPChart';
+import TimelineFinanceChart from './helperExamplePage/TimelineFinanceChart';
 
 interface ExamplePageProps {
   isDarkMode: boolean;
@@ -36,6 +38,23 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
          
          <div className="h-[450px]">
             <ElevatorsByLiterChart isDarkMode={isDarkMode} />
+         </div>
+      </div>
+
+      {/* Finance Timeline Chart Section */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
+         <div className="mb-6 flex items-center gap-3">
+            <div className="p-2 bg-violet-100 dark:bg-violet-500/20 rounded-xl text-violet-600 dark:text-violet-400">
+               <DollarSign size={24} />
+            </div>
+            <div>
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Финансовая динамика по ЖК</h3>
+               <p className="text-sm text-gray-500 dark:text-gray-400">План / Факт доходов и расходов во времени</p>
+            </div>
+         </div>
+         
+         <div className="w-full">
+            <TimelineFinanceChart isDarkMode={isDarkMode} />
          </div>
       </div>
 
@@ -75,6 +94,23 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
             <div className="text-xs text-gray-400 font-mono break-all bg-gray-50 dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-white/5">
                 <span className="font-bold text-indigo-500">Generated URL:</span> {imageUrl}
             </div>
+         </div>
+      </div>
+
+      {/* GDP Timeline Chart Section */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
+         <div className="mb-6 flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400">
+               <TrendingUp size={24} />
+            </div>
+            <div>
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Динамика макроэкономических показателей</h3>
+               <p className="text-sm text-gray-500 dark:text-gray-400">Временная шкала ВВП и секторов экономики (Пример)</p>
+            </div>
+         </div>
+         
+         <div className="w-full">
+            <TimelineGDPChart isDarkMode={isDarkMode} />
          </div>
       </div>
       

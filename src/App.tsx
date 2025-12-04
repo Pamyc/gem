@@ -17,7 +17,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Компонент-обертка для содержимого приложения, чтобы использовать useAuth
 const AppContent: React.FC = () => {
   const { user } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Sidebar закрыт по умолчанию
+  const [isCollapsed, setIsCollapsed] = useState(true);
   // Статистика теперь первая вкладка и дефолтная
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   

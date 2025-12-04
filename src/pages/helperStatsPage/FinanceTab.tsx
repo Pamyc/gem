@@ -2,13 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import KPISection from './helperFinanceTab/KPISection';
 import KPISection2 from './helperFinanceTab/KPISection2';
-import ChartsSection from './helperFinanceTab/ChartsSection';
 import CitySelector from './helperFinanceTab/CitySelector';
 import YearSelector from './helperFinanceTab/YearSelector';
 import HousingComplexSection from './helperFinanceTab/HousingComplexSection';
-import ComplexComparisons from './helperFinanceTab/ComplexComparisons';
-import ElevatorsByLiterGeneralChart from './components/ElevatorsByLiterGeneralChart';
-import FinanceDynamicsSection from './helperFinanceTab/FinanceDynamicsSection';
+import TimelineFinanceChart from './helperFinanceTab/TimelineFinanceChart';
 
 interface FinanceTabProps {
   isDarkMode: boolean;
@@ -68,37 +65,13 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
       {/* KPI Section 2 */}
       <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
 
-      {/* Complex Comparisons */}
-      <div className="w-full">
-        <ComplexComparisons 
-          isDarkMode={isDarkMode}
-          selectedCity={selectedCity}
-          selectedYear={selectedYear}
-        />
-      </div>
-
-      {/* General Sunburst Chart */}
-      <div className="w-full">
-         <ElevatorsByLiterGeneralChart 
-            isDarkMode={isDarkMode} 
+      {/* Timeline Finance Chart (Copied from Examples) */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
+         <TimelineFinanceChart 
+            isDarkMode={isDarkMode}
             selectedCity={selectedCity}
             selectedYear={selectedYear}
          />
-      </div>
-
-      {/* Charts Grid */}
-      <ChartsSection 
-        isDarkMode={isDarkMode} 
-        selectedCity={selectedCity} 
-        selectedYear={selectedYear} 
-      />
-
-      {/* Dynamics Section */}
-      <div className="w-full">
-        <FinanceDynamicsSection 
-          isDarkMode={isDarkMode}
-          selectedCity={selectedCity}
-        />
       </div>
       
     </div>
