@@ -85,24 +85,58 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
     userSelect: 'none'
   };
 
-  // Calculate Data Contexts for Modal (Support multiple data sources like Min/Max)
+  // Calculate Data Contexts for Modal (Support multiple data sources like Min/Max and Variables)
   const dataContexts = useMemo(() => {
     const contexts: Array<{ name: string, config: CardConfig }> = [];
+
+    // Helper to add context with deduplication
+    const addContext = (name: string, ctxConfig: CardConfig) => {
+        const isDuplicate = contexts.some(ctx => 
+            ctx.config.sheetKey === ctxConfig.sheetKey && 
+            ctx.config.dataColumn === ctxConfig.dataColumn &&
+            ctx.config.aggregation === ctxConfig.aggregation &&
+            JSON.stringify(ctx.config.filters) === JSON.stringify(ctxConfig.filters)
+        );
+
+        if (!isDuplicate) {
+            contexts.push({ name, config: ctxConfig });
+        }
+    };
 
     // 1. Scan elements for data bindings
     config.elements.forEach((el, idx) => {
         // We are interested in elements that define a data source (Value type)
-        if (el.type === 'value') {
-             const sheetKey = el.dataSettings?.sheetKey || config.sheetKey;
-             const dataColumn = el.dataSettings?.dataColumn || config.dataColumn;
+        if (el.type === 'value' && el.dataSettings) {
              
+             // A. Check for Variables (Formula Mode)
+             if (el.dataSettings.variables && el.dataSettings.variables.length > 0) {
+                 el.dataSettings.variables.forEach(variable => {
+                     if (variable.sheetKey && variable.dataColumn) {
+                         const variableConfig: CardConfig = {
+                             ...config,
+                             sheetKey: variable.sheetKey,
+                             dataColumn: variable.dataColumn,
+                             aggregation: variable.aggregation,
+                             filters: variable.filters || []
+                         };
+                         addContext(`Переменная {${variable.name}}`, variableConfig);
+                     }
+                 });
+             }
+
+             // B. Check for Standard Data Binding (Simple Mode)
+             const sheetKey = el.dataSettings.sheetKey || (el.dataSettings.variables ? '' : config.sheetKey);
+             const dataColumn = el.dataSettings.dataColumn || (el.dataSettings.variables ? '' : config.dataColumn);
+             
+             // Only add if explicit sheet/column exists AND it's not just a container for variables
+             // (If it has variables, the direct dataSettings might be empty/unused)
              if (sheetKey && dataColumn) {
                  const mergedConfig: CardConfig = {
                      ...config,
                      sheetKey,
                      dataColumn,
-                     aggregation: el.dataSettings?.aggregation || config.aggregation,
-                     filters: el.dataSettings?.filters || config.filters
+                     aggregation: el.dataSettings.aggregation || config.aggregation,
+                     filters: el.dataSettings.filters || config.filters
                  };
                  
                  let name = el.dataBind ? el.dataBind.toUpperCase() : `Значение ${idx + 1}`;
@@ -111,22 +145,10 @@ const CustomCard: React.FC<CustomCardProps> = ({ config, globalData, containerSt
                  if (el.dataBind === 'min') name = 'Минимум';
                  else if (el.dataBind === 'max') name = 'Максимум';
                  else if (el.dataBind === 'value' || !el.dataBind) {
-                    // Use column name if generic value
                     name = dataColumn; 
                  }
 
-                 // Check if we already have a context with this exact config to avoid duplicates
-                 // Simple check based on JSON stringify of key props
-                 const isDuplicate = contexts.some(ctx => 
-                    ctx.config.sheetKey === mergedConfig.sheetKey && 
-                    ctx.config.dataColumn === mergedConfig.dataColumn &&
-                    ctx.config.aggregation === mergedConfig.aggregation &&
-                    JSON.stringify(ctx.config.filters) === JSON.stringify(mergedConfig.filters)
-                 );
-
-                 if (!isDuplicate) {
-                    contexts.push({ name, config: mergedConfig });
-                 }
+                 addContext(name, mergedConfig);
              }
         }
     });

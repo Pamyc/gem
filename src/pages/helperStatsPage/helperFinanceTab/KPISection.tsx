@@ -150,8 +150,8 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
       width: "100%",
       height: "50px",
       colorTheme: "blue",
-      gradientFrom: "violet",
-      gradientTo: "orange",
+      gradientFrom: "orange",
+      gradientTo: "red",
       elements: [
         {
           id: "value-q6cne",
@@ -216,8 +216,8 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
       width: "100%",
       height: "50px",
       colorTheme: "blue",
-      gradientFrom: "violet",
-      gradientTo: "orange",
+      gradientFrom: "red",
+      gradientTo: "emerald",
       elements: [
         {
           id: "value-q6cne",
@@ -299,7 +299,7 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
   }, [baseConfigs, selectedCity, selectedYear]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 min-[2000px]:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
       {effectiveConfigs.map((config, idx) => (
         <DynamicCard key={idx} config={config} />
       ))}

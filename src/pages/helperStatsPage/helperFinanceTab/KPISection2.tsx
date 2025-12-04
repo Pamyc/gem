@@ -12,13 +12,13 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear })
   const baseConfigs = useMemo<CardConfig[]>(() => [
     {
       template: "custom",
-      title: "Лифтов на 1 дом",
+      title: "Плановые доходы на 1 жк",
       sheetKey: "",
       dataColumn: "",
-      aggregation: "average",
+      aggregation: "sum",
       filters: [],
       valuePrefix: "",
-      valueSuffix: "",
+      valueSuffix: " ₽",
       compactNumbers: false,
       icon: "Users",
       showIcon: true,
@@ -35,20 +35,59 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear })
           id: "value-q6cne",
           type: "value",
           style: {
-            top: 8,
-            left: 230,
+            top: 10,
+            left: 300,
             fontSize: 20,
             color: "#ffffff",
             fontWeight: "bold"
           },
           dataSettings: {
-            sheetKey: "clientGrowth",
-            dataColumn: "Кол-во лифтов",
-            aggregation: "average",
-            filters: [
-              { id: "uaxlml8uu", column: "Итого (Да/Нет)", operator: "equals", value: "Нет" },
-              { id: "284qb4n5p", column: "Отдельный литер (Да/Нет)", operator: "equals", value: "Да" }
-            ]
+            
+            variables: [
+              {
+                id: "g7yijd2y9",
+                name: "a",
+                sheetKey: "clientGrowth",
+                dataColumn: "ЖК",
+                aggregation: "unique",
+                filters: [
+                  {
+                    id: "j2ygwux7n",
+                    column: "Итого (Да/Нет)",
+                    operator: "equals",
+                    value: "Нет"
+                  },
+                  {
+                    id: "eqdsc2n6x",
+                    column: "Без разбивки на литеры (Да/Нет)",
+                    operator: "equals",
+                    value: "Да"
+                  }
+                ]
+              },
+              {
+                id: "ruy3ou2ln",
+                name: "b",
+                sheetKey: "clientGrowth",
+                dataColumn: "Доходы + Итого + План",
+                aggregation: "sum",
+                filters: [
+                  {
+                    id: "j2ygwux7n",
+                    column: "Итого (Да/Нет)",
+                    operator: "equals",
+                    value: "Нет"
+                  },
+                  {
+                    id: "eqdsc2n6x",
+                    column: "Без разбивки на литеры (Да/Нет)",
+                    operator: "equals",
+                    value: "Да"
+                  }
+                ]
+              }
+            ],
+            formula: "{b} / {a}"
           }
         },
         {
@@ -68,13 +107,13 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear })
     },
     {
       template: "custom",
-      title: "Этажей на 1 дом",
+      title: "Фактические доходы на 1 жк",
       sheetKey: "",
       dataColumn: "",
-      aggregation: "average",
+      aggregation: "sum",
       filters: [],
       valuePrefix: "",
-      valueSuffix: "",
+      valueSuffix: " ₽",
       compactNumbers: false,
       icon: "Users",
       showIcon: true,
@@ -85,26 +124,65 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear })
       height: "50px",
       colorTheme: "blue",
       gradientFrom: "violet",
-      gradientTo: "orange",
+      gradientTo: "red",
       elements: [
         {
           id: "value-q6cne",
           type: "value",
           style: {
-            top: 8,
-            left: 230,
+            top: 10,
+            left: 300,
             fontSize: 20,
             color: "#ffffff",
             fontWeight: "bold"
           },
           dataSettings: {
-            sheetKey: "clientGrowth",
-            dataColumn: "Кол-во этажей",
-            aggregation: "average",
-            filters: [
-              { id: "uaxlml8uu", column: "Итого (Да/Нет)", operator: "equals", value: "Нет" },
-              { id: "284qb4n5p", column: "Отдельный литер (Да/Нет)", operator: "equals", value: "Да" }
-            ]
+            
+            variables: [
+              {
+                id: "g7yijd2y9",
+                name: "a",
+                sheetKey: "clientGrowth",
+                dataColumn: "ЖК",
+                aggregation: "unique",
+                filters: [
+                  {
+                    id: "j2ygwux7n",
+                    column: "Итого (Да/Нет)",
+                    operator: "equals",
+                    value: "Нет"
+                  },
+                  {
+                    id: "eqdsc2n6x",
+                    column: "Без разбивки на литеры (Да/Нет)",
+                    operator: "equals",
+                    value: "Да"
+                  }
+                ]
+              },
+              {
+                id: "ruy3ou2ln",
+                name: "b",
+                sheetKey: "clientGrowth",
+                dataColumn: "Доходы + Итого + Факт",
+                aggregation: "sum",
+                filters: [
+                  {
+                    id: "j2ygwux7n",
+                    column: "Итого (Да/Нет)",
+                    operator: "equals",
+                    value: "Нет"
+                  },
+                  {
+                    id: "eqdsc2n6x",
+                    column: "Без разбивки на литеры (Да/Нет)",
+                    operator: "equals",
+                    value: "Да"
+                  }
+                ]
+              }
+            ],
+            formula: "{b} / {a}"
           }
         },
         {
@@ -129,24 +207,40 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear })
 
     return baseConfigs.map(config => {
       const newConfig = JSON.parse(JSON.stringify(config));
+
       if (newConfig.elements) {
         newConfig.elements.forEach((el: any) => {
           if (el.dataSettings) {
+            
+            // Функция для добавления фильтров в любой массив фильтров
+            const injectFilters = (targetFilters: any[]) => {
+              if (selectedCity) {
+                targetFilters.push({
+                  id: "city-filter-dynamic",
+                  column: "Город",
+                  operator: "equals",
+                  value: selectedCity
+                });
+              }
+              if (selectedYear) {
+                targetFilters.push({
+                  id: "year-filter-dynamic",
+                  column: "Год",
+                  operator: "equals",
+                  value: selectedYear
+                });
+              }
+            };
+
+            // 1. Внедряем в основные фильтры элемента
             if (!el.dataSettings.filters) el.dataSettings.filters = [];
-            if (selectedCity) {
-              el.dataSettings.filters.push({
-                id: "city-filter-dynamic",
-                column: "Город",
-                operator: "equals",
-                value: selectedCity
-              });
-            }
-            if (selectedYear) {
-              el.dataSettings.filters.push({
-                id: "year-filter-dynamic",
-                column: "Год",
-                operator: "equals",
-                value: selectedYear
+            injectFilters(el.dataSettings.filters);
+
+            // 2. Внедряем в переменные, если они есть (для формул)
+            if (el.dataSettings.variables && Array.isArray(el.dataSettings.variables)) {
+              el.dataSettings.variables.forEach((variable: any) => {
+                if (!variable.filters) variable.filters = [];
+                injectFilters(variable.filters);
               });
             }
           }
