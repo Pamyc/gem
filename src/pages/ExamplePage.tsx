@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { ExternalLink, Image as ImageIcon, BarChart3, TrendingUp, DollarSign } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, BarChart3, TrendingUp, DollarSign, PenTool } from 'lucide-react';
 import { getImgByName } from '../utils/driveUtils';
 import { googleFileLinks } from '../utils/linkForGoogleFiles';
 import ElevatorsByLiterChart from './helperExamplePage/ElevatorsByLiterChart';
 import TimelineGDPChart from './helperExamplePage/TimelineGDPChart';
 import TimelineFinanceChart from './helperExamplePage/TimelineFinanceChart';
+import BuilderDemoChart from './helperExamplePage/BuilderDemoChart';
 
 interface ExamplePageProps {
   isDarkMode: boolean;
@@ -111,6 +112,23 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
          
          <div className="w-full">
             <TimelineGDPChart isDarkMode={isDarkMode} />
+         </div>
+      </div>
+
+      {/* Builder Demo Chart Section */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
+         <div className="mb-6 flex items-center gap-3">
+            <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-xl text-orange-600 dark:text-orange-400">
+               <PenTool size={24} />
+            </div>
+            <div>
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Статистика ECharts</h3>
+               <p className="text-sm text-gray-500 dark:text-gray-400">Демонстрация сложной компоновки и водяных знаков</p>
+            </div>
+         </div>
+         
+         <div className="w-full h-[700px]">
+            <BuilderDemoChart isDarkMode={isDarkMode} />
          </div>
       </div>
       

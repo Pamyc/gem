@@ -58,7 +58,7 @@ const MultiFilterMenu: React.FC<MultiFilterMenuProps> = ({ filters, onChange, op
   };
 
   const getActiveCount = () => {
-    return Object.values(filters).reduce((acc, curr) => acc + curr.length, 0);
+    return (Object.values(filters) as string[][]).reduce((acc, curr) => acc + curr.length, 0);
   };
 
   const activeCount = getActiveCount();

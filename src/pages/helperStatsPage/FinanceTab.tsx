@@ -6,6 +6,7 @@ import CitySelector from './helperFinanceTab/CitySelector';
 import YearSelector from './helperFinanceTab/YearSelector';
 import HousingComplexSection from './helperFinanceTab/HousingComplexSection';
 import TimelineFinanceChart from './helperFinanceTab/TimelineFinanceChart';
+import StackedBarFinanceChart from './helperFinanceTab/StackedBarFinanceChart';
 
 interface FinanceTabProps {
   isDarkMode: boolean;
@@ -65,9 +66,18 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
       {/* KPI Section 2 */}
       <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
 
-      {/* Timeline Finance Chart (Copied from Examples) */}
+      {/* Timeline Finance Chart (Vertical) */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
          <TimelineFinanceChart 
+            isDarkMode={isDarkMode}
+            selectedCity={selectedCity}
+            selectedYear={selectedYear}
+         />
+      </div>
+
+      {/* Stacked Bar Finance Chart (Horizontal) */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
+         <StackedBarFinanceChart 
             isDarkMode={isDarkMode}
             selectedCity={selectedCity}
             selectedYear={selectedYear}

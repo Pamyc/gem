@@ -208,9 +208,9 @@ const TimelineGDPChart: React.FC<TimelineGDPChartProps> = ({ isDarkMode }) => {
           }
         ],
         series: [
-          { name: 'ВВП', type: 'bar' },
-          { name: 'Финансы', type: 'bar' },
-          { name: 'Недвижимость', type: 'bar' },
+          { name: 'ВВП', type: 'bar', stack: 'one'},
+          { name: 'Финансы', type: 'bar', stack: 'one' },
+          { name: 'Недвижимость', type: 'bar' , stack: 'one'},
           { name: 'Первичный сектор', type: 'bar' },
           { name: 'Вторичный сектор', type: 'bar' },
           { name: 'Третичный сектор', type: 'bar' },
