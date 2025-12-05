@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
             {/* Text Content */}
             <div className="relative z-10">
               <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">CCM Elevator</h2>
-              <p className="text-violet-100 mt-2 text-sm font-medium opacity-90">Лучшая установка лифтов ЮГА России</p>
+              <p className="text-violet-100 mt-2 text-sm font-medium opacity-90"></p>
             </div>
           </div>
 

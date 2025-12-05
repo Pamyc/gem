@@ -7,6 +7,7 @@ import ElevatorsByLiterChart from './helperExamplePage/ElevatorsByLiterChart';
 import TimelineGDPChart from './helperExamplePage/TimelineGDPChart';
 import TimelineFinanceChart from './helperExamplePage/TimelineFinanceChart';
 import BuilderDemoChart from './helperExamplePage/BuilderDemoChart';
+import ComparisonChart from './helperExamplePage/ComparisonChart';
 
 interface ExamplePageProps {
   isDarkMode: boolean;
@@ -25,6 +26,8 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
   return (
     <div className="w-full max-w-[1152px] mx-auto space-y-8 p-6">
       
+      
+
       {/* New Chart Section */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6">
          <div className="mb-6 flex items-center gap-3">
@@ -130,6 +133,11 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ isDarkMode }) => {
          <div className="w-full h-[700px]">
             <BuilderDemoChart isDarkMode={isDarkMode} />
          </div>
+      </div>
+
+      {/* Comparison Chart Section (New) */}
+      <div className="w-full">
+         <ComparisonChart isDarkMode={isDarkMode} />
       </div>
       
     </div>
