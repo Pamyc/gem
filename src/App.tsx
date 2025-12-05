@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -10,6 +10,7 @@ import ConstructorPage from './pages/ConstructorPage';
 import CardConstructorPage from './pages/CardConstructorPage';
 import KPIPage from './pages/KPIPage';
 import FilterTestPage from './pages/FilterTestPage';
+import Example2Page from './pages/Example2Page';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -34,6 +35,7 @@ const AppContent: React.FC = () => {
     }
   }, [isDarkMode]);
 
+  const mainColor = 'yellow';
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev);
   };
@@ -47,17 +49,18 @@ const AppContent: React.FC = () => {
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
       { id: 'filter-test', label: 'Тест фильтров', icon: Filter },
       { id: 'kpi', label: 'KPI Примеры', icon: Target },
+      { id: 'example2', label: 'Пример 2', icon: Copy }, // Новая вкладка
       { id: 'example', label: 'Пример 1', icon: FileText },
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
-    // Скрываем конструктор и KPI для всех, кроме i
+    // Скрываем конструктор, KPI и Пример 2 для всех, кроме i
     if (user?.username !== 'i') {
       return items.filter(item => 
         item.id !== 'constructor' && 
-        
         item.id !== 'card-constructor' &&
-        item.id !== 'filter-test'
+        item.id !== 'filter-test' &&
+        item.id !== 'example2'
       );
     }
 
@@ -66,7 +69,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2'];
     if (restrictedTabs.includes(activeTab) && user?.username !== 'i') {
       setActiveTab('stats');
     }
@@ -92,9 +95,11 @@ const AppContent: React.FC = () => {
         {activeTab === 'home' && <HomePage />}
         
         {/* Рендерим админские страницы только если пользователь имеет доступ */}
-        {activeTab === 'constructor' && user.username === 'i' && <ConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'constructor' && user.username === 'i' && <ConstructorPage isDarkMode={isDarkMode}  />}
         {activeTab === 'card-constructor' && user.username === 'i' && <CardConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'filter-test' && user.username === 'i' && <FilterTestPage isDarkMode={isDarkMode} />}
+        {activeTab === 'example2' && user.username === 'i' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
+        
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'example' && <ExamplePage isDarkMode={isDarkMode} />}

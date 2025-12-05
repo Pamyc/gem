@@ -25,16 +25,10 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
 
   const { data, isLoading } = useProcessedChartData(config);
 
-  useEffect(() => {
-    if (!isLoading && data.length > 0 && !selectedCity) {
-      const rostov = data.find(d => d.name === 'Ростов-на-Дону');
-      if (rostov) {
-        onSelectCity(rostov.name);
-      } else {
-        onSelectCity(data[0].name);
-      }
-    }
-  }, [data, isLoading, selectedCity, onSelectCity]);
+  // Calculate total count for "All Cities" badge
+  const totalCount = useMemo(() => {
+    return data.reduce((acc, item) => acc + item.value, 0);
+  }, [data]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,7 +53,7 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
         title="Нажмите для выбора города"
       >
         <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
-          {selectedCity || (isLoading ? "Загрузка..." : "Выберите город")}
+          {selectedCity || "Все города"}
         </h1>
         <ChevronDown 
           size={24} 
@@ -75,6 +69,21 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
             </div>
           ) : (
             <div className="p-2">
+              {/* Option: All Cities */}
+              <button
+                onClick={() => handleSelect('')}
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors flex justify-between items-center ${
+                  selectedCity === ''
+                    ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                }`}
+              >
+                <span>Все города</span>
+                <span className="text-xs font-normal text-gray-400 bg-white dark:bg-black/20 px-2 py-0.5 rounded-md">
+                  {totalCount}
+                </span>
+              </button>
+
               {data.map((item) => (
                 <button
                   key={item.name}
