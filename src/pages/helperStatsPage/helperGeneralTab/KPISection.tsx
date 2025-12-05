@@ -76,7 +76,7 @@ const KPISection: React.FC = () => {
 
     {
       template: "custom",
-      title: "Расходы общие",
+      title: "Расходы",
       sheetKey: "",
       dataColumn: "",
       aggregation: "sum",
@@ -107,7 +107,7 @@ const KPISection: React.FC = () => {
           },
           dataSettings: {
             sheetKey: "clientGrowth",
-            dataColumn: "Расходы + Итого + факт",
+            dataColumn: "Расходы + Итого + Факт",
             aggregation: "sum",
             filters: [
               {
@@ -121,78 +121,6 @@ const KPISection: React.FC = () => {
                 column: "Без разбивки на литеры (Да/Нет)",
                 operator: "equals",
                 value: "Да"
-              }
-            ]
-          }
-        },
-        {
-          id: "title-j5jou",
-          type: "title",
-          style: {
-            top: 25,
-            left: 25,
-            fontSize: 23,
-            color: "rgba(255,255,255,0.8)",
-            fontWeight: "500"
-          }
-        }
-      ],
-      backgroundColor: "",
-      borderColor: ""
-    },
-    {
-      template: "custom",
-      title: "Рентабельность по закр.",
-      sheetKey: "",
-      dataColumn: "",
-      aggregation: "sum",
-      filters: [],
-      valuePrefix: "",
-      valueSuffix: " %",
-      compactNumbers: false,
-      icon: "Users",
-      showIcon: true,
-      showTrend: false,
-      trendValue: "0%",
-      trendDirection: "neutral",
-      width: "100%",
-      height: "150px",
-      colorTheme: "blue",
-      gradientFrom: "orange",
-      gradientTo: "violet",
-      elements: [
-        {
-          id: "value-q6cne",
-          type: "value",
-          style: {
-            top: 70,
-            left: 25,
-            fontSize: 23,
-            color: "#ffffff",
-            fontWeight: "bold"
-          },
-          dataSettings: {
-            sheetKey: "clientGrowth",
-            dataColumn: "Рентабельность",
-            aggregation: "average",
-            filters: [
-              {
-                id: "uaxlml8uu",
-                column: "Итого (Да/Нет)",
-                operator: "equals",
-                value: "Нет"
-              },
-              {
-                id: "684qb4n5p",
-                column: "Без разбивки на литеры (Да/Нет)",
-                operator: "equals",
-                value: "Да"
-              },
-              {
-                id: "f3",
-                column: "Сдан да/нет",
-                operator: "equals",
-                value: "да"
               }
             ]
           }
@@ -377,6 +305,78 @@ const KPISection: React.FC = () => {
       backgroundColor: "",
       borderColor: ""
     },
+    {
+      template: "custom",
+      title: "Рентабельность по закр.",
+      sheetKey: "",
+      dataColumn: "",
+      aggregation: "sum",
+      filters: [],
+      valuePrefix: "",
+      valueSuffix: " %",
+      compactNumbers: false,
+      icon: "Users",
+      showIcon: true,
+      showTrend: false,
+      trendValue: "0%",
+      trendDirection: "neutral",
+      width: "100%",
+      height: "150px",
+      colorTheme: "blue",
+      gradientFrom: "orange",
+      gradientTo: "violet",
+      elements: [
+        {
+          id: "value-q6cne",
+          type: "value",
+          style: {
+            top: 70,
+            left: 25,
+            fontSize: 23,
+            color: "#ffffff",
+            fontWeight: "bold"
+          },
+          dataSettings: {
+            sheetKey: "clientGrowth",
+            dataColumn: "Рентабельность",
+            aggregation: "average",
+            filters: [
+              {
+                id: "uaxlml8uu",
+                column: "Итого (Да/Нет)",
+                operator: "equals",
+                value: "Нет"
+              },
+              {
+                id: "684qb4n5p",
+                column: "Без разбивки на литеры (Да/Нет)",
+                operator: "equals",
+                value: "Да"
+              },
+              {
+                id: "f3",
+                column: "Сдан да/нет",
+                operator: "equals",
+                value: "да"
+              }
+            ]
+          }
+        },
+        {
+          id: "title-j5jou",
+          type: "title",
+          style: {
+            top: 25,
+            left: 25,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.8)",
+            fontWeight: "500"
+          }
+        }
+      ],
+      backgroundColor: "",
+      borderColor: ""
+    }
     // Row 2
     {
       template: "custom",

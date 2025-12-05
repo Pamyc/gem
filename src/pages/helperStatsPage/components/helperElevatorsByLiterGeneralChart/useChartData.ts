@@ -71,7 +71,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
 
     // --- New Financial Columns ---
     const idxIncomeFact = headers.indexOf('Доходы + Итого + Факт');
-    const idxExpenseFact = headers.indexOf('Расходы + Итого + факт');
+    const idxExpenseFact = headers.indexOf('Расходы + Итого + Факт');
     
     const idxIncomeLO = headers.indexOf('Доходы + Лифтовое оборудование + Факт');
     const idxExpenseLO = headers.indexOf('Расходы + Лифтовое оборудование + Факт');
