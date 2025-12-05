@@ -376,7 +376,7 @@ const KPISection: React.FC = () => {
       ],
       backgroundColor: "",
       borderColor: ""
-    }
+    },
     // Row 2
     {
       template: "custom",
