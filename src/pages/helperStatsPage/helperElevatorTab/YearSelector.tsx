@@ -1,15 +1,16 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useProcessedChartData } from '../../../hooks/useProcessedChartData';
-import { ChevronDown, Loader2, Calendar } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 
 interface YearSelectorProps {
   selectedYear: string;
   onSelectYear: (year: string) => void;
   selectedCity: string;
+  selectedRegion?: string;
 }
 
-const YearSelector: React.FC<YearSelectorProps> = ({ selectedYear, onSelectYear, selectedCity }) => {
+const YearSelector: React.FC<YearSelectorProps> = ({ selectedYear, onSelectYear, selectedCity, selectedRegion }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,13 +31,23 @@ const YearSelector: React.FC<YearSelectorProps> = ({ selectedYear, onSelectYear,
       }
     ];
 
-    // Apply city filter if selected to restrict years to that city
+    // Apply city filter if selected
     if (selectedCity) {
         filters.push({
             id: "city-context-filter",
             column: "Город",
             operator: "equals",
             value: selectedCity
+        });
+    }
+
+    // Apply region filter if selected
+    if (selectedRegion) {
+        filters.push({
+            id: "region-context-filter",
+            column: "Регион",
+            operator: "equals",
+            value: selectedRegion
         });
     }
 
@@ -47,7 +58,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({ selectedYear, onSelectYear,
         aggregation: 'count' as const,
         filters: filters
     };
-  }, [selectedCity]);
+  }, [selectedCity, selectedRegion]);
 
   const { data, isLoading } = useProcessedChartData(config);
 
@@ -82,16 +93,16 @@ const YearSelector: React.FC<YearSelectorProps> = ({ selectedYear, onSelectYear,
   }, [data, isLoading]);
 
   return (
-    <div className="relative mb-6 z-40" ref={containerRef}>
-      {/* Trigger Area */}
+    <div className="relative mb-6 z-30" ref={containerRef}>
+      {/* Trigger Area - H3 Style (Tertiary/Metadata) */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center gap-2 cursor-pointer select-none group transition-opacity hover:opacity-80"
         title="Нажмите для выбора периода"
       >
-        <span className="text-2xl font-bold text-gray-500 dark:text-gray-400 tracking-tight">
+        <h3 className="text-xl font-bold text-gray-400 dark:text-gray-500 tracking-tight flex items-center gap-2">
           {isLoading ? "Загрузка..." : displayValue}
-        </span>
+        </h3>
         
         <ChevronDown 
           size={20} 

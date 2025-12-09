@@ -19,6 +19,7 @@ interface ElevatorsByLiterGeneralChartProps {
   isDarkMode: boolean;
   selectedCity?: string;
   selectedYear?: string;
+  selectedRegion?: string;
 }
 
 // Helper to parse ID to Breadcrumbs
@@ -47,7 +48,8 @@ const getParentId = (id: string | null) => {
 const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> = ({ 
   isDarkMode, 
   selectedCity, 
-  selectedYear: externalSelectedYear 
+  selectedYear: externalSelectedYear,
+  selectedRegion
 }) => {
   // State
   const [chartType, setChartType] = useState<ChartType>('sunburst');
@@ -61,6 +63,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
   // Filter State
   const [filters, setFilters] = useState<FilterState>({
     years: [],
+    regions: [],
     cities: [],
     jks: [],
     clients: [],
@@ -93,6 +96,16 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         setFilters(prev => ({ ...prev, cities: [] }));
     }
   }, [selectedCity]);
+
+  // Sync external region prop
+  useEffect(() => {
+    if (selectedRegion) {
+        setFilters(prev => ({ ...prev, regions: [selectedRegion] }));
+        handleResetZoom();
+    } else {
+        setFilters(prev => ({ ...prev, regions: [] }));
+    }
+  }, [selectedRegion]);
 
   // Handler needed for useEffect below
   const handleResetZoom = () => {

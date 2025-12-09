@@ -40,7 +40,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         citySummary: [],
         totalValue: 0,
         filterOptions: {
-            years: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: []
+            years: [], regions: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: []
         } as FilterOptions
     };
 
@@ -60,6 +60,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     const idxProfit = headers.indexOf('Валовая'); 
     
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     const idxYear = headers.indexOf('Год');
     const idxStatus = headers.indexOf('Сдан да/нет');
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
@@ -94,6 +95,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     // Collectors for Filter Options (Unique values)
     const optionsSet = {
         years: new Set<string>(),
+        regions: new Set<string>(),
         cities: new Set<string>(),
         jks: new Set<string>(),
         clients: new Set<string>(),
@@ -115,6 +117,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
       const statusRaw = idxStatus !== -1 ? String(row[idxStatus] ?? '').trim().toLowerCase() : '';
       const isHandedOver = statusRaw === 'да';
       
+      const region = idxRegion !== -1 ? cleanStr(row[idxRegion]) : '';
       const client = idxClient !== -1 ? cleanStr(row[idxClient]) : '';
       const objectType = idxObjectType !== -1 ? cleanStr(row[idxObjectType]) : '';
       const rowYear = idxYear !== -1 ? String(row[idxYear] ?? '').trim() : '';
@@ -125,6 +128,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
 
       // --- Collect Options (Before Filtering) ---
       if (rowYear) optionsSet.years.add(rowYear);
+      if (region) optionsSet.regions.add(region);
       if (rowCity) optionsSet.cities.add(rowCity);
       if (jk) optionsSet.jks.add(jk);
       if (client) optionsSet.clients.add(client);
@@ -133,6 +137,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
 
       // --- Apply Filters ---
       if (filters.years.length > 0 && !filters.years.includes(rowYear)) return;
+      if (filters.regions.length > 0 && !filters.regions.includes(region)) return;
       if (filters.cities.length > 0 && !filters.cities.includes(rowCity)) return;
       if (filters.jks.length > 0 && !filters.jks.includes(jk)) return;
       if (filters.clients.length > 0 && !filters.clients.includes(client)) return;
@@ -171,6 +176,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     // Prepare Filter Options Object
     const filterOptions: FilterOptions = {
         years: Array.from(optionsSet.years).sort().reverse(),
+        regions: Array.from(optionsSet.regions).sort(),
         cities: Array.from(optionsSet.cities).sort(),
         jks: Array.from(optionsSet.jks).sort(),
         clients: Array.from(optionsSet.clients).sort(),

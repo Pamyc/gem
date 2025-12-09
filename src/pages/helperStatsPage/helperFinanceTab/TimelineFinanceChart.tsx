@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import EChartComponent from '../../../components/charts/EChartComponent';
 import { useDataStore } from '../../../contexts/DataContext';
@@ -9,11 +10,12 @@ interface TimelineFinanceChartProps {
   isDarkMode: boolean;
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
 type StatusFilterType = 'all' | 'yes' | 'no';
 
-const TimelineFinanceChart: React.FC<TimelineFinanceChartProps> = ({ isDarkMode, selectedCity, selectedYear }) => {
+const TimelineFinanceChart: React.FC<TimelineFinanceChartProps> = ({ isDarkMode, selectedCity, selectedYear, selectedRegion }) => {
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
 
@@ -32,6 +34,7 @@ const TimelineFinanceChart: React.FC<TimelineFinanceChartProps> = ({ isDarkMode,
     // 1. Индексы колонок
     const idxJK = headers.indexOf('ЖК');
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     const idxYear = headers.indexOf('Год');
     const idxStatus = headers.indexOf('Сдан да/нет');
     
@@ -57,7 +60,10 @@ const TimelineFinanceChart: React.FC<TimelineFinanceChartProps> = ({ isDarkMode,
       if (idxTotal !== -1 && String(row[idxTotal]).trim().toLowerCase() === 'да') return;
       if (idxNoBreakdown !== -1 && String(row[idxNoBreakdown]).trim().toLowerCase() !== 'да') return;
 
-      // Применяем пользовательские фильтры (Город / Год)
+      // Применяем пользовательские фильтры (Регион / Город / Год)
+      const rowRegion = idxRegion !== -1 ? String(row[idxRegion]).trim() : '';
+      if (selectedRegion && rowRegion !== selectedRegion) return;
+
       const rowCity = idxCity !== -1 ? String(row[idxCity]).trim() : '';
       if (selectedCity && rowCity !== selectedCity) return;
 
@@ -287,7 +293,7 @@ const TimelineFinanceChart: React.FC<TimelineFinanceChartProps> = ({ isDarkMode,
       ]
     };
 
-  }, [googleSheets, sheetConfigs, isDarkMode, selectedCity, selectedYear, statusFilter]);
+  }, [googleSheets, sheetConfigs, isDarkMode, selectedCity, selectedYear, selectedRegion, statusFilter]);
 
   if (isLoading) {
     return (

@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 
 export type ComparisonCategory = 'client' | 'city' | 'jk' | 'liter' | 'year' | 'status';
@@ -19,6 +18,7 @@ export interface MetricConfig {
 
 export interface ComparisonFilterState {
   years: string[];
+  regions: string[];
   cities: string[];
   jks: string[];
   clients: string[];
@@ -28,6 +28,7 @@ export interface ComparisonFilterState {
 
 export interface ComparisonFilterOptions {
   years: string[];
+  regions: string[];
   cities: string[];
   jks: string[];
   clients: string[];

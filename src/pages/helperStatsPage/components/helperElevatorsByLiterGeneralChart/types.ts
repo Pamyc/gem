@@ -1,4 +1,5 @@
 
+
 export const COLORS = [
   '#3b82f6', // Blue
   '#f97316', // Orange
@@ -53,6 +54,7 @@ export const METRIC_OPTIONS: { key: MetricKey; label: string; prefix?: string; s
 
 export interface FilterState {
   years: string[];
+  regions: string[];
   cities: string[];
   jks: string[];
   clients: string[];
@@ -62,6 +64,7 @@ export interface FilterState {
 
 export interface FilterOptions {
   years: string[];
+  regions: string[];
   cities: string[];
   jks: string[];
   clients: string[];

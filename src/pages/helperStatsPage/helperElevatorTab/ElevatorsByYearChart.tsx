@@ -7,6 +7,7 @@ import { getMergedHeaders } from '../../../utils/chartUtils';
 interface ElevatorsByYearChartProps {
   isDarkMode: boolean;
   selectedCity: string;
+  selectedRegion?: string;
 }
 
 const COLORS = [
@@ -14,7 +15,7 @@ const COLORS = [
   '#eab308', '#06b6d4', '#6366f1', '#a855f7', '#f43f5e'
 ];
 
-const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode, selectedCity }) => {
+const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode, selectedCity, selectedRegion }) => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
   const { years, series, jks } = useMemo(() => {
@@ -34,6 +35,7 @@ const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode,
     const idxJK = headers.indexOf('ЖК');
     const idxElevators = headers.indexOf('Кол-во лифтов');
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     
     // Filters
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
@@ -53,7 +55,10 @@ const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode,
       if (idxTotal !== -1 && String(row[idxTotal]).trim().toLowerCase() === 'да') return;
       if (idxNoBreakdown !== -1 && String(row[idxNoBreakdown]).trim().toLowerCase() !== 'да') return;
 
-      // 2. Context Filter (City only)
+      // 2. Context Filter (City / Region)
+      const rowRegion = idxRegion !== -1 ? String(row[idxRegion]).trim() : '';
+      if (selectedRegion && rowRegion !== selectedRegion) return;
+
       const rowCity = idxCity !== -1 ? String(row[idxCity]).trim() : '';
       if (selectedCity && rowCity !== selectedCity) return;
 
@@ -103,85 +108,64 @@ const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode,
           show: true,
           position: 'inside', 
           fontSize: 12,
+          color: '#fff',
           fontWeight: 'bold',
-          color: '#ffffff',
-          // Сильная темная обводка для контраста на любом фоне
-          textBorderColor: 'rgba(0,0,0,0.8)',
-          textBorderWidth: 2,
-          
-          formatter: (params: any) => {
-             return params.value > 0 ? params.value : '';
-          }
+          formatter: (p: any) => p.value > 0 ? p.value : ''
         },
-        itemStyle: { 
+        itemStyle: {
             color: COLORS[idx % COLORS.length],
-            borderRadius: [0, 0, 0, 0], 
-            borderColor: isDarkMode ? '#1e293b' : '#fff',
-            borderWidth: 1
+            borderRadius: [0, 0, 0, 0]
         },
         data: sortedYears.map(year => {
-          const val = dataMap.get(year)?.get(jk) || 0;
-          return val === 0 ? null : val; 
+            const val = dataMap.get(year)?.get(jk) || 0;
+            return val === 0 ? null : val;
         })
       };
     });
 
     return { years: sortedYears, series: finalSeries, jks: sortedJKs };
-  }, [googleSheets, sheetConfigs, selectedCity, isDarkMode]);
+  }, [googleSheets, sheetConfigs, selectedCity, selectedRegion]);
 
   const option = {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
+      axisPointer: { type: 'shadow' }, // 'shadow' as default; can also be 'line' or 'cross'
       backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
       borderColor: isDarkMode ? '#334155' : '#e2e8f0',
       textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
-      axisPointer: { type: 'shadow' },
       formatter: (params: any) => {
-        if (!Array.isArray(params) || params.length === 0) return '';
-        
-        let total = 0;
-        const rows = params
-            .filter((p: any) => p.value !== null && p.value !== undefined)
-            .map((p: any) => {
-                total += Number(p.value);
-                return `
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; font-size: 12px;">
-                    <span style="display: flex; align-items: center; gap: 5px;">
-                        <span style="width: 8px; height: 8px; border-radius: 2px; background-color: ${p.color};"></span>
-                        <span style="color: ${isDarkMode ? '#cbd5e1' : '#64748b'};">${p.seriesName}</span>
-                    </span>
-                    <span style="font-weight: bold; color: ${isDarkMode ? '#fff' : '#0f172a'};">${p.value}</span>
-                </div>
-                `;
-            }).join('');
-
-        return `
-            <div style="font-weight: bold; margin-bottom: 8px; color: ${isDarkMode ? '#fff' : '#0f172a'}; border-bottom: 1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}; padding-bottom: 4px;">
-                ${params[0].axisValue} <span style="font-weight: normal; font-size: 12px; color: ${isDarkMode ? '#94a3b8' : '#64748b'}">(Всего: ${total})</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                ${rows}
-            </div>
-        `;
+          if (Array.isArray(params)) {
+              let res = `<div style="font-weight:bold; margin-bottom:5px;">${params[0].axisValue}</div>`;
+              let total = 0;
+              params.forEach((p: any) => {
+                  if (p.value) {
+                      res += `<div style="display:flex; justify-content:space-between; width:180px; font-size:12px;">
+                        <span>${p.marker} ${p.seriesName}</span>
+                        <span style="font-weight:bold;">${p.value}</span>
+                      </div>`;
+                      total += p.value;
+                  }
+              });
+              res += `<div style="margin-top:5px; border-top:1px solid #ccc; padding-top:5px; font-weight:bold; text-align:right;">Итого: ${total}</div>`;
+              return res;
+          }
+          return '';
       }
     },
     legend: {
       show: true,
       type: 'scroll',
       bottom: 0,
-      textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' },
-      pageIconColor: isDarkMode ? '#94a3b8' : '#64748b',
-      pageTextStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
+      textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' }
     },
     grid: {
       left: '3%',
       right: '4%',
-      bottom: '15%',
+      bottom: '10%',
       top: '5%',
       containLabel: true
     },
-    // Horizontal Chart: Value Axis is X, Category Axis is Y
     xAxis: {
       type: 'value',
       axisLabel: { color: isDarkMode ? '#94a3b8' : '#64748b' },
@@ -192,21 +176,28 @@ const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode,
       data: years,
       axisLabel: { 
           color: isDarkMode ? '#e2e8f0' : '#1e293b', 
-          fontWeight: 'bold' 
+          fontWeight: 'bold', 
+          fontSize: 13 
       },
       axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#cbd5e1' } }
     },
     series: series
   };
 
+  if (!series.length) {
+      return (
+          <div className="flex items-center justify-center h-full text-gray-400">
+              Нет данных для отображения
+          </div>
+      );
+  }
+
   return (
-    <div className="w-full h-[500px]">
-      <EChartComponent
-        options={option}
-        theme={isDarkMode ? 'dark' : 'light'}
-        height="100%"
-      />
-    </div>
+    <EChartComponent
+      options={option}
+      theme={isDarkMode ? 'dark' : 'light'}
+      height="100%"
+    />
   );
 };
 

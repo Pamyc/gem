@@ -11,12 +11,13 @@ interface StackedBarFinanceChartProps {
   isDarkMode: boolean;
   selectedCity: string;
   selectedYear?: string; // Prop from parent (optional, maybe unused if we have local filter)
+  selectedRegion?: string;
 }
 
 type StatusFilter = 'all' | 'yes' | 'no';
 type GroupingMode = 'jk' | 'client';
 
-const StackedBarFinanceChart: React.FC<StackedBarFinanceChartProps> = ({ isDarkMode, selectedCity }) => {
+const StackedBarFinanceChart: React.FC<StackedBarFinanceChartProps> = ({ isDarkMode, selectedCity, selectedRegion }) => {
   const { isLoading } = useDataStore();
   const chartRef = useRef<EChartInstance>(null);
 
@@ -35,7 +36,7 @@ const StackedBarFinanceChart: React.FC<StackedBarFinanceChartProps> = ({ isDarkM
   };
 
   // 1. Get processed data with filtering
-  const data = useFinanceData(selectedCity, statusFilter, groupingMode, localYear);
+  const data = useFinanceData(selectedCity, statusFilter, groupingMode, localYear, selectedRegion);
 
   // 2. Generate chart options (passing visibility state and grouping mode for tooltip)
   const option = useChartOptions(isDarkMode, data, visibleMetrics, groupingMode);

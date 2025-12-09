@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useDataStore } from '../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../utils/chartUtils';
@@ -18,7 +17,7 @@ export const useComparisonData = (
     const empty: ComparisonDataResult = { 
         availableItems: [], 
         aggregatedData: new Map(), 
-        filterOptions: { years: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: [] } 
+        filterOptions: { years: [], regions: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: [] } 
     };
 
     if (!sheetData || !sheetData.headers || !sheetData.rows) return empty;
@@ -29,6 +28,7 @@ export const useComparisonData = (
 
     // Indices
     const idxMap = {
+        region: headers.indexOf('Регион'),
         city: headers.indexOf('Город'),
         jk: headers.indexOf('ЖК'),
         liter: headers.indexOf('Литер'),
@@ -41,7 +41,7 @@ export const useComparisonData = (
         floors: headers.indexOf('Кол-во этажей'),
         
         incomeFact: headers.indexOf('Доходы + Итого + Факт'),
-        expenseFact: headers.indexOf('Расходы + Итого + факт'),
+        expenseFact: headers.indexOf('Расходы + Итого + Факт'),
         
         total: headers.indexOf('Итого (Да/Нет)'),
         noBreakdown: headers.indexOf('Без разбивки на литеры (Да/Нет)')
@@ -52,6 +52,7 @@ export const useComparisonData = (
     // Filter Options Collectors
     const optionsSet = {
         years: new Set<string>(),
+        regions: new Set<string>(),
         cities: new Set<string>(),
         jks: new Set<string>(),
         clients: new Set<string>(),
@@ -70,6 +71,7 @@ export const useComparisonData = (
         const getVal = (idx: number) => String(row[idx] || '').trim();
         
         const rowData = {
+            region: getVal(idxMap.region),
             city: getVal(idxMap.city),
             jk: getVal(idxMap.jk),
             liter: getVal(idxMap.liter) || getVal(idxMap.jk), // Fallback
@@ -81,6 +83,7 @@ export const useComparisonData = (
 
         // Collect Options
         if (rowData.year) optionsSet.years.add(rowData.year);
+        if (rowData.region) optionsSet.regions.add(rowData.region);
         if (rowData.city) optionsSet.cities.add(rowData.city);
         if (rowData.jk) optionsSet.jks.add(rowData.jk);
         if (rowData.client) optionsSet.clients.add(rowData.client);
@@ -89,6 +92,7 @@ export const useComparisonData = (
 
         // Check Active Filters
         if (filters.years.length > 0 && !filters.years.includes(rowData.year)) return;
+        if (filters.regions.length > 0 && !filters.regions.includes(rowData.region)) return;
         if (filters.cities.length > 0 && !filters.cities.includes(rowData.city)) return;
         if (filters.jks.length > 0 && !filters.jks.includes(rowData.jk)) return;
         if (filters.clients.length > 0 && !filters.clients.includes(rowData.client)) return;
@@ -142,6 +146,7 @@ export const useComparisonData = (
         aggregatedData: dataMap,
         filterOptions: {
             years: Array.from(optionsSet.years).sort().reverse(),
+            regions: Array.from(optionsSet.regions).sort(),
             cities: Array.from(optionsSet.cities).sort(),
             jks: Array.from(optionsSet.jks).sort(),
             clients: Array.from(optionsSet.clients).sort(),

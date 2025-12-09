@@ -8,6 +8,7 @@ interface ComplexComparisonsProps {
   isDarkMode: boolean;
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
 // Helper for pluralization defined outside to avoid ReferenceError
@@ -18,7 +19,7 @@ const getPluralLiter = (n: number) => {
   return 'литеров';
 };
 
-const ComplexComparisons: React.FC<ComplexComparisonsProps> = ({ isDarkMode, selectedCity, selectedYear }) => {
+const ComplexComparisons: React.FC<ComplexComparisonsProps> = ({ isDarkMode, selectedCity, selectedYear, selectedRegion }) => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
   const aggregatedData = useMemo(() => {
@@ -34,6 +35,7 @@ const ComplexComparisons: React.FC<ComplexComparisonsProps> = ({ isDarkMode, sel
     // Indices
     const idxJK = headers.indexOf('ЖК');
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     const idxYear = headers.indexOf('Год');
     const idxElevators = headers.indexOf('Кол-во лифтов');
     const idxFloors = headers.indexOf('Кол-во этажей');
@@ -53,7 +55,8 @@ const ComplexComparisons: React.FC<ComplexComparisonsProps> = ({ isDarkMode, sel
          if (val !== 'нет') return;
       }
 
-      // Filter by City/Year
+      // Filter by Region/City/Year
+      if (selectedRegion && idxRegion !== -1 && String(row[idxRegion]) !== selectedRegion) return;
       if (selectedCity && idxCity !== -1 && String(row[idxCity]) !== selectedCity) return;
       if (selectedYear && selectedYear !== 'Весь период' && idxYear !== -1 && String(row[idxYear]) !== selectedYear) return;
 
@@ -109,7 +112,7 @@ const ComplexComparisons: React.FC<ComplexComparisonsProps> = ({ isDarkMode, sel
     // Sort by Total Elevators Descending
     return result.sort((a, b) => b.totalElevators - a.totalElevators);
 
-  }, [googleSheets, sheetConfigs, selectedCity, selectedYear]);
+  }, [googleSheets, sheetConfigs, selectedCity, selectedYear, selectedRegion]);
 
   const getOption = (metric: 'elevators' | 'floors') => {
     const isElevator = metric === 'elevators';

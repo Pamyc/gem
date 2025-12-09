@@ -6,19 +6,16 @@ import { ChevronDown, Loader2 } from 'lucide-react';
 interface CitySelectorProps {
   selectedCity: string;
   onSelectCity: (city: string) => void;
+  selectedRegion?: string;
 }
 
-const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity }) => {
+const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity, selectedRegion }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Config to fetch list of cities
-  const config = useMemo(() => ({ 
-    sheetKey: 'clientGrowth', 
-    xAxisColumn: 'Город', 
-    yAxisColumn: 'Город', 
-    aggregation: 'count' as const, // Count implies grouping by unique values
-    filters: [
+  const config = useMemo(() => {
+    const filters: any[] = [
       {
         id: "aipx3lchq",
         column: "Итого (Да/Нет)",
@@ -31,8 +28,26 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
         operator: "equals" as const,
         value: "Да"
       }
-    ]
-  }), []);
+    ];
+
+    // Apply region filter if selected
+    if (selectedRegion) {
+        filters.push({
+            id: "region-context-filter",
+            column: "Регион",
+            operator: "equals",
+            value: selectedRegion
+        });
+    }
+
+    return { 
+      sheetKey: 'clientGrowth', 
+      xAxisColumn: 'Город', 
+      yAxisColumn: 'Город', 
+      aggregation: 'count' as const, // Count implies grouping by unique values
+      filters: filters
+    };
+  }, [selectedRegion]);
 
   const { data, isLoading } = useProcessedChartData(config);
 
@@ -58,18 +73,17 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
   };
 
   return (
-    <div className="relative mb-1 z-50" ref={containerRef}>
-      {/* Trigger Area */}
+    <div className="relative mb-1 z-40" ref={containerRef}>
+      {/* Trigger Area - H2 Style (Secondary) */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-baseline gap-3 cursor-pointer select-none group transition-opacity hover:opacity-80"
+        className="inline-flex items-baseline gap-2 cursor-pointer select-none group transition-opacity"
         title="Нажмите для выбора города"
       >
-        <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-700 dark:text-gray-200 tracking-tight flex items-center gap-2">
           {selectedCity || "Все города"}
-        </h1>
+        </h2>
         
-        {/* Subtle indicator that appears on hover to hint interaction */}
         <ChevronDown 
           size={24} 
           className={`text-gray-400 dark:text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'} opacity-0 group-hover:opacity-100`} 
@@ -100,22 +114,26 @@ const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onSelectCity 
                 </span>
               </button>
 
-              {data.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleSelect(item.name)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors flex justify-between items-center ${
-                    selectedCity === item.name
-                      ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
-                  }`}
-                >
-                  <span>{item.name}</span>
-                  <span className="text-xs font-normal text-gray-400 bg-white dark:bg-black/20 px-2 py-0.5 rounded-md">
-                    {item.value}
-                  </span>
-                </button>
-              ))}
+              {data.length === 0 ? (
+                 <div className="px-4 py-3 text-xs text-gray-400 italic">Нет городов для выбранного региона</div>
+              ) : (
+                data.map((item) => (
+                  <button
+                    key={item.name}
+                    onClick={() => handleSelect(item.name)}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors flex justify-between items-center ${
+                      selectedCity === item.name
+                        ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{item.name}</span>
+                    <span className="text-xs font-normal text-gray-400 bg-white dark:bg-black/20 px-2 py-0.5 rounded-md">
+                      {item.value}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           )}
         </div>

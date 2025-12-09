@@ -6,9 +6,10 @@ import { CardConfig } from '../../../types/card';
 interface KPISectionProps {
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
-const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) => {
+const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, selectedRegion }) => {
   const baseConfigs = useMemo<CardConfig[]>(() => [
     {
       template: "custom",
@@ -267,7 +268,7 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
   ], []);
 
   const effectiveConfigs = useMemo(() => {
-    if (!selectedCity && !selectedYear) return baseConfigs;
+    if (!selectedCity && !selectedYear && !selectedRegion) return baseConfigs;
 
     return baseConfigs.map(config => {
       const newConfig = JSON.parse(JSON.stringify(config));
@@ -275,6 +276,15 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
         newConfig.elements.forEach((el: any) => {
           if (el.dataSettings) {
             if (!el.dataSettings.filters) el.dataSettings.filters = [];
+            
+            if (selectedRegion) {
+              el.dataSettings.filters.push({
+                id: "region-filter-dynamic",
+                column: "Регион",
+                operator: "equals",
+                value: selectedRegion
+              });
+            }
             if (selectedCity) {
               el.dataSettings.filters.push({
                 id: "city-filter-dynamic",
@@ -296,7 +306,7 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
       }
       return newConfig;
     });
-  }, [baseConfigs, selectedCity, selectedYear]);
+  }, [baseConfigs, selectedCity, selectedYear, selectedRegion]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">

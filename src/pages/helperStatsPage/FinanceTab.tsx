@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import KPISection from './helperFinanceTab/KPISection';
 import KPISection2 from './helperFinanceTab/KPISection2';
-import CitySelector from './helperFinanceTab/CitySelector';
-import YearSelector from './helperFinanceTab/YearSelector';
+// Re-using selectors from ElevatorTab to maintain consistent style and logic
+import RegionSelector from './helperElevatorTab/RegionSelector';
+import CitySelector from './helperElevatorTab/CitySelector';
+import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperFinanceTab/HousingComplexSection';
 import TimelineFinanceChart from './helperFinanceTab/TimelineFinanceChart';
 import StackedBarFinanceChart from './helperFinanceTab/StackedBarFinanceChart';
@@ -13,6 +15,7 @@ interface FinanceTabProps {
 }
 
 const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [isSticky, setIsSticky] = useState(false);
@@ -29,6 +32,12 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // When Region changes, reset City to avoid invalid state
+  const handleRegionChange = (region: string) => {
+    setSelectedRegion(region);
+    setSelectedCity('');
+  };
+
   return (
     <div className="flex flex-col gap-8">
       {/* Sticky Header for Selectors */}
@@ -42,29 +51,49 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
           hover:scale-100 hover:translate-y-0 hover:w-full hover:bg-slate-50/95 hover:dark:bg-[#0b0f19]/0
         `}
       >
+        {/* Region Selector */}
+        <RegionSelector 
+          selectedRegion={selectedRegion}
+          onSelectRegion={handleRegionChange}
+        />
+
+        {/* City Selector (Filtered by Region) */}
         <CitySelector 
           selectedCity={selectedCity} 
           onSelectCity={setSelectedCity} 
+          selectedRegion={selectedRegion}
         />
+        
+        {/* Year Selector */}
         <YearSelector 
           selectedYear={selectedYear} 
           onSelectYear={setSelectedYear}
           selectedCity={selectedCity}
+          selectedRegion={selectedRegion}
         />
       </div>
 
       {/* KPI Section */}
-      <KPISection selectedCity={selectedCity} selectedYear={selectedYear} />
+      <KPISection 
+        selectedCity={selectedCity} 
+        selectedYear={selectedYear} 
+        selectedRegion={selectedRegion}
+      />
       
       {/* Housing Complex Section */}
       <HousingComplexSection 
         isDarkMode={isDarkMode}
         selectedCity={selectedCity} 
         selectedYear={selectedYear}
+        selectedRegion={selectedRegion}
       />
 
       {/* KPI Section 2 */}
-      <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
+      <KPISection2 
+        selectedCity={selectedCity} 
+        selectedYear={selectedYear} 
+        selectedRegion={selectedRegion}
+      />
 
       {/* Timeline Finance Chart (Vertical) */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
@@ -72,6 +101,7 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
             isDarkMode={isDarkMode}
             selectedCity={selectedCity}
             selectedYear={selectedYear}
+            selectedRegion={selectedRegion}
          />
       </div>
 
@@ -80,7 +110,8 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
          <StackedBarFinanceChart 
             isDarkMode={isDarkMode}
             selectedCity={selectedCity}
-            selectedYear={selectedYear}
+            // selectedYear is typically handled internally by this chart or passed if needed
+            selectedRegion={selectedRegion}
          />
       </div>
       

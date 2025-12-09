@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import KPISection from './helperElevatorTab/KPISection';
 import KPISection2 from './helperElevatorTab/KPISection2';
 import ChartsSection from './helperElevatorTab/ChartsSection';
+import RegionSelector from './helperElevatorTab/RegionSelector';
 import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
 import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
@@ -15,6 +16,7 @@ interface ElevatorTabProps {
 }
 
 const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [isSticky, setIsSticky] = useState(false);
@@ -32,6 +34,12 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // When Region changes, reset City to avoid invalid state
+  const handleRegionChange = (region: string) => {
+    setSelectedRegion(region);
+    setSelectedCity('');
+  };
+
   return (
     <div className="flex flex-col gap-8">
       {/* Sticky Header for Selectors */}
@@ -45,31 +53,41 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
           hover:scale-100 hover:translate-y-0 hover:w-full hover:bg-slate-50/95 hover:dark:bg-[#0b0f19]/0
         `}
       >
-        {/* Transparent Container with City Selector (Large Header) */}
+        {/* Region Selector */}
+        <RegionSelector 
+          selectedRegion={selectedRegion}
+          onSelectRegion={handleRegionChange}
+        />
+
+        {/* City Selector (Filtered by Region) */}
         <CitySelector 
           selectedCity={selectedCity} 
           onSelectCity={setSelectedCity} 
+          selectedRegion={selectedRegion}
         />
-        {/* Year Selector below */}
+        
+        {/* Year Selector */}
         <YearSelector 
           selectedYear={selectedYear} 
           onSelectYear={setSelectedYear}
           selectedCity={selectedCity}
+          selectedRegion={selectedRegion}
         />
       </div>
 
       {/* KPI Section with filtering */}
-      <KPISection selectedCity={selectedCity} selectedYear={selectedYear} />
+      <KPISection selectedCity={selectedCity} selectedYear={selectedYear} selectedRegion={selectedRegion} />
       
       {/* New Housing Complex Section */}
       <HousingComplexSection 
         isDarkMode={isDarkMode}
         selectedCity={selectedCity} 
         selectedYear={selectedYear}
+        selectedRegion={selectedRegion}
       />
 
       {/* KPI Section 2 with filtering */}
-      <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} />
+      <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} selectedRegion={selectedRegion} />
 
       {/* NEW: Complex Comparisons (Elevators/Floors per Liter) */}
       <div className="w-full">
@@ -77,6 +95,7 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
           isDarkMode={isDarkMode}
           selectedCity={selectedCity}
           selectedYear={selectedYear}
+          selectedRegion={selectedRegion}
         />
       </div>
 
@@ -86,6 +105,7 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
             isDarkMode={isDarkMode} 
             selectedCity={selectedCity}
             selectedYear={selectedYear}
+            selectedRegion={selectedRegion}
          />
       </div>
 
@@ -94,6 +114,7 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         isDarkMode={isDarkMode} 
         selectedCity={selectedCity} 
         selectedYear={selectedYear} 
+        selectedRegion={selectedRegion}
       />
 
       {/* Dynamics Section (New) */}
@@ -101,6 +122,7 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         <ElevatorDynamicsSection 
           isDarkMode={isDarkMode}
           selectedCity={selectedCity}
+          selectedRegion={selectedRegion}
         />
       </div>
       

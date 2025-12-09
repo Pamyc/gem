@@ -12,6 +12,7 @@ interface HousingComplexSectionProps {
   isDarkMode: boolean;
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
 const jkImageMapping = [
@@ -45,7 +46,7 @@ interface JKAggregatedData {
   city: string;
 }
 
-const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedCity, selectedYear, isDarkMode }) => {
+const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedCity, selectedYear, isDarkMode, selectedRegion }) => {
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [selectedJK, setSelectedJK] = useState<JKAggregatedData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,6 +64,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
     const idxJK = headers.indexOf('ЖК');
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     const idxYear = headers.indexOf('Год');
     const idxClient = headers.indexOf('Клиент');
     const idxElevators = headers.indexOf('Кол-во лифтов');
@@ -81,6 +83,8 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
          if (val !== 'нет') return;
       }
 
+      // Context Filters
+      if (selectedRegion && idxRegion !== -1 && String(row[idxRegion]) !== selectedRegion) return;
       if (selectedCity && idxCity !== -1 && String(row[idxCity]) !== selectedCity) return;
       if (selectedYear && selectedYear !== 'Весь период' && idxYear !== -1 && String(row[idxYear]) !== selectedYear) return;
 
@@ -137,7 +141,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
 
-  }, [googleSheets, sheetConfigs, selectedCity, selectedYear]);
+  }, [googleSheets, sheetConfigs, selectedCity, selectedYear, selectedRegion]);
 
   const modalContexts = useMemo<{ name: string; config: CardConfig }[]>(() => {
     if (!selectedJK) return [];
@@ -147,6 +151,9 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       { id: 'f_total', column: 'Итого (Да/Нет)', operator: 'equals', value: 'Нет' },
     ];
 
+    if (selectedRegion) {
+      baseFilters.push({ id: 'f_region', column: 'Регион', operator: 'equals', value: selectedRegion });
+    }
     if (selectedCity) {
       baseFilters.push({ id: 'f_city', column: 'Город', operator: 'equals', value: selectedCity });
     }
@@ -225,7 +232,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
         }
       }
     ];
-  }, [selectedJK, selectedCity, selectedYear]);
+  }, [selectedJK, selectedCity, selectedYear, selectedRegion]);
 
   if (isLoading) {
     return (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import EChartComponent from '../../components/charts/EChartComponent';
 import { useComparisonData } from './helperComparisonChart/useComparisonData';
@@ -18,74 +17,77 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
   const [itemB, setItemB] = useState<string>('');
   
   const [filters, setFilters] = useState<ComparisonFilterState>({
-    years: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: []
+    years: [],
+    regions: [],
+    cities: [],
+    jks: [],
+    clients: [],
+    statuses: [],
+    objectTypes: []
   });
 
-  // --- DATA ---
+  // --- DATA HOOK ---
   const { availableItems, aggregatedData, filterOptions } = useComparisonData(category, filters);
 
-  // --- AUTO SELECT DEFAULTS ---
-  useEffect(() => {
-      if (availableItems.length >= 2) {
-          if (!itemA || !availableItems.includes(itemA)) setItemA(availableItems[0]);
-          if (!itemB || !availableItems.includes(itemB)) setItemB(availableItems[1]);
-      } else if (availableItems.length === 1) {
-          if (!itemA) setItemA(availableItems[0]);
-      }
-  }, [availableItems, category]);
-
-  // --- CHART OPTIONS ---
-  const option = useComparisonChartOptions({
-      aggregatedData,
-      itemA,
-      itemB,
-      isDarkMode
+  // --- CHART OPTIONS HOOK ---
+  const chartOption = useComparisonChartOptions({
+    aggregatedData,
+    itemA,
+    itemB,
+    isDarkMode
   });
 
+  // Reset selection when category changes or items become unavailable
+  useEffect(() => {
+    setItemA('');
+    setItemB('');
+  }, [category]);
+
   return (
-    <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col w-full">
-        
-        {/* Header Controls */}
-        <HeaderControls 
-            category={category}
-            setCategory={setCategory}
-            filters={filters}
-            setFilters={setFilters}
-            filterOptions={filterOptions}
-        />
+    <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
+       
+       <HeaderControls 
+          category={category}
+          setCategory={setCategory}
+          filters={filters}
+          setFilters={setFilters}
+          filterOptions={filterOptions}
+       />
 
-        {/* Content Area */}
-        <div className="p-6">
-            
-            {/* Selectors (Outside Relative Container to prevent shifting chart) */}
-            <ObjectSelectors 
-                mode="controls"
-                itemA={itemA}
-                setItemA={setItemA}
-                itemB={itemB}
-                setItemB={setItemB}
-                availableItems={availableItems}
-            />
+       <div className="p-6 relative min-h-[500px]">
+          {/* Selectors overlay */}
+          <ObjectSelectors 
+             mode="controls"
+             itemA={itemA} setItemA={setItemA}
+             itemB={itemB} setItemB={setItemB}
+             availableItems={availableItems}
+          />
 
-            <div className="relative w-full h-[400px]">
-                {/* Overlay Labels (Absolute) */}
-                <ObjectSelectors 
-                    mode="labels"
-                    itemA={itemA}
-                    setItemA={setItemA}
-                    itemB={itemB}
-                    setItemB={setItemB}
-                    availableItems={availableItems}
-                />
-
-                {/* EChart */}
+          {/* Chart Area */}
+          <div className="h-[400px] mt-8">
+             {itemA && itemB ? (
                 <EChartComponent 
-                    options={option} 
+                    options={chartOption}
                     theme={isDarkMode ? 'dark' : 'light'}
                     height="100%"
                 />
-            </div>
-        </div>
+             ) : (
+                <div className="h-full flex items-center justify-center text-gray-400">
+                    Выберите два объекта для сравнения
+                </div>
+             )}
+          </div>
+
+          {/* Metric Labels Overlay (Center) */}
+          {itemA && itemB && (
+             <ObjectSelectors 
+                mode="labels"
+                itemA={itemA} setItemA={setItemA}
+                itemB={itemB} setItemB={setItemB}
+                availableItems={availableItems}
+             />
+          )}
+       </div>
     </div>
   );
 };

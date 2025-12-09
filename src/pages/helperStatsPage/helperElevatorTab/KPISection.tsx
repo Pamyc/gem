@@ -6,9 +6,10 @@ import { CardConfig } from '../../../types/card';
 interface KPISectionProps {
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
-const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) => {
+const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, selectedRegion }) => {
   // --- KPI CONFIGURATIONS ---
   const baseConfigs = useMemo<CardConfig[]>(() => [
     // Row 1
@@ -282,7 +283,7 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
 
   // Apply dynamic filtering based on selectedCity and selectedYear
   const effectiveConfigs = useMemo(() => {
-    if (!selectedCity && !selectedYear) return baseConfigs;
+    if (!selectedCity && !selectedYear && !selectedRegion) return baseConfigs;
 
     return baseConfigs.map(config => {
       // Clone to avoid mutation
@@ -293,6 +294,16 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
         newConfig.elements.forEach((el: any) => {
           if (el.dataSettings) {
             if (!el.dataSettings.filters) el.dataSettings.filters = [];
+
+            // Add Region Filter
+            if (selectedRegion) {
+              el.dataSettings.filters.push({
+                id: "region-filter-dynamic",
+                column: "Регион",
+                operator: "equals",
+                value: selectedRegion
+              });
+            }
 
             // Add City Filter
             if (selectedCity) {
@@ -319,7 +330,7 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear }) =
 
       return newConfig;
     });
-  }, [baseConfigs, selectedCity, selectedYear]);
+  }, [baseConfigs, selectedCity, selectedYear, selectedRegion]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 min-[2000px]:grid-cols-4 gap-6">

@@ -8,7 +8,8 @@ export const useFinanceData = (
   selectedCity: string,
   statusFilter: 'all' | 'yes' | 'no',
   groupingMode: 'jk' | 'client',
-  selectedYear: string // New Argument
+  selectedYear: string, // New Argument
+  selectedRegion?: string // New Argument
 ): ProcessedFinanceData | null => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
@@ -28,6 +29,7 @@ export const useFinanceData = (
     const idxJK = headers.indexOf('ЖК');
     const idxClient = headers.indexOf('Клиент'); // Добавляем индекс клиента
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     const idxYear = headers.indexOf('Год');
     const idxStatus = headers.indexOf('Сдан да/нет'); // Для фильтрации статуса
     
@@ -59,6 +61,10 @@ export const useFinanceData = (
       // Применяем технические фильтры
       if (idxTotal !== -1 && String(row[idxTotal]).trim().toLowerCase() === 'да') return;
       if (idxNoBreakdown !== -1 && String(row[idxNoBreakdown]).trim().toLowerCase() !== 'да') return;
+
+      // Применяем фильтр по Региону
+      const rowRegion = idxRegion !== -1 ? String(row[idxRegion]).trim() : '';
+      if (selectedRegion && rowRegion !== selectedRegion) return;
 
       // Применяем фильтр по Городу
       const rowCity = idxCity !== -1 ? String(row[idxCity]).trim() : '';
@@ -144,5 +150,5 @@ export const useFinanceData = (
       yearTotals,
       availableYears
     };
-  }, [googleSheets, sheetConfigs, selectedCity, statusFilter, groupingMode, selectedYear]);
+  }, [googleSheets, sheetConfigs, selectedCity, statusFilter, groupingMode, selectedYear, selectedRegion]);
 };

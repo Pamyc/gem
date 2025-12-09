@@ -7,9 +7,10 @@ import { getMergedHeaders } from '../../../utils/chartUtils';
 interface ElevatorsByCustomerChartProps {
   isDarkMode: boolean;
   selectedCity: string;
+  selectedRegion?: string;
 }
 
-const ElevatorsByCustomerChart: React.FC<ElevatorsByCustomerChartProps> = ({ isDarkMode, selectedCity }) => {
+const ElevatorsByCustomerChart: React.FC<ElevatorsByCustomerChartProps> = ({ isDarkMode, selectedCity, selectedRegion }) => {
   const { googleSheets, sheetConfigs } = useDataStore();
 
   const chartOption = useMemo(() => {
@@ -29,6 +30,7 @@ const ElevatorsByCustomerChart: React.FC<ElevatorsByCustomerChartProps> = ({ isD
     const idxStatus = headers.indexOf('Сдан да/нет');
     const idxElevators = headers.indexOf('Кол-во лифтов');
     const idxCity = headers.indexOf('Город');
+    const idxRegion = headers.indexOf('Регион');
     
     // Filters (Technical)
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
@@ -47,6 +49,9 @@ const ElevatorsByCustomerChart: React.FC<ElevatorsByCustomerChartProps> = ({ isD
       if (idxNoBreakdown !== -1 && String(row[idxNoBreakdown]).trim().toLowerCase() !== 'да') return;
 
       // Context Filter
+      const rowRegion = idxRegion !== -1 ? String(row[idxRegion]).trim() : '';
+      if (selectedRegion && rowRegion !== selectedRegion) return;
+
       const rowCity = idxCity !== -1 ? String(row[idxCity]).trim() : '';
       if (selectedCity && rowCity !== selectedCity) return;
 
@@ -176,7 +181,7 @@ const ElevatorsByCustomerChart: React.FC<ElevatorsByCustomerChartProps> = ({ isD
         }
       ]
     };
-  }, [googleSheets, sheetConfigs, selectedCity, isDarkMode]);
+  }, [googleSheets, sheetConfigs, selectedCity, isDarkMode, selectedRegion]);
 
   if (!chartOption) return <div className="flex items-center justify-center h-full text-gray-400 text-xs">Нет данных</div>;
 

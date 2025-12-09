@@ -3,22 +3,30 @@ import React, { useMemo } from 'react';
 import GeneralChartCard from './GeneralChartCard';
 import PieDonutChart from './PieDonutChart';
 import TreemapSunburstChart from './TreemapSunburstChart';
-import LineChart from './LineChart';
 import { ChartConfig } from '../../../types/chart';
 import ElevatorsByCustomerChart from './ElevatorsByCustomerChart';
-import { Briefcase } from 'lucide-react';
 
 interface ChartsSectionProps {
   isDarkMode: boolean;
   selectedCity: string;
   selectedYear: string;
+  selectedRegion?: string;
 }
 
-const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity, selectedYear }) => {
+const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity, selectedYear, selectedRegion }) => {
 
   // Helper to inject filters
   const withFilters = (config: Partial<ChartConfig>) => {
     const newFilters = [...(config.filters || [])];
+
+    if (selectedRegion) {
+      newFilters.push({
+        id: "region-filter-dynamic",
+        column: "Регион",
+        operator: "equals" as const,
+        value: selectedRegion
+      });
+    }
 
     if (selectedCity) {
       newFilters.push({
@@ -67,7 +75,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
         value: "Да"
       }
     ]
-  }), [selectedCity, selectedYear]);
+  }), [selectedCity, selectedYear, selectedRegion]);
 
   const SumElevatorDataConfig = useMemo(() => withFilters({
     title: 'Кол-во сданных лифтов да/нет',
@@ -89,7 +97,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
         value: "Да"
       }
     ]
-  }), [selectedCity, selectedYear]);
+  }), [selectedCity, selectedYear, selectedRegion]);
 
   // Новая конфигурация: Кол-во ЖК по заказчикам
   const SumJkClientDataConfig = useMemo(() => withFilters({
@@ -113,7 +121,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
         value: "Да"
       }
     ]
-  }), [selectedCity, selectedYear]);
+  }), [selectedCity, selectedYear, selectedRegion]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
@@ -179,6 +187,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
           <ElevatorsByCustomerChart 
               isDarkMode={isDarkMode} 
               selectedCity={selectedCity}
+              selectedRegion={selectedRegion}
           />
         </div>
       </div>

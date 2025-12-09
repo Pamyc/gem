@@ -6,9 +6,10 @@ import ElevatorsByYearChart from './ElevatorsByYearChart';
 interface ElevatorDynamicsSectionProps {
   isDarkMode: boolean;
   selectedCity: string;
+  selectedRegion?: string;
 }
 
-const ElevatorDynamicsSection: React.FC<ElevatorDynamicsSectionProps> = ({ isDarkMode, selectedCity }) => {
+const ElevatorDynamicsSection: React.FC<ElevatorDynamicsSectionProps> = ({ isDarkMode, selectedCity, selectedRegion }) => {
   return (
     <div className="grid grid-cols-1 gap-6">
       
@@ -34,6 +35,7 @@ const ElevatorDynamicsSection: React.FC<ElevatorDynamicsSectionProps> = ({ isDar
           <ElevatorsByYearChart 
               isDarkMode={isDarkMode} 
               selectedCity={selectedCity}
+              selectedRegion={selectedRegion}
           />
         </div>
       </div>

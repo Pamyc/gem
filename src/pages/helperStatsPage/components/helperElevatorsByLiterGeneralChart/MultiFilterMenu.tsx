@@ -11,6 +11,7 @@ interface MultiFilterMenuProps {
 
 const CATEGORIES: { key: keyof FilterState; label: string }[] = [
   { key: 'years', label: 'Год' },
+  { key: 'regions', label: 'Регион' },
   { key: 'cities', label: 'Город' },
   { key: 'jks', label: 'Жилой Комплекс' },
   { key: 'clients', label: 'Клиент' },
@@ -90,7 +91,7 @@ const MultiFilterMenu: React.FC<MultiFilterMenuProps> = ({ filters, onChange, op
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Параметры</span>
             {activeCount > 0 && (
               <button 
-                onClick={() => onChange({ years: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: [] })}
+                onClick={() => onChange({ years: [], regions: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: [] })}
                 className="text-[10px] text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
               >
                 <X size={10} /> Сбросить всё
