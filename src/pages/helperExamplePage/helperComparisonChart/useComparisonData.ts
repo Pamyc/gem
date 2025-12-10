@@ -50,7 +50,6 @@ export const useComparisonData = (
         'elevators': 'Кол-во лифтов',
         'floors': 'Кол-во этажей',
         'incomePlan': 'Доходы + Итого + План',
-        'expensePlan': 'Расходы + Итого + План',
         'incomeFact': 'Доходы + Итого + Факт',
         'expenseFact': 'Расходы + Итого + Факт',
         'profit': 'Валовая',

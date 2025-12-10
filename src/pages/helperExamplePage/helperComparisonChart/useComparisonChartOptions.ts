@@ -1,6 +1,7 @@
+
 import { useMemo } from 'react';
 import { METRICS } from './constants';
-import { getSemanticColor, formatFullNumber } from './utils';
+import { formatFullNumber, calculateComparisonValues, generateTooltipHtml } from './utils';
 
 interface UseComparisonChartOptionsProps {
   aggregatedData: Map<string, Record<string, number>>;
@@ -31,42 +32,20 @@ export const useComparisonChartOptions = ({
     const activeMetrics = METRICS.filter(m => visibleMetrics.includes(m.key));
 
     activeMetrics.forEach(m => {
-        const valA = dataA[m.key] || 0;
-        const valB = dataB[m.key] || 0;
+        const rawValA = dataA[m.key] || 0;
+        const rawValB = dataB[m.key] || 0;
         
-        // For averages, we don't just sum them for percentage, but it works for visual comparison
-        const total = valA + valB;
-        
-        let shareA = 0;
-        let shareB = 0;
-        let percentA = 0;
-        let percentB = 0;
-
-        if (total > 0) {
-            shareA = valA / total;
-            shareB = valB / total;
-            // Рассчитываем проценты для визуализации ширины столбца (независимо от масштаба числа)
-            percentA = shareA * 100;
-            percentB = shareB * 100;
-        } else if (valA === 0 && valB === 0) {
-            // Both zero
-            percentA = 0;
-            percentB = 0;
-        }
-
-        const colorA = getSemanticColor(shareA);
-        const colorB = getSemanticColor(shareB);
-
-        // Используем полное форматирование для текстов
-        const fullValueA = formatFullNumber(valA, m.prefix, m.suffix);
-        const fullValueB = formatFullNumber(valB, m.prefix, m.suffix);
-        const shareAStr = (shareA * 100).toFixed(0) + '%';
-        const shareBStr = (shareB * 100).toFixed(0) + '%';
+        const { 
+            percentA, percentB, 
+            colorA, colorB, 
+            fullValueA, fullValueB, 
+            shareAStr, shareBStr 
+        } = calculateComparisonValues(rawValA, rawValB, m);
 
         // Данные для левой серии (Объект А)
         seriesA.push({
             value: percentA, // Визуально - процент от общей суммы строки
-            realValue: valA, // Реальное значение для лейбла
+            realValue: rawValA, // Реальное значение для лейбла
             itemStyle: { 
                 color: colorA, 
                 borderRadius: [4, 0, 0, 4] 
@@ -85,7 +64,7 @@ export const useComparisonChartOptions = ({
                 show: true,
                 position: 'insideRight',
                 offset: [-5, 0],
-                color: valA === 0 ? labelColor : '#fff',
+                color: rawValA === 0 ? labelColor : '#fff',
                 fontWeight: 'bold',
                 fontSize: 12,
                 // Используем realValue, чтобы показать "284", а не "74.8"
@@ -96,7 +75,7 @@ export const useComparisonChartOptions = ({
         // Данные для правой серии (Объект Б)
         seriesB.push({
             value: percentB, // Визуально - процент
-            realValue: valB, // Реальное значение
+            realValue: rawValB, // Реальное значение
             itemStyle: { 
                 color: colorB, 
                 borderRadius: [0, 4, 4, 0] 
@@ -115,7 +94,7 @@ export const useComparisonChartOptions = ({
                 show: true,
                 position: 'insideLeft',
                 offset: [5, 0],
-                color: valB === 0 ? labelColor : '#fff',
+                color: rawValB === 0 ? labelColor : '#fff',
                 fontWeight: 'bold',
                 fontSize: 12,
                 // Используем realValue
@@ -170,28 +149,11 @@ export const useComparisonChartOptions = ({
                     rightName = myName; rightVal = myVal; rightShare = myShare; rightColor = myColor;
                 }
 
-                let res = `<div style="font-weight:bold; margin-bottom:8px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:5px; text-align:center;">${metricLabel}</div>`;
-                res += `<div style="display:grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items:center;">`;
-                
-                // Left (A)
-                res += `<div style="text-align:right;">
-                    <div style="font-size:10px; color:#aaa; margin-bottom:2px;">${leftName}</div>
-                    <div style="font-weight:bold; font-size:14px; color:${leftColor}">${leftVal}</div>
-                    <div style="font-size:10px; color:${leftColor}">${leftShare}</div>
-                </div>`;
-                
-                // Center
-                res += `<div style="font-size:10px; color:#666; font-weight:bold;">VS</div>`;
-                
-                // Right (B)
-                res += `<div style="text-align:left;">
-                    <div style="font-size:10px; color:#aaa; margin-bottom:2px;">${rightName}</div>
-                    <div style="font-weight:bold; font-size:14px; color:${rightColor}">${rightVal}</div>
-                    <div style="font-size:10px; color:${rightColor}">${rightShare}</div>
-                </div>`;
-                
-                res += `</div>`;
-                return res;
+                return generateTooltipHtml(
+                    metricLabel,
+                    leftName, leftVal, leftShare, leftColor,
+                    rightName, rightVal, rightShare, rightColor
+                );
             }
         },
         legend: {

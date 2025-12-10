@@ -1,7 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { METRICS } from './constants';
 import { TreeOption } from './types';
 import { ChevronDown, ChevronRight, Check, Search } from 'lucide-react';
+import { calculateComparisonValues, generateTooltipHtml } from './utils';
 
 interface ObjectSelectorsProps {
   mode: 'controls' | 'labels';
@@ -11,6 +13,8 @@ interface ObjectSelectorsProps {
   setItemB: (v: string) => void;
   availableItems: TreeOption[];
   visibleMetrics?: string[];
+  aggregatedData?: Map<string, Record<string, number>>;
+  isDarkMode?: boolean;
 }
 
 // --- Tree Select Components ---
@@ -175,8 +179,9 @@ const CustomTreeSelect: React.FC<{
 // --- Main ObjectSelectors Component ---
 
 const ObjectSelectors: React.FC<ObjectSelectorsProps> = ({ 
-  mode, itemA, setItemA, itemB, setItemB, availableItems, visibleMetrics = [] 
+  mode, itemA, setItemA, itemB, setItemB, availableItems, visibleMetrics = [], aggregatedData, isDarkMode 
 }) => {
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
   
   if (mode === 'controls') {
     return (
@@ -214,25 +219,86 @@ const ObjectSelectors: React.FC<ObjectSelectorsProps> = ({
   // Filter labels
   const activeMetrics = METRICS.filter(m => visibleMetrics.includes(m.key));
 
+  const handleMouseEnter = (e: React.MouseEvent, metricKey: string) => {
+    if (!aggregatedData || !itemA || !itemB) return;
+
+    const dataA = aggregatedData.get(itemA) || {};
+    const dataB = aggregatedData.get(itemB) || {};
+    const metric = METRICS.find(m => m.key === metricKey);
+    
+    if (!metric) return;
+
+    const valA = dataA[metricKey] || 0;
+    const valB = dataB[metricKey] || 0;
+
+    const { 
+        fullValueA, fullValueB, shareAStr, shareBStr, colorA, colorB 
+    } = calculateComparisonValues(valA, valB, metric);
+
+    const html = generateTooltipHtml(
+        metric.label,
+        itemA, fullValueA, shareAStr, colorA,
+        itemB, fullValueB, shareBStr, colorB
+    );
+
+    setTooltip({
+        x: e.clientX,
+        y: e.clientY,
+        content: html
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltip(null);
+  };
+
   // mode === 'labels'
   return (
-    <div 
-        className="absolute top-[40px] bottom-[20px] left-1/2 -translate-x-1/2 w-[25%] pointer-events-none z-10"
-        style={{ 
-            display: 'grid', 
-            gridTemplateRows: `repeat(${activeMetrics.length}, 1fr)`,
-            alignItems: 'center',
-            justifyItems: 'center'
-        }}
-    >
-        {activeMetrics.map(m => (
-            <div key={m.key} className="flex flex-col items-center justify-center bg-white dark:bg-[#1e293b] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm min-w-[140px] backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
-                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase text-center leading-tight">
-                    {m.label}
-                </span>
-            </div>
-        ))}
-    </div>
+    <>
+        <div 
+            className="absolute top-[40px] bottom-[20px] left-1/2 -translate-x-1/2 w-[25%] pointer-events-auto z-10"
+            style={{ 
+                display: 'grid', 
+                gridTemplateRows: `repeat(${activeMetrics.length}, 1fr)`,
+                alignItems: 'center',
+                justifyItems: 'center'
+            }}
+        >
+            {activeMetrics.map(m => (
+                <div 
+                    key={m.key} 
+                    onMouseEnter={(e) => handleMouseEnter(e, m.key)}
+                    onMouseLeave={handleMouseLeave}
+                    className="flex flex-col items-center justify-center bg-white dark:bg-[#1e293b] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm min-w-[140px] backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90 cursor-help transition-transform hover:scale-105"
+                >
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase text-center leading-tight">
+                        {m.label}
+                    </span>
+                </div>
+            ))}
+        </div>
+
+        {tooltip && (
+            <div
+                style={{
+                    position: 'fixed',
+                    top: tooltip.y + 15,
+                    left: tooltip.x + 15,
+                    zIndex: 9999,
+                    backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3)',
+                    backdropFilter: 'blur(10px)',
+                    padding: '12px',
+                    color: isDarkMode ? '#f8fafc' : '#1e293b',
+                    fontSize: '13px',
+                    fontFamily: 'sans-serif'
+                }}
+                dangerouslySetInnerHTML={{ __html: tooltip.content }}
+            />
+        )}
+    </>
   );
 };
 

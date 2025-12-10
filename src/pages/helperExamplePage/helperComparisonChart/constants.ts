@@ -18,7 +18,6 @@ export const METRICS: MetricConfig[] = [
   
   // 2. План / Факт Итого
   { key: 'incomePlan', label: 'Доходы (План)', isMoney: true, prefix: '₽ ', aggregation: 'sum' },
-  { key: 'expensePlan', label: 'Расходы (План)', isMoney: true, prefix: '₽ ', aggregation: 'sum' },
   { key: 'incomeFact', label: 'Доходы (Факт)', isMoney: true, prefix: '₽ ', aggregation: 'sum' },
   { key: 'expenseFact', label: 'Расходы (Факт)', isMoney: true, prefix: '₽ ', aggregation: 'sum' },
   

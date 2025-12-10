@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import EChartComponent from '../../components/charts/EChartComponent';
 import { useComparisonData } from './helperComparisonChart/useComparisonData';
@@ -101,7 +102,9 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
                         itemA={itemA} setItemA={setItemA}
                         itemB={itemB} setItemB={setItemB}
                         availableItems={availableItems}
-                        visibleMetrics={visibleMetrics} // Pass to hide labels
+                        visibleMetrics={visibleMetrics}
+                        aggregatedData={aggregatedData}
+                        isDarkMode={isDarkMode}
                     />
                 </>
              ) : (
