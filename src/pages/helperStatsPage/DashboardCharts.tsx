@@ -1,18 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical } from 'lucide-react';
+import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical, ArrowRightLeft } from 'lucide-react';
 import GeneralTab from './GeneralTab';
 import TestTab from './TestTab';
 import LiftsTab from './LiftsTab';
 import FinanceTab from './FinanceTab';
 import MontagTab from './MontagTab';
 import ElevatorTab from './ElevatorTab';
+import ComparisonTab from './ComparisonTab';
 
 interface DashboardChartsProps {
   isDarkMode: boolean;
 }
 
-type TabType = 'general' | 'elevator_tab' | 'test' | 'lifts' | 'finance' | 'montag';
+type TabType = 'general' | 'elevator_tab' | 'test' | 'lifts' | 'finance' | 'montag' | 'comparison';
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
@@ -45,20 +46,6 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       gradient: 'from-purple-600 to-pink-600 shadow-purple-500/30',
       inactiveStyle: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
     },
-    // { 
-    //   id: 'test', 
-    //   label: 'Тест', 
-    //   icon: FlaskConical,
-    //   gradient: 'from-pink-500 to-rose-500 shadow-rose-500/30',
-    //   inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
-    // },
-    // { 
-    //   id: 'lifts', 
-    //   label: 'пример', 
-    //   icon: ArrowUpFromLine,
-    //   gradient: 'from-emerald-500 to-teal-600 shadow-emerald-500/30',
-    //   inactiveStyle: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20'
-    // },
     { 
       id: 'finance', 
       label: 'Финансы', 
@@ -72,6 +59,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
       icon: Hammer,
       gradient: 'from-cyan-500 to-blue-600 shadow-blue-500/30',
       inactiveStyle: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+    },
+    { 
+      id: 'comparison', 
+      label: 'Сравнение', 
+      icon: ArrowRightLeft,
+      gradient: 'from-fuchsia-500 to-rose-600 shadow-rose-500/30',
+      inactiveStyle: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
     },
   ];
 
@@ -127,6 +121,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
         {activeTab === 'lifts' && <LiftsTab isDarkMode={isDarkMode} />}
         {activeTab === 'finance' && <FinanceTab isDarkMode={isDarkMode} />}
         {activeTab === 'montag' && <MontagTab isDarkMode={isDarkMode} />}
+        {activeTab === 'comparison' && <ComparisonTab isDarkMode={isDarkMode} />}
       </div>
     </div>
   );
