@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useDataStore } from '../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../utils/chartUtils';
 import { ComparisonCategory, ComparisonFilterState, ComparisonDataResult, TreeOption } from './types';
+import { METRICS } from './constants';
 
 export const useComparisonData = (
   category: ComparisonCategory,
@@ -27,7 +28,7 @@ export const useComparisonData = (
     // Get headers and TRIM them to ensure exact matching
     const headers = getMergedHeaders(sheetData.headers, headerRowsCount).map(h => h.trim());
 
-    // Indices
+    // Indices for Filtering & Grouping
     const idxMap = {
         region: headers.indexOf('Регион'),
         city: headers.indexOf('Город'),
@@ -38,15 +39,36 @@ export const useComparisonData = (
         status: headers.indexOf('Сдан да/нет'),
         objectType: headers.indexOf('Тип объекта'),
         
-        elevators: headers.indexOf('Кол-во лифтов'),
-        floors: headers.indexOf('Кол-во этажей'),
-        
-        incomeFact: headers.indexOf('Доходы + Итого + Факт'),
-        expenseFact: headers.indexOf('Расходы + Итого + Факт'),
-        
         total: headers.indexOf('Итого (Да/Нет)'),
         noBreakdown: headers.indexOf('Без разбивки на литеры (Да/Нет)')
     };
+
+    // Indices for Metrics (Dynamically map from constants)
+    const metricIndices: Record<string, number> = {};
+    // Map internal key to exact CSV header name (derived from user prompt)
+    const headerMapping: Record<string, string> = {
+        'elevators': 'Кол-во лифтов',
+        'floors': 'Кол-во этажей',
+        'incomePlan': 'Доходы + Итого + План',
+        'expensePlan': 'Расходы + Итого + План',
+        'incomeFact': 'Доходы + Итого + Факт',
+        'expenseFact': 'Расходы + Итого + Факт',
+        'profit': 'Валовая',
+        'profitAvg': 'Валовая', // Same source, different agg
+        'rentability': 'Рентабельность',
+        'profitPerLift': 'Прибыль с 1 лифта',
+        'incomeLO': 'Доходы + Лифтовое оборудование + Факт',
+        'expenseLO': 'Расходы + Лифтовое оборудование + Факт',
+        'incomeObr': 'Доходы + Обрамление + Факт',
+        'expenseObr': 'Расходы + Обрамление + Факт',
+        'incomeMont': 'Доходы + Монтаж ЛО + Факт',
+        'expenseMont': 'Расходы + Монтаж ЛО + Факт'
+    };
+
+    METRICS.forEach(m => {
+        const headerName = headerMapping[m.key];
+        metricIndices[m.key] = headers.indexOf(headerName);
+    });
 
     if (idxMap.city === -1) return empty;
 
@@ -61,6 +83,7 @@ export const useComparisonData = (
         objectTypes: new Set<string>()
     };
 
+    // Data Map: Key -> { count: number, ...metrics }
     const dataMap = new Map<string, Record<string, number>>();
     
     // Helper to build tree
@@ -188,33 +211,32 @@ export const useComparisonData = (
             }
         }
 
-        // Parse Metrics
+        // Parse Metrics Values
         const parseNum = (idx: number) => {
             if (idx === -1) return 0;
             return parseFloat(String(row[idx]).replace(/\s/g, '').replace(',', '.')) || 0;
         };
 
-        const metrics = {
-            elevators: parseNum(idxMap.elevators),
-            floors: parseNum(idxMap.floors),
-            incomeFact: parseNum(idxMap.incomeFact),
-            expenseFact: parseNum(idxMap.expenseFact),
-        };
+        const metricValues: Record<string, number> = {};
+        METRICS.forEach(m => {
+            metricValues[m.key] = parseNum(metricIndices[m.key]);
+        });
 
         // --- Accumulate Data ---
 
         const accumulate = (key: string) => {
             if (!dataMap.has(key)) {
-                dataMap.set(key, { 
-                    elevators: 0, floors: 0, 
-                    incomeFact: 0, expenseFact: 0 
-                });
+                // Initialize with 0s and special 'count' field
+                const initObj: Record<string, number> = { count: 0 };
+                METRICS.forEach(m => initObj[m.key] = 0);
+                dataMap.set(key, initObj);
             }
             const entry = dataMap.get(key)!;
-            entry.elevators += metrics.elevators;
-            entry.floors += metrics.floors;
-            entry.incomeFact += metrics.incomeFact;
-            entry.expenseFact += metrics.expenseFact;
+            
+            entry.count += 1;
+            METRICS.forEach(m => {
+                entry[m.key] += metricValues[m.key];
+            });
         };
 
         // 1. Specific Item
@@ -225,6 +247,17 @@ export const useComparisonData = (
         // 2. Total Item
         if (totalKey) {
             accumulate(totalKey);
+        }
+    });
+
+    // --- Post-Process: Calculate Averages ---
+    dataMap.forEach((entry) => {
+        if (entry.count > 0) {
+            METRICS.forEach(m => {
+                if (m.aggregation === 'avg') {
+                    entry[m.key] = entry[m.key] / entry.count;
+                }
+            });
         }
     });
 

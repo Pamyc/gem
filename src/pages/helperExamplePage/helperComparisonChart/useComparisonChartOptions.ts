@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { METRICS } from './constants';
 import { getSemanticColor, formatFullNumber } from './utils';
@@ -8,28 +7,34 @@ interface UseComparisonChartOptionsProps {
   itemA: string;
   itemB: string;
   isDarkMode: boolean;
+  visibleMetrics: string[];
 }
 
 export const useComparisonChartOptions = ({
   aggregatedData,
   itemA,
   itemB,
-  isDarkMode
+  isDarkMode,
+  visibleMetrics
 }: UseComparisonChartOptionsProps) => {
   return useMemo(() => {
     const dataA = aggregatedData.get(itemA) || {};
     const dataB = aggregatedData.get(itemB) || {};
 
-    const textColor = isDarkMode ? '#e2e8f0' : '#1e293b';
     const labelColor = isDarkMode ? '#e2e8f0' : '#1e293b';
 
     const seriesA: any[] = [];
     const seriesB: any[] = [];
     const axisData: string[] = [];
 
-    METRICS.forEach(m => {
+    // Filter metrics based on visibility
+    const activeMetrics = METRICS.filter(m => visibleMetrics.includes(m.key));
+
+    activeMetrics.forEach(m => {
         const valA = dataA[m.key] || 0;
         const valB = dataB[m.key] || 0;
+        
+        // For averages, we don't just sum them for percentage, but it works for visual comparison
         const total = valA + valB;
         
         let shareA = 0;
@@ -43,6 +48,10 @@ export const useComparisonChartOptions = ({
             // Рассчитываем проценты для визуализации ширины столбца (независимо от масштаба числа)
             percentA = shareA * 100;
             percentB = shareB * 100;
+        } else if (valA === 0 && valB === 0) {
+            // Both zero
+            percentA = 0;
+            percentB = 0;
         }
 
         const colorA = getSemanticColor(shareA);
@@ -119,7 +128,7 @@ export const useComparisonChartOptions = ({
 
     // Константы отступов
     const GRID_TOP = 40;
-    const GRID_BOTTOM = 30;
+    const GRID_BOTTOM = 20;
 
     return {
         backgroundColor: 'transparent',
@@ -189,7 +198,7 @@ export const useComparisonChartOptions = ({
             show: false, // Скрываем легенду по запросу
             data: [itemA, itemB],
             top: 0,
-            textStyle: { color: textColor, fontWeight: 'bold' }
+            textStyle: { color: isDarkMode ? '#e2e8f0' : '#1e293b', fontWeight: 'bold' }
         },
         grid: [
             { left: '2%', width: '38%', containLabel: false, top: GRID_TOP, bottom: GRID_BOTTOM },
@@ -260,5 +269,5 @@ export const useComparisonChartOptions = ({
             }
         ]
     };
-  }, [aggregatedData, itemA, itemB, isDarkMode]);
+  }, [aggregatedData, itemA, itemB, isDarkMode, visibleMetrics]);
 };

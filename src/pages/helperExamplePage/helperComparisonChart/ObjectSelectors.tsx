@@ -9,7 +9,8 @@ interface ObjectSelectorsProps {
   setItemA: (v: string) => void;
   itemB: string;
   setItemB: (v: string) => void;
-  availableItems: TreeOption[]; // Changed from string[] to TreeOption[]
+  availableItems: TreeOption[];
+  visibleMetrics?: string[];
 }
 
 // --- Tree Select Components ---
@@ -174,7 +175,7 @@ const CustomTreeSelect: React.FC<{
 // --- Main ObjectSelectors Component ---
 
 const ObjectSelectors: React.FC<ObjectSelectorsProps> = ({ 
-  mode, itemA, setItemA, itemB, setItemB, availableItems 
+  mode, itemA, setItemA, itemB, setItemB, availableItems, visibleMetrics = [] 
 }) => {
   
   if (mode === 'controls') {
@@ -210,18 +211,21 @@ const ObjectSelectors: React.FC<ObjectSelectorsProps> = ({
     );
   }
 
+  // Filter labels
+  const activeMetrics = METRICS.filter(m => visibleMetrics.includes(m.key));
+
   // mode === 'labels'
   return (
     <div 
-        className="absolute top-[40px] bottom-[30px] left-1/2 -translate-x-1/2 w-[25%] pointer-events-none z-10"
+        className="absolute top-[40px] bottom-[20px] left-1/2 -translate-x-1/2 w-[25%] pointer-events-none z-10"
         style={{ 
             display: 'grid', 
-            gridTemplateRows: `repeat(${METRICS.length}, 1fr)`,
+            gridTemplateRows: `repeat(${activeMetrics.length}, 1fr)`,
             alignItems: 'center',
             justifyItems: 'center'
         }}
     >
-        {METRICS.map(m => (
+        {activeMetrics.map(m => (
             <div key={m.key} className="flex flex-col items-center justify-center bg-white dark:bg-[#1e293b] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm min-w-[140px] backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
                 <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase text-center leading-tight">
                     {m.label}

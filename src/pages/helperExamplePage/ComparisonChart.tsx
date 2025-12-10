@@ -5,6 +5,7 @@ import { useComparisonChartOptions } from './helperComparisonChart/useComparison
 import HeaderControls from './helperComparisonChart/HeaderControls';
 import ObjectSelectors from './helperComparisonChart/ObjectSelectors';
 import { ComparisonCategory, ComparisonFilterState } from './helperComparisonChart/types';
+import { METRICS } from './helperComparisonChart/constants';
 
 interface ComparisonChartProps {
   isDarkMode: boolean;
@@ -12,9 +13,12 @@ interface ComparisonChartProps {
 
 const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
   // --- STATE ---
-  const [category, setCategory] = useState<ComparisonCategory>('city');
+  const [category, setCategory] = useState<ComparisonCategory>('status');
   const [itemA, setItemA] = useState<string>('');
   const [itemB, setItemB] = useState<string>('');
+  
+  // Initialize with all metrics visible
+  const [visibleMetrics, setVisibleMetrics] = useState<string[]>(METRICS.map(m => m.key));
   
   const [filters, setFilters] = useState<ComparisonFilterState>({
     years: [],
@@ -27,7 +31,6 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
   });
 
   // --- DATA HOOK ---
-  // treeOptions aliased to availableItems to match component usage
   const { treeOptions: availableItems, aggregatedData, filterOptions } = useComparisonData(category, filters);
 
   // --- CHART OPTIONS HOOK ---
@@ -35,7 +38,8 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
     aggregatedData,
     itemA,
     itemB,
-    isDarkMode
+    isDarkMode,
+    visibleMetrics // Pass visibility state
   });
 
   // Reset selection when category changes or items become unavailable
@@ -67,6 +71,8 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
           filters={filters}
           setFilters={setFilters}
           filterOptions={filterOptions}
+          visibleMetrics={visibleMetrics}
+          setVisibleMetrics={setVisibleMetrics}
        />
 
        <div className="p-6 min-h-[500px]">
@@ -76,10 +82,11 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
              itemA={itemA} setItemA={setItemA}
              itemB={itemB} setItemB={setItemB}
              availableItems={availableItems}
+             visibleMetrics={visibleMetrics} // Pass to hide labels
           />
 
           {/* Chart Area Wrapper: Relative context for aligning Chart + Central Labels */}
-          <div className="h-[400px] mt-8 relative">
+          <div className="h-[550px] mt-8 relative">
              {itemA && itemB ? (
                 <>
                     <EChartComponent 
@@ -94,6 +101,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
                         itemA={itemA} setItemA={setItemA}
                         itemB={itemB} setItemB={setItemB}
                         availableItems={availableItems}
+                        visibleMetrics={visibleMetrics} // Pass to hide labels
                     />
                 </>
              ) : (

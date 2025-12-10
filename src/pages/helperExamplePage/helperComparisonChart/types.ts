@@ -14,6 +14,7 @@ export interface MetricConfig {
   suffix?: string;
   prefix?: string;
   isMoney?: boolean;
+  aggregation: 'sum' | 'avg'; // New field to determine calculation logic
 }
 
 export interface ComparisonFilterState {
@@ -38,7 +39,7 @@ export interface ComparisonFilterOptions {
 
 export interface TreeOption {
   label: string;
-  value?: string; // Если есть value, значит это конечный элемент, который можно выбрать
+  value?: string;
   children?: TreeOption[];
 }
 
