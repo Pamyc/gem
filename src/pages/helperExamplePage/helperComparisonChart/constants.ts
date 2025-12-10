@@ -1,14 +1,14 @@
-
-import { Users, Building, MapPin, Calendar, Layers, CheckCircle2 } from 'lucide-react';
+import { Users, Building, MapPin, Calendar, Layers, CheckCircle2, Globe } from 'lucide-react';
 import { CategoryOption, MetricConfig } from './types';
 
 export const CATEGORIES: CategoryOption[] = [
+  { value: 'status', label: 'Статус сдачи', icon: CheckCircle2 },
   { value: 'client', label: 'Клиент', icon: Users },
+  { value: 'year', label: 'Год', icon: Calendar },
+  { value: 'region', label: 'Регион', icon: Globe },
   { value: 'city', label: 'Город', icon: MapPin },
   { value: 'jk', label: 'ЖК', icon: Building },
   { value: 'liter', label: 'Литер', icon: Layers },
-  { value: 'year', label: 'Год', icon: Calendar },
-  { value: 'status', label: 'Статус сдачи', icon: CheckCircle2 },
 ];
 
 export const METRICS: MetricConfig[] = [

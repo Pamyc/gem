@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useDataStore } from '../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../utils/chartUtils';
-import { ComparisonCategory, ComparisonFilterState, ComparisonDataResult } from './types';
+import { ComparisonCategory, ComparisonFilterState, ComparisonDataResult, TreeOption } from './types';
 
 export const useComparisonData = (
   category: ComparisonCategory,
@@ -15,7 +15,7 @@ export const useComparisonData = (
     
     // Default Empty Return
     const empty: ComparisonDataResult = { 
-        availableItems: [], 
+        treeOptions: [], 
         aggregatedData: new Map(), 
         filterOptions: { years: [], regions: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: [] } 
     };
@@ -24,7 +24,8 @@ export const useComparisonData = (
 
     const config = sheetConfigs.find(c => c.key === sheetKey);
     const headerRowsCount = config?.headerRows || 1;
-    const headers = getMergedHeaders(sheetData.headers, headerRowsCount);
+    // Get headers and TRIM them to ensure exact matching
+    const headers = getMergedHeaders(sheetData.headers, headerRowsCount).map(h => h.trim());
 
     // Indices
     const idxMap = {
@@ -61,11 +62,47 @@ export const useComparisonData = (
     };
 
     const dataMap = new Map<string, Record<string, number>>();
+    
+    // Helper to build tree
+    const treeRoot: TreeOption[] = [];
+    const findOrAddNode = (nodes: TreeOption[], label: string): TreeOption => {
+        let node = nodes.find(n => n.label === label);
+        if (!node) {
+            node = { label, children: [] };
+            nodes.push(node);
+        }
+        return node;
+    };
+
+    // Determine Total Key based on category
+    let totalKey = '';
+    if (category === 'year') {
+        totalKey = 'Весь период';
+    } else if (['region', 'city', 'jk', 'liter'].includes(category)) {
+        totalKey = 'Все объекты';
+    }
 
     sheetData.rows.forEach(row => {
-        // Technical Filters
-        if (idxMap.total !== -1 && String(row[idxMap.total]).toLowerCase() === 'да') return;
-        if (idxMap.noBreakdown !== -1 && String(row[idxMap.noBreakdown]).toLowerCase() === 'да') return; 
+        // --- STRICT FILTERS ---
+        
+        // 1. Итого (Да/Нет) -> Должно быть "Нет" (Исключаем "Да")
+        if (idxMap.total !== -1) {
+            const valTotal = String(row[idxMap.total] || '').trim().toLowerCase();
+            if (valTotal === 'да') return; 
+        }
+
+        // 2. Без разбивки на литеры (Да/Нет)
+        if (idxMap.noBreakdown !== -1) {
+            const valNoBreakdown = String(row[idxMap.noBreakdown] || '').trim().toLowerCase();
+            
+            if (category === 'liter') {
+                // Если сравниваем литеры, нужны строки ГДЕ ЕСТЬ разбивка (значение "Нет" или пусто)
+                if (valNoBreakdown === 'да') return;
+            } else {
+                // Для всего остального нужны агрегаты ("Да")
+                if (valNoBreakdown !== 'да') return;
+            }
+        }
 
         // Extract Values
         const getVal = (idx: number) => String(row[idx] || '').trim();
@@ -77,11 +114,11 @@ export const useComparisonData = (
             liter: getVal(idxMap.liter) || getVal(idxMap.jk), // Fallback
             year: getVal(idxMap.year),
             client: getVal(idxMap.client),
-            status: getVal(idxMap.status).toLowerCase() === 'да' ? 'Сдан' : 'В работе',
+            status: getVal(idxMap.status).toLowerCase() === 'да' ? 'Сданы' : 'В работе',
             objectType: getVal(idxMap.objectType)
         };
 
-        // Collect Options
+        // Collect Options for Filters
         if (rowData.year) optionsSet.years.add(rowData.year);
         if (rowData.region) optionsSet.regions.add(rowData.region);
         if (rowData.city) optionsSet.cities.add(rowData.city);
@@ -101,16 +138,55 @@ export const useComparisonData = (
 
         // Determine Group Key based on selected Category
         let groupKey = '';
-        switch(category) {
-            case 'city': groupKey = rowData.city; break;
-            case 'jk': groupKey = rowData.jk; break;
-            case 'liter': groupKey = rowData.liter; break; 
-            case 'client': groupKey = rowData.client; break;
-            case 'year': groupKey = rowData.year || 'Не указан'; break;
-            case 'status': groupKey = rowData.status; break;
+        
+        // Tree Building Logic
+        if (category === 'city') {
+            groupKey = rowData.city;
+            if (groupKey && rowData.region) {
+                const regionNode = findOrAddNode(treeRoot, rowData.region);
+                // City is leaf here
+                if (!regionNode.children!.find(n => n.value === groupKey)) {
+                    regionNode.children!.push({ label: groupKey, value: groupKey });
+                }
+            }
+        } 
+        else if (category === 'jk') {
+            groupKey = rowData.jk;
+            if (groupKey && rowData.region && rowData.city) {
+                const regionNode = findOrAddNode(treeRoot, rowData.region);
+                const cityNode = findOrAddNode(regionNode.children!, rowData.city);
+                // JK is leaf
+                if (!cityNode.children!.find(n => n.value === groupKey)) {
+                    cityNode.children!.push({ label: groupKey, value: groupKey });
+                }
+            }
         }
-
-        if (!groupKey) return;
+        else if (category === 'liter') {
+            groupKey = rowData.liter;
+            if (groupKey && rowData.region && rowData.city && rowData.jk) {
+                const regionNode = findOrAddNode(treeRoot, rowData.region);
+                const cityNode = findOrAddNode(regionNode.children!, rowData.city);
+                const jkNode = findOrAddNode(cityNode.children!, rowData.jk);
+                // Liter is leaf
+                if (!jkNode.children!.find(n => n.value === groupKey)) {
+                    jkNode.children!.push({ label: groupKey, value: groupKey });
+                }
+            }
+        }
+        else {
+            // Flat categories
+            switch(category) {
+                case 'client': groupKey = rowData.client; break;
+                case 'region': groupKey = rowData.region; break;
+                case 'year': groupKey = rowData.year || 'Не указан'; break;
+                case 'status': groupKey = rowData.status; break;
+            }
+            if (groupKey) {
+                if (!treeRoot.find(n => n.value === groupKey)) {
+                    treeRoot.push({ label: groupKey, value: groupKey });
+                }
+            }
+        }
 
         // Parse Metrics
         const parseNum = (idx: number) => {
@@ -125,24 +201,57 @@ export const useComparisonData = (
             expenseFact: parseNum(idxMap.expenseFact),
         };
 
-        if (!dataMap.has(groupKey)) {
-            dataMap.set(groupKey, { 
-                elevators: 0, floors: 0, 
-                incomeFact: 0, expenseFact: 0 
-            });
+        // --- Accumulate Data ---
+
+        const accumulate = (key: string) => {
+            if (!dataMap.has(key)) {
+                dataMap.set(key, { 
+                    elevators: 0, floors: 0, 
+                    incomeFact: 0, expenseFact: 0 
+                });
+            }
+            const entry = dataMap.get(key)!;
+            entry.elevators += metrics.elevators;
+            entry.floors += metrics.floors;
+            entry.incomeFact += metrics.incomeFact;
+            entry.expenseFact += metrics.expenseFact;
+        };
+
+        // 1. Specific Item
+        if (groupKey) {
+            accumulate(groupKey);
         }
-        
-        const entry = dataMap.get(groupKey)!;
-        entry.elevators += metrics.elevators;
-        entry.floors += metrics.floors;
-        entry.incomeFact += metrics.incomeFact;
-        entry.expenseFact += metrics.expenseFact;
+
+        // 2. Total Item
+        if (totalKey) {
+            accumulate(totalKey);
+        }
     });
 
-    const items = Array.from(dataMap.keys()).sort();
+    // Sort the tree root level
+    treeRoot.sort((a, b) => a.label.localeCompare(b.label));
+    
+    // Helper to recursively sort children
+    const sortChildren = (nodes: TreeOption[]) => {
+        nodes.forEach(node => {
+            if (node.children) {
+                node.children.sort((a, b) => a.label.localeCompare(b.label));
+                sortChildren(node.children);
+            }
+        });
+    };
+    sortChildren(treeRoot);
+
+    // Insert Total Option at the beginning if exists and has data
+    if (totalKey && dataMap.has(totalKey)) {
+        treeRoot.unshift({
+            label: totalKey,
+            value: totalKey
+        });
+    }
 
     return {
-        availableItems: items,
+        treeOptions: treeRoot,
         aggregatedData: dataMap,
         filterOptions: {
             years: Array.from(optionsSet.years).sort().reverse(),

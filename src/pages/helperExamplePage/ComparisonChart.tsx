@@ -27,7 +27,8 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
   });
 
   // --- DATA HOOK ---
-  const { availableItems, aggregatedData, filterOptions } = useComparisonData(category, filters);
+  // treeOptions aliased to availableItems to match component usage
+  const { treeOptions: availableItems, aggregatedData, filterOptions } = useComparisonData(category, filters);
 
   // --- CHART OPTIONS HOOK ---
   const chartOption = useComparisonChartOptions({
@@ -39,8 +40,22 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
 
   // Reset selection when category changes or items become unavailable
   useEffect(() => {
-    setItemA('');
-    setItemB('');
+    if (category === 'status') {
+      setItemA('В работе');
+      setItemB('Сданы');
+    } else if (category === 'client') {
+      setItemA('ЮСИ');
+      setItemB('ССК');
+    } else if (category === 'year') {
+      setItemA('Весь период');
+      setItemB('Весь период');
+    } else if (['region', 'city', 'jk', 'liter'].includes(category)) {
+      setItemA('Все объекты');
+      setItemB('Все объекты');
+    } else {
+      setItemA('');
+      setItemB('');
+    }
   }, [category]);
 
   return (
@@ -54,8 +69,8 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
           filterOptions={filterOptions}
        />
 
-       <div className="p-6 relative min-h-[500px]">
-          {/* Selectors overlay */}
+       <div className="p-6 min-h-[500px]">
+          {/* Selectors overlay - Controls are separate from the chart positioning context */}
           <ObjectSelectors 
              mode="controls"
              itemA={itemA} setItemA={setItemA}
@@ -63,30 +78,30 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ isDarkMode }) => {
              availableItems={availableItems}
           />
 
-          {/* Chart Area */}
-          <div className="h-[400px] mt-8">
+          {/* Chart Area Wrapper: Relative context for aligning Chart + Central Labels */}
+          <div className="h-[400px] mt-8 relative">
              {itemA && itemB ? (
-                <EChartComponent 
-                    options={chartOption}
-                    theme={isDarkMode ? 'dark' : 'light'}
-                    height="100%"
-                />
+                <>
+                    <EChartComponent 
+                        options={chartOption}
+                        theme={isDarkMode ? 'dark' : 'light'}
+                        height="100%"
+                    />
+                    
+                    {/* Metric Labels Overlay (Center) - Now inside the relative chart container */}
+                    <ObjectSelectors 
+                        mode="labels"
+                        itemA={itemA} setItemA={setItemA}
+                        itemB={itemB} setItemB={setItemB}
+                        availableItems={availableItems}
+                    />
+                </>
              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
+                <div className="h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-2xl">
                     Выберите два объекта для сравнения
                 </div>
              )}
           </div>
-
-          {/* Metric Labels Overlay (Center) */}
-          {itemA && itemB && (
-             <ObjectSelectors 
-                mode="labels"
-                itemA={itemA} setItemA={setItemA}
-                itemB={itemB} setItemB={setItemB}
-                availableItems={availableItems}
-             />
-          )}
        </div>
     </div>
   );

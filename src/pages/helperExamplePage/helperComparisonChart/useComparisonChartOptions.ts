@@ -34,16 +34,21 @@ export const useComparisonChartOptions = ({
         
         let shareA = 0;
         let shareB = 0;
+        let percentA = 0;
+        let percentB = 0;
 
         if (total > 0) {
             shareA = valA / total;
             shareB = valB / total;
+            // Рассчитываем проценты для визуализации ширины столбца (независимо от масштаба числа)
+            percentA = shareA * 100;
+            percentB = shareB * 100;
         }
 
         const colorA = getSemanticColor(shareA);
         const colorB = getSemanticColor(shareB);
 
-        // Используем полное форматирование
+        // Используем полное форматирование для текстов
         const fullValueA = formatFullNumber(valA, m.prefix, m.suffix);
         const fullValueB = formatFullNumber(valB, m.prefix, m.suffix);
         const shareAStr = (shareA * 100).toFixed(0) + '%';
@@ -51,7 +56,8 @@ export const useComparisonChartOptions = ({
 
         // Данные для левой серии (Объект А)
         seriesA.push({
-            value: valA,
+            value: percentA, // Визуально - процент от общей суммы строки
+            realValue: valA, // Реальное значение для лейбла
             itemStyle: { 
                 color: colorA, 
                 borderRadius: [4, 0, 0, 4] 
@@ -60,7 +66,7 @@ export const useComparisonChartOptions = ({
             metricName: m.label,
             fullValue: fullValueA,
             share: shareAStr,
-            // Данные "соседа" для тултипа (ВСЕГДА передаем их, даже если 0)
+            // Данные "соседа" для тултипа
             peerName: itemB,
             peerFullValue: fullValueB,
             peerShare: shareBStr,
@@ -73,13 +79,15 @@ export const useComparisonChartOptions = ({
                 color: valA === 0 ? labelColor : '#fff',
                 fontWeight: 'bold',
                 fontSize: 12,
-                formatter: (p: any) => formatFullNumber(p.value, m.prefix, m.suffix)
+                // Используем realValue, чтобы показать "284", а не "74.8"
+                formatter: (p: any) => formatFullNumber(p.data.realValue, m.prefix, m.suffix)
             }
         });
 
         // Данные для правой серии (Объект Б)
         seriesB.push({
-            value: valB,
+            value: percentB, // Визуально - процент
+            realValue: valB, // Реальное значение
             itemStyle: { 
                 color: colorB, 
                 borderRadius: [0, 4, 4, 0] 
@@ -101,18 +109,15 @@ export const useComparisonChartOptions = ({
                 color: valB === 0 ? labelColor : '#fff',
                 fontWeight: 'bold',
                 fontSize: 12,
-                formatter: (p: any) => formatFullNumber(p.value, m.prefix, m.suffix)
+                // Используем realValue
+                formatter: (p: any) => formatFullNumber(p.data.realValue, m.prefix, m.suffix)
             }
         });
 
         axisData.push(m.label);
     });
 
-    const allValues = [...seriesA.map(s => s.value), ...seriesB.map(s => s.value)];
-    const maxVal = Math.max(...allValues);
-    const limit = maxVal * 1.1 || 100;
-
-    // Константы отступов должны совпадать с top-[40px] и bottom-[30px] в ObjectSelectors
+    // Константы отступов
     const GRID_TOP = 40;
     const GRID_BOTTOM = 30;
 
@@ -181,7 +186,7 @@ export const useComparisonChartOptions = ({
             }
         },
         legend: {
-            show: true,
+            show: false, // Скрываем легенду по запросу
             data: [itemA, itemB],
             top: 0,
             textStyle: { color: textColor, fontWeight: 'bold' }
@@ -197,7 +202,7 @@ export const useComparisonChartOptions = ({
                 axisLabel: { show: false },
                 axisLine: { show: false },
                 splitLine: { show: false },
-                max: limit,
+                max: 100, // Нормализуем масштаб до 100% для каждой строки
                 gridIndex: 0
             },
             {
@@ -206,7 +211,7 @@ export const useComparisonChartOptions = ({
                 axisLabel: { show: false },
                 axisLine: { show: false },
                 splitLine: { show: false },
-                max: limit,
+                max: 100, // Нормализуем масштаб до 100% для каждой строки
                 gridIndex: 1
             }
         ],

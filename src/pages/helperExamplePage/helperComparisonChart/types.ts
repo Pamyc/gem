@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type ComparisonCategory = 'client' | 'city' | 'jk' | 'liter' | 'year' | 'status';
+export type ComparisonCategory = 'client' | 'city' | 'jk' | 'liter' | 'year' | 'status' | 'region';
 
 export interface CategoryOption {
   value: ComparisonCategory;
@@ -36,8 +36,14 @@ export interface ComparisonFilterOptions {
   objectTypes: string[];
 }
 
+export interface TreeOption {
+  label: string;
+  value?: string; // Если есть value, значит это конечный элемент, который можно выбрать
+  children?: TreeOption[];
+}
+
 export interface ComparisonDataResult {
-  availableItems: string[];
+  treeOptions: TreeOption[];
   aggregatedData: Map<string, Record<string, number>>;
   filterOptions: ComparisonFilterOptions;
 }
