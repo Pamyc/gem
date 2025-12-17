@@ -31,8 +31,8 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, sel
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
-      gradientFrom: "emerald",
+      colorTheme: "violet",
+      gradientFrom: "violet",
       gradientTo: "violet",
       elements: [
         {
@@ -97,9 +97,9 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, sel
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
+      colorTheme: "violet",
       gradientFrom: "violet",
-      gradientTo: "orange",
+      gradientTo: "violet",
       elements: [
         {
           id: "value-q6cne",
@@ -163,9 +163,9 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, sel
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
-      gradientFrom: "orange",
-      gradientTo: "blue",
+      colorTheme: "violet",
+      gradientFrom: "violet",
+      gradientTo: "violet",
       elements: [
         {
           id: "value-q6cne",
@@ -229,8 +229,8 @@ const KPISection: React.FC<KPISectionProps> = ({ selectedCity, selectedYear, sel
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
-      gradientFrom: "blue",
+      colorTheme: "violet",
+      gradientFrom: "violet",
       gradientTo: "violet",
       elements: [
         {

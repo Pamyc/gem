@@ -10,7 +10,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ isDarkMode }) => {
   return (
     <div className="grid grid-cols-1 gap-6">
       {/* KPI Section */}
-      <KPISection />
+      
       
       {/* Charts Grid */}
       <ChartsSection isDarkMode={isDarkMode} />

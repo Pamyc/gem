@@ -31,8 +31,8 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear, s
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
-      gradientFrom: "emerald",
+      colorTheme: "violet",
+      gradientFrom: "violet",
       gradientTo: "violet",
       elements: [
         {
@@ -97,9 +97,9 @@ const KPISection2: React.FC<KPISection2Props> = ({ selectedCity, selectedYear, s
       trendDirection: "neutral",
       width: "100%",
       height: "50px",
-      colorTheme: "blue",
+      colorTheme: "violet",
       gradientFrom: "violet",
-      gradientTo: "orange",
+      gradientTo: "violet",
       elements: [
         {
           id: "value-q6cne",
