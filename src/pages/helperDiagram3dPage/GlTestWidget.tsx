@@ -1,7 +1,7 @@
 
 import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { Box, AlertTriangle, Loader2 } from 'lucide-react';
-
+import EChartComponent from './EChartComponent';
 
 interface Props {
   isDarkMode: boolean;
@@ -175,7 +175,9 @@ const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
           </div>
        </div>
        
-       
+       <div className="h-64 w-full">
+          <EChartComponent options={option} theme={isDarkMode ? 'dark' : 'light'} height="100%" />
+       </div>
     </div>
   );
 };
