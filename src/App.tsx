@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -11,6 +12,7 @@ import CardConstructorPage from './pages/CardConstructorPage';
 import KPIPage from './pages/KPIPage';
 import FilterTestPage from './pages/FilterTestPage';
 import Example2Page from './pages/Example2Page';
+import Diagram3dPage from './pages/Diagram3dPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -45,22 +47,24 @@ const AppContent: React.FC = () => {
     const items: MenuItem[] = [
       { id: 'stats', label: 'Статистика', icon: BarChart3 },
       { id: 'home', label: 'Источник данных', icon: Database },
+      { id: 'diagram3d', label: '3D Диаграмма', icon: Box }, // Новая вкладка
       { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
       { id: 'filter-test', label: 'Тест фильтров', icon: Filter },
       { id: 'kpi', label: 'KPI Примеры', icon: Target },
-      { id: 'example2', label: 'Пример 2', icon: Copy }, // Новая вкладка
+      { id: 'example2', label: 'Пример 2', icon: Copy }, 
       { id: 'example', label: 'Пример 1', icon: FileText },
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
-    // Скрываем конструктор, KPI и Пример 2 для всех, кроме i
+    // Скрываем спец-страницы для всех, кроме i (Super Admin)
     if (user?.username !== 'i') {
       return items.filter(item => 
         item.id !== 'constructor' && 
         item.id !== 'card-constructor' &&
         item.id !== 'filter-test' &&
-        item.id !== 'example2'
+        item.id !== 'example2' &&
+        item.id !== 'diagram3d'
       );
     }
 
@@ -69,7 +73,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d'];
     if (restrictedTabs.includes(activeTab) && user?.username !== 'i') {
       setActiveTab('stats');
     }
@@ -99,6 +103,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'card-constructor' && user.username === 'i' && <CardConstructorPage isDarkMode={isDarkMode} />}
         {activeTab === 'filter-test' && user.username === 'i' && <FilterTestPage isDarkMode={isDarkMode} />}
         {activeTab === 'example2' && user.username === 'i' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
+        {activeTab === 'diagram3d' && user.username === 'i' && <Diagram3dPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
