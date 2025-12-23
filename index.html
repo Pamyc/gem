@@ -10,6 +10,10 @@
         darkMode: 'class',
       }
     </script>
+    <!-- Load ECharts and ECharts-GL globally to ensure 3D components register correctly -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+    
   <script type="importmap">
 {
   "imports": {
@@ -22,11 +26,11 @@
     "path": "https://aistudiocdn.com/path@^0.12.7",
     "express": "https://aistudiocdn.com/express@^5.1.0",
     "url": "https://aistudiocdn.com/url@^0.11.4",
-    "echarts": "https://aistudiocdn.com/echarts@^5.6.0/dist/echarts.esm.min.js",
     "@tanstack/react-table": "https://aistudiocdn.com/@tanstack/react-table@^8.20.5",
     "next/": "https://aistudiocdn.com/next@^16.0.3/",
     "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "echarts-gl": "https://esm.sh/echarts-gl@^2.0.9"
+    "echarts": "data:text/javascript;charset=utf-8,const%20e=window.echarts;export%20const%20init=e.init;export%20const%20graphic=e.graphic;export%20const%20getInstanceByDom=e.getInstanceByDom;export%20const%20connect=e.connect;export%20const%20disconnect=e.disconnect;export%20const%20dispose=e.dispose;export%20const%20registerMap=e.registerMap;export%20const%20registerTheme=e.registerTheme;export%20const%20use=e.use;export%20default%20e;",
+    "echarts-gl": "data:text/javascript;charset=utf-8,export%20default%20{};"
   }
 }
 </script>

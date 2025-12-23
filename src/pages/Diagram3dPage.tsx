@@ -1,6 +1,7 @@
 
 import React from 'react';
 import GlTestWidget from './helperDiagram3dPage/GlTestWidget';
+import DailySchedule3D from './helperDiagram3dPage/DailySchedule3D';
 
 interface Diagram3dPageProps {
   isDarkMode: boolean;
@@ -14,8 +15,9 @@ const Diagram3dPage: React.FC<Diagram3dPageProps> = ({ isDarkMode }) => {
          <p className="text-gray-500 dark:text-gray-400">Экспериментальный раздел для трехмерных графиков и моделей.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <GlTestWidget />
+      <div className="grid grid-cols-1 gap-6">
+          <DailySchedule3D isDarkMode={isDarkMode} />
+          <GlTestWidget isDarkMode={isDarkMode} />
       </div>
     </div>
   );

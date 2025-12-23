@@ -51,16 +51,12 @@ class GlErrorBoundary extends Component<{ children: ReactNode, isDarkMode: boole
 // 2. The Actual 3D Chart Content
 const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
   const [isReady, setIsReady] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Dynamic import to prevent bundle crash
-    import('echarts-gl')
-      .then(() => setIsReady(true))
-      .catch((err) => {
-        console.error("Failed to load echarts-gl", err);
-        setLoadError(err.message || "Network Error");
-      });
+    // ECharts and ECharts-GL are loaded globally via <script> tags in index.html.
+    // This ensures they share the same instance and registers 3D components correctly.
+    // We just set ready to true immediately.
+    setIsReady(true);
   }, []);
 
   const option = {
@@ -137,17 +133,6 @@ const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
       }
     ]
   };
-
-  if (loadError) {
-      return (
-        <div className="bg-white dark:bg-[#151923] rounded-3xl border border-red-200 dark:border-red-500/20 shadow-sm p-6 mb-8 flex items-center justify-center h-64">
-          <div className="text-center text-red-500">
-             <AlertTriangle size={32} className="mx-auto mb-2 opacity-50" />
-             <p>Failed to load 3D component</p>
-          </div>
-        </div>
-      );
-  }
 
   if (!isReady) {
       return (
