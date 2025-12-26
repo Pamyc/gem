@@ -46,6 +46,7 @@ const jkImageMapping = [
 
   { name: "Детский сад", id: "sadik" },
   { name: "Садик 450 мест", id: "sadik" },
+  { name: "ДОО", id: "sadik" },
 
   { name: "Школа 1750 мест", id: "skola" },
   { name: "Сбер школа", id: "skola" },
