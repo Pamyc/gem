@@ -17,7 +17,7 @@ interface HousingComplexSectionProps {
 
 // Массив соответствия названия ЖК и ключа картинки
 const jkImageMapping = [
-  
+
   { name: "Октябрь парк", id: "oktbr_park" },
   { name: "Архитектор", id: "arhi" },
   { name: "Цитрус", id: "citrus" },
@@ -36,7 +36,21 @@ const jkImageMapping = [
   { name: "Софи", id: "sofi" },
   { name: "Усадьба", id: "usadba" },
   { name: "Высота", id: "visota" },
-  { name: "Золотой берег", id: "zolotoi" }
+  { name: "Золотой берег", id: "zolotoi" },
+
+  { name: "ФОК", id: "fok" },
+  { name: "Медцентр", id: "medicina" },
+
+  { name: "Западный обход ТЦ", id: "tc" },
+  { name: "Левобережье (ТЦ)", id: "tc" },
+
+  { name: "Детский сад", id: "sadik" },
+  { name: "Садик 450 мест", id: "sadik" },
+
+  { name: "Школа 1750 мест", id: "skola" },
+  { name: "Сбер школа", id: "skola" },
+  { name: "Школа (учебный корпус)", id: "skola" },
+  { name: "Полет (школа)", id: "skola" },
 ];
 
 interface JKAggregatedData {
@@ -52,7 +66,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
   const { googleSheets, sheetConfigs, isLoading } = useDataStore();
   const [selectedJK, setSelectedJK] = useState<JKAggregatedData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // State for Image Preview (Lightbox)
   const [viewImage, setViewImage] = useState<string | null>(null);
 
@@ -87,8 +101,8 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       // Base Filter: Итого = Нет (Exclude grand totals)
       // STRICT FILTER: Match modal logic (equals "Нет")
       if (idxTotal !== -1) {
-         const val = String(row[idxTotal]).trim().toLowerCase();
-         if (val !== 'нет') return;
+        const val = String(row[idxTotal]).trim().toLowerCase();
+        if (val !== 'нет') return;
       }
 
       // Context Filters
@@ -122,13 +136,13 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       // Try to use "Отдельный литер (Да/Нет)" column first (as per modal fix)
       let liters = 0;
       if (idxOneLiter !== -1) {
-         liters = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да'.toLowerCase()).length;
+        liters = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да'.toLowerCase()).length;
       } else {
-         // Fallback logic
-         const detailRows = idxNoBreakdown !== -1
-            ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет'.toLowerCase())
-            : rows;
-         liters = detailRows.length;
+        // Fallback logic
+        const detailRows = idxNoBreakdown !== -1
+          ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет'.toLowerCase())
+          : rows;
+        liters = detailRows.length;
       }
 
       // If count is 0 but we have data for the JK, assume 1 (the main building/complex itself).
@@ -137,7 +151,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
       }
 
       // Summing metrics - use rows where "Без разбивки на литеры" is "Да" to match Modal/KPI logic
-      const sumRows = idxNoBreakdown !== -1 
+      const sumRows = idxNoBreakdown !== -1
         ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'да')
         : rows;
 
@@ -220,7 +234,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
           dataColumn: 'Кол-во лифтов',
           aggregation: 'sum',
           filters: [...baseFilters,
-            { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
+          { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
           ]
         }
       },
@@ -235,7 +249,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
           filters: [
             ...baseFilters,
             { id: 'f_oneliter', column: 'Отдельный литер (Да/Нет)', operator: 'equals', value: 'Да' },
-            
+
           ]
         }
       },
@@ -247,7 +261,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
           dataColumn: 'Кол-во этажей',
           aggregation: 'sum',
           filters: [...baseFilters,
-            { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
+          { id: 'f_nobreak', column: 'Без разбивки на литеры (Да/Нет)', operator: 'equals', value: 'Да' }
           ]
         }
       }
@@ -318,11 +332,11 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
                     {/* Expand Image Action */}
                     {fullImageUrl && (
-                      <div 
+                      <div
                         className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white opacity-0 group-hover:opacity-100 transition-all transform scale-90 group-hover:scale-100 hover:bg-white/30 cursor-pointer"
                         onClick={(e) => {
-                           e.stopPropagation();
-                           setViewImage(fullImageUrl);
+                          e.stopPropagation();
+                          setViewImage(fullImageUrl);
                         }}
                         title="Развернуть картинку"
                       >
@@ -387,22 +401,22 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
       {/* Image Preview Modal (Lightbox) */}
       {viewImage && (
-        <div 
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200"
-            onClick={() => setViewImage(null)}
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          onClick={() => setViewImage(null)}
         >
-            <button 
-                className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
-                onClick={() => setViewImage(null)}
-            >
-                <X size={32} />
-            </button>
-            <img 
-                src={viewImage} 
-                alt="Expanded View" 
-                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                onClick={(e) => e.stopPropagation()} 
-            />
+          <button
+            className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+            onClick={() => setViewImage(null)}
+          >
+            <X size={32} />
+          </button>
+          <img
+            src={viewImage}
+            alt="Expanded View"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 

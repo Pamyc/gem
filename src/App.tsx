@@ -57,8 +57,8 @@ const AppContent: React.FC = () => {
       { id: 'settings', label: 'Настройки', icon: Settings },
     ];
 
-    // Скрываем спец-страницы для всех, кроме i (Super Admin)
-    if (user?.username !== 'i') {
+    // Скрываем спец-страницы для всех, кроме '1' (Super Admin)
+    if (user?.username !== '1') {
       return items.filter(item => 
         item.id !== 'constructor' && 
         item.id !== 'card-constructor' &&
@@ -74,7 +74,7 @@ const AppContent: React.FC = () => {
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
     const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d'];
-    if (restrictedTabs.includes(activeTab) && user?.username !== 'i') {
+    if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
       setActiveTab('stats');
     }
   }, [activeTab, user]);
@@ -99,11 +99,11 @@ const AppContent: React.FC = () => {
         {activeTab === 'home' && <HomePage />}
         
         {/* Рендерим админские страницы только если пользователь имеет доступ */}
-        {activeTab === 'constructor' && user.username === 'i' && <ConstructorPage isDarkMode={isDarkMode}  />}
-        {activeTab === 'card-constructor' && user.username === 'i' && <CardConstructorPage isDarkMode={isDarkMode} />}
-        {activeTab === 'filter-test' && user.username === 'i' && <FilterTestPage isDarkMode={isDarkMode} />}
-        {activeTab === 'example2' && user.username === 'i' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
-        {activeTab === 'diagram3d' && user.username === 'i' && <Diagram3dPage isDarkMode={isDarkMode} />}
+        {activeTab === 'constructor' && user.username === '1' && <ConstructorPage isDarkMode={isDarkMode}  />}
+        {activeTab === 'card-constructor' && user.username === '1' && <CardConstructorPage isDarkMode={isDarkMode} />}
+        {activeTab === 'filter-test' && user.username === '1' && <FilterTestPage isDarkMode={isDarkMode} />}
+        {activeTab === 'example2' && user.username === '1' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
+        {activeTab === 'diagram3d' && user.username === '1' && <Diagram3dPage isDarkMode={isDarkMode} />}
         
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         

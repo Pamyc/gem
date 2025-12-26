@@ -96,7 +96,9 @@ const DailySchedule3D: React.FC<DailySchedule3DProps> = ({ isDarkMode }) => {
         boxWidth: 200,
         boxDepth: 80,
         viewControl: {
-          // projection: 'orthographic'
+          projection: 'perspective',
+          autoRotate: true,
+          autoRotateSpeed: 10,
           alpha: 40,
           beta: 40,
         },

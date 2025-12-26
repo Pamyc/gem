@@ -6,7 +6,7 @@ import KPISection2 from './helperFinanceTab/KPISection2';
 import RegionSelector from './helperElevatorTab/RegionSelector';
 import CitySelector from './helperElevatorTab/CitySelector';
 import YearSelector from './helperElevatorTab/YearSelector';
-import HousingComplexSection from './helperFinanceTab/HousingComplexSection';
+import HousingComplexSection from './helperElevatorTab/HousingComplexSection';
 import TimelineFinanceChart from './helperFinanceTab/TimelineFinanceChart';
 import StackedBarFinanceChart from './helperFinanceTab/StackedBarFinanceChart';
 

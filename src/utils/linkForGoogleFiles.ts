@@ -29,6 +29,12 @@ export const googleFileLinks: Record<string, string> = {
   "visota": "https://drive.google.com/file/d/1OVtbOZT-smFbXc2sORMoOQq2z3iW5gJY/view?usp=drive_link",
   "zolotoi": "https://drive.google.com/file/d/1O9ObcduMZi6snDNx5OmCOpoirSLL136B/view?usp=drive_link",
 
+  "fok": "https://drive.google.com/file/d/1nSKBUlKotAYh237NAOUxyzlnQS9VcIYw/view?usp=drive_link",
+  "sadik": "https://drive.google.com/file/d/1bgBzsueuN-rTIQh3Oeo9amDgsAH8f43i/view?usp=drive_link",
+  "skola": "https://drive.google.com/file/d/1hAEpEv9dRv1ScCniZVCvwu0tEXZ1RNeT/view?usp=drive_link",
+  "tc": "https://drive.google.com/file/d/1v4j0qRDZ1ODUSDVokUoif18g8Ba6Db0E/view?usp=drive_link",
+  "medicina": "https://drive.google.com/file/d/1AARlCtBIcxl1ZfIg2oHEfv64C2bpvIHj/view?usp=drive_link",
+
   
   // Здесь можно добавлять новые файлы:
   // "logo_main": "https://drive.google.com/...",

