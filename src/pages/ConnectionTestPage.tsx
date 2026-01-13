@@ -6,8 +6,21 @@ const ConnectionTestPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Состояние для параметров подключения
+  const [dbConfig, setDbConfig] = useState({
+    host: '192.168.0.4',
+    port: '5432',
+    database: 'default_db',
+    user: 'gen_user',
+    password: '@gemdb@gemdb'
+  });
+
   // Дефолтный запрос
   const [sqlQuery, setSqlQuery] = useState<string>("SELECT * FROM test ORDER BY id DESC LIMIT 5;");
+
+  const handleConfigChange = (field: string, value: string) => {
+    setDbConfig(prev => ({ ...prev, [field]: value }));
+  };
 
   const runQuery = async () => {
     setLoading(true);
@@ -20,7 +33,10 @@ const ConnectionTestPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sql: sqlQuery }),
+        body: JSON.stringify({ 
+            sql: sqlQuery,
+            config: dbConfig // Отправляем параметры подключения
+        }),
       });
       
       const data = await response.json();
@@ -54,6 +70,8 @@ const ConnectionTestPage: React.FC = () => {
       }
   };
 
+  const inputClass = "w-full bg-transparent font-mono font-bold text-gray-800 dark:text-white outline-none border-b border-transparent focus:border-indigo-500 transition-colors text-sm py-1";
+
   return (
     <div className="w-full max-w-[900px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
@@ -64,11 +82,11 @@ const ConnectionTestPage: React.FC = () => {
           Шлюз управления БД
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Прямое управление базой данных PostgreSQL. Будьте осторожны с запросами.
+          Прямое управление базой данных PostgreSQL. Параметры подключения можно изменять.
         </p>
       </div>
 
-      {/* 1. Credentials Panel */}
+      {/* 1. Credentials Panel (Editable) */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#1e2433]/50 flex items-center gap-2">
               <Shield size={16} className="text-indigo-500" />
@@ -76,28 +94,53 @@ const ConnectionTestPage: React.FC = () => {
           </div>
           
           <div className="p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5">
+              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-indigo-500/20 transition-all">
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Host</span>
-                  <span className="font-mono font-bold text-gray-800 dark:text-white truncate" title="192.168.0.4">192.168.0.4</span>
+                  <input 
+                    type="text" 
+                    value={dbConfig.host}
+                    onChange={(e) => handleConfigChange('host', e.target.value)}
+                    className={inputClass}
+                  />
               </div>
-              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5">
+              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-indigo-500/20 transition-all">
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Port</span>
-                  <span className="font-mono font-bold text-indigo-500">5432</span>
+                  <input 
+                    type="text" 
+                    value={dbConfig.port}
+                    onChange={(e) => handleConfigChange('port', e.target.value)}
+                    className={`${inputClass} text-indigo-500`}
+                  />
               </div>
-              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5">
+              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-emerald-500/20 transition-all">
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Database</span>
-                  <div className="flex items-center gap-1.5">
-                      <HardDrive size={14} className="text-emerald-500" />
-                      <span className="font-mono font-bold text-gray-800 dark:text-white truncate">default_db</span>
+                  <div className="flex items-center gap-1.5 w-full">
+                      <HardDrive size={14} className="text-emerald-500 shrink-0" />
+                      <input 
+                        type="text" 
+                        value={dbConfig.database}
+                        onChange={(e) => handleConfigChange('database', e.target.value)}
+                        className={inputClass}
+                      />
                   </div>
               </div>
-              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5">
+              <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-indigo-500/20 transition-all">
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">User</span>
-                  <span className="font-mono font-bold text-gray-800 dark:text-white truncate">gen_user</span>
+                  <input 
+                    type="text" 
+                    value={dbConfig.user}
+                    onChange={(e) => handleConfigChange('user', e.target.value)}
+                    className={inputClass}
+                  />
               </div>
-              <div className="flex flex-col p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-500/20 group relative">
+              <div className="flex flex-col p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-500/20 group relative focus-within:ring-2 ring-red-500/20 transition-all">
                   <span className="text-[10px] font-bold text-red-400 uppercase mb-1 flex items-center gap-1">Password <Key size={10}/></span>
-                  <span className="font-mono font-bold text-red-600 dark:text-red-400 truncate">searchtrg</span>
+                  <input 
+                    type="text" 
+                    value={dbConfig.password}
+                    onChange={(e) => handleConfigChange('password', e.target.value)}
+                    className={`${inputClass} text-red-600 dark:text-red-400`}
+                  />
               </div>
           </div>
       </div>
@@ -174,8 +217,8 @@ const ConnectionTestPage: React.FC = () => {
                
                {loading && (
                    <div className="text-indigo-500 animate-pulse space-y-1">
-                      <div>&gt; Connecting to 192.168.0.4:5432...</div>
-                      <div>&gt; Authenticating as gen_user...</div>
+                      <div>&gt; Connecting to {dbConfig.host}:{dbConfig.port}...</div>
+                      <div>&gt; Authenticating as {dbConfig.user}...</div>
                       <div>&gt; Executing Query...</div>
                    </div>
                )}
