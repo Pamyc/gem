@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box, Share2 } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -13,29 +13,53 @@ import KPIPage from './pages/KPIPage';
 import FilterTestPage from './pages/FilterTestPage';
 import Example2Page from './pages/Example2Page';
 import Diagram3dPage from './pages/Diagram3dPage';
+import TestEmbedChart from './pages/TestEmbedChart'; // Import new page
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-// Компонент-обертка для содержимого приложения, чтобы использовать useAuth
+// Компонент-обертка для содержимого приложения
 const AppContent: React.FC = () => {
   const { user } = useAuth();
+  
+  // Проверяем режим embed сразу при рендере
+  const urlParams = new URLSearchParams(window.location.search);
+  const isEmbed = urlParams.get('mode') === 'embed';
+  // Тема может быть передана в URL для embed режима
+  const urlTheme = urlParams.get('theme');
+
   // Sidebar закрыт по умолчанию
   const [isCollapsed, setIsCollapsed] = useState(true);
   // Статистика теперь первая вкладка и дефолтная
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   
-  // Состояние темы (по умолчанию темная)
+  // Состояние темы (по умолчанию темная, если не сказано иное)
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Эффект для применения класса dark к html тегу
   useEffect(() => {
-    if (isDarkMode) {
+    // В режиме embed уважаем параметр URL, иначе стейт
+    const effectiveDarkMode = isEmbed ? (urlTheme === 'light' ? false : true) : isDarkMode;
+    
+    if (effectiveDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, isEmbed, urlTheme]);
+
+  // --- EMBED MODE ---
+  // Если мы в режиме встраивания, рендерим ТОЛЬКО график, минуя авторизацию и лейаут
+  if (isEmbed) {
+    return (
+      <DataProvider>
+        <TestEmbedChart 
+          isEmbed={true} 
+          isDarkMode={urlTheme === 'light' ? false : true} 
+        />
+      </DataProvider>
+    );
+  }
 
   const mainColor = 'yellow';
   const toggleTheme = () => {
@@ -47,7 +71,8 @@ const AppContent: React.FC = () => {
     const items: MenuItem[] = [
       { id: 'stats', label: 'Статистика', icon: BarChart3 },
       { id: 'home', label: 'Источник данных', icon: Database },
-      { id: 'diagram3d', label: '3D Диаграмма', icon: Box }, // Новая вкладка
+      { id: 'diagram3d', label: '3D Диаграмма', icon: Box },
+      { id: 'test-embed', label: 'Тест Embed', icon: Share2 }, // Новая вкладка
       { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
       { id: 'filter-test', label: 'Тест фильтров', icon: Filter },
@@ -64,7 +89,8 @@ const AppContent: React.FC = () => {
         item.id !== 'card-constructor' &&
         item.id !== 'filter-test' &&
         item.id !== 'example2' &&
-        item.id !== 'diagram3d'
+        item.id !== 'diagram3d' &&
+        item.id !== 'test-embed'
       );
     }
 
@@ -73,13 +99,13 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed'];
     if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
       setActiveTab('stats');
     }
   }, [activeTab, user]);
 
-  // Если пользователь не авторизован, показываем страницу входа
+  // Если пользователь не авторизован (и не embed), показываем страницу входа
   if (!user) {
     return <LoginPage />;
   }
@@ -104,6 +130,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'filter-test' && user.username === '1' && <FilterTestPage isDarkMode={isDarkMode} />}
         {activeTab === 'example2' && user.username === '1' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
         {activeTab === 'diagram3d' && user.username === '1' && <Diagram3dPage isDarkMode={isDarkMode} />}
+        {activeTab === 'test-embed' && user.username === '1' && <TestEmbedChart isDarkMode={isDarkMode} />}
         
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
