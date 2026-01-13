@@ -1,9 +1,9 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-// Используем Connection String с новым паролем
+// Используем Connection String с актуальным паролем
 const dbConfig = {
-  connectionString: 'postgresql://gen_user:@gemdb@gemdb@192.168.0.4:5432/default_db',
+  connectionString: 'postgresql://gen_user:searchtrg@192.168.0.4:5432/default_db',
   connectionTimeoutMillis: 5000,
 };
 

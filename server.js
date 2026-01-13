@@ -16,7 +16,12 @@ app.use(express.static(path.join(__dirname, "dist")));
 
 // Инициализация БД при запуске
 async function initializeDatabase() {
-    // Логика создания таблиц отключена для теста соединения
+    // Логика создания таблиц отключена для теста соединения,
+    // но можно раскомментировать для авто-создания таблицы test
+    // const client = await pool.connect();
+    // try {
+    //    for(const q of DB_SCHEMA) await client.query(q);
+    // } finally { client.release(); }
     console.log('[Server] Database initialization skipped (Connection Test Mode)');
     return Promise.resolve();
 }
@@ -24,48 +29,39 @@ async function initializeDatabase() {
 // Подключаем API обработчики (Telegram и пр.)
 setupHandlers(app, pool);
 
-// API Роут для теста соединения и шаблонов SQL
+// API Роут для выполнения произвольного SQL
 app.post("/api/db-test", async (req, res) => {
-  const { action } = req.body;
+  const { sql } = req.body;
   
+  if (!sql) {
+      return res.status(400).json({ status: "error", message: "SQL query is required" });
+  }
+
   try {
     const client = await pool.connect();
-    let queryResult;
-    let message = "";
-    let sql = "";
-
-    if (action === 'insert') {
-        const textVal = `Test entry ${new Date().toLocaleTimeString()}`;
-        sql = "INSERT INTO test_connection (text) VALUES ($1) RETURNING *";
-        const resDb = await client.query(sql, [textVal]);
-        queryResult = resDb.rows[0];
-        message = `Успешно добавлена запись (ID: ${queryResult.id})`;
-    } else if (action === 'select') {
-        sql = "SELECT * FROM test_connection ORDER BY id DESC LIMIT 5";
-        const resDb = await client.query(sql);
-        queryResult = resDb.rows;
-        message = `Получено ${queryResult.length} последних записей`;
-    } else {
-        // Default: Time check
-        sql = "SELECT NOW() as time";
-        const resDb = await client.query(sql);
-        queryResult = resDb.rows[0];
-        message = "Успешное подключение (Время сервера)";
-    }
-
+    const startTime = Date.now();
+    
+    // Выполняем произвольный запрос
+    const resDb = await client.query(sql);
+    
+    const duration = Date.now() - startTime;
     client.release();
     
+    // Определяем тип результата (массив строк или результат команды)
+    const resultData = resDb.rows.length > 0 ? resDb.rows : (resDb.command + ' completed. Rows affected: ' + resDb.rowCount);
+
     res.json({ 
       status: "success", 
       executedSql: sql,
-      result: queryResult, 
-      message 
+      duration: `${duration}ms`,
+      result: resultData,
+      message: "Запрос выполнен успешно"
     });
   } catch (err) {
     console.error("DB Error:", err);
     res.status(500).json({ 
       status: "error", 
-      message: "Ошибка выполнения запроса", 
+      message: "Ошибка выполнения SQL", 
       details: err.message 
     });
   }

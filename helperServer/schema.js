@@ -13,8 +13,8 @@ export const DB_SCHEMA = [
     `ALTER TABLE search_task_logs ADD COLUMN IF NOT EXISTS successful_groups JSONB DEFAULT '[]';`,
     `ALTER TABLE search_task_logs ADD COLUMN IF NOT EXISTS processing_stats JSONB DEFAULT '{}';`,
     `CREATE TABLE IF NOT EXISTS telegram_config (key VARCHAR(50) PRIMARY KEY, value TEXT);`,
-    // Сохраняем таблицу для теста соединения
-    `CREATE TABLE IF NOT EXISTS test_connection (
+    // Таблица для тестов (4 буквы, как просили)
+    `CREATE TABLE IF NOT EXISTS test (
         id SERIAL PRIMARY KEY,
         text VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
