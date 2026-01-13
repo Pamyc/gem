@@ -24,24 +24,48 @@ async function initializeDatabase() {
 // Подключаем API обработчики (Telegram и пр.)
 setupHandlers(app, pool);
 
-// API Роут для теста соединения
-app.get("/api/db-test", async (req, res) => {
+// API Роут для теста соединения и шаблонов SQL
+app.post("/api/db-test", async (req, res) => {
+  const { action } = req.body;
+  
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT NOW() as time");
-    const time = result.rows[0].time;
+    let queryResult;
+    let message = "";
+    let sql = "";
+
+    if (action === 'insert') {
+        const textVal = `Test entry ${new Date().toLocaleTimeString()}`;
+        sql = "INSERT INTO test_connection (text) VALUES ($1) RETURNING *";
+        const resDb = await client.query(sql, [textVal]);
+        queryResult = resDb.rows[0];
+        message = `Успешно добавлена запись (ID: ${queryResult.id})`;
+    } else if (action === 'select') {
+        sql = "SELECT * FROM test_connection ORDER BY id DESC LIMIT 5";
+        const resDb = await client.query(sql);
+        queryResult = resDb.rows;
+        message = `Получено ${queryResult.length} последних записей`;
+    } else {
+        // Default: Time check
+        sql = "SELECT NOW() as time";
+        const resDb = await client.query(sql);
+        queryResult = resDb.rows[0];
+        message = "Успешное подключение (Время сервера)";
+    }
+
     client.release();
     
     res.json({ 
       status: "success", 
-      time, 
-      message: "Успешное подключение к 192.168.0.4" 
+      executedSql: sql,
+      result: queryResult, 
+      message 
     });
   } catch (err) {
     console.error("DB Error:", err);
     res.status(500).json({ 
       status: "error", 
-      message: "Ошибка подключения к БД", 
+      message: "Ошибка выполнения запроса", 
       details: err.message 
     });
   }
