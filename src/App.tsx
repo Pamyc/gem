@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box, Share2 } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box, Share2, Server } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -13,7 +13,8 @@ import KPIPage from './pages/KPIPage';
 import FilterTestPage from './pages/FilterTestPage';
 import Example2Page from './pages/Example2Page';
 import Diagram3dPage from './pages/Diagram3dPage';
-import TestEmbedChart from './pages/TestEmbedChart'; // Import new page
+import TestEmbedChart from './pages/TestEmbedChart';
+import ConnectionTestPage from './pages/ConnectionTestPage'; // Import new page
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -72,7 +73,8 @@ const AppContent: React.FC = () => {
       { id: 'stats', label: 'Статистика', icon: BarChart3 },
       { id: 'home', label: 'Источник данных', icon: Database },
       { id: 'diagram3d', label: '3D Диаграмма', icon: Box },
-      { id: 'test-embed', label: 'Тест Embed', icon: Share2 }, // Новая вкладка
+      { id: 'test-embed', label: 'Тест Embed', icon: Share2 },
+      { id: 'db-gateway', label: 'Шлюз управления БД', icon: Server }, // New Item
       { id: 'constructor', label: 'Конструктор графиков', icon: PenTool },
       { id: 'card-constructor', label: 'Конструктор карточек', icon: Layout },
       { id: 'filter-test', label: 'Тест фильтров', icon: Filter },
@@ -90,7 +92,8 @@ const AppContent: React.FC = () => {
         item.id !== 'filter-test' &&
         item.id !== 'example2' &&
         item.id !== 'diagram3d' &&
-        item.id !== 'test-embed'
+        item.id !== 'test-embed' &&
+        item.id !== 'db-gateway'
       );
     }
 
@@ -99,7 +102,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed', 'db-gateway'];
     if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
       setActiveTab('stats');
     }
@@ -131,6 +134,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'example2' && user.username === '1' && <Example2Page isDarkMode={isDarkMode} mainColor={mainColor} />}
         {activeTab === 'diagram3d' && user.username === '1' && <Diagram3dPage isDarkMode={isDarkMode} />}
         {activeTab === 'test-embed' && user.username === '1' && <TestEmbedChart isDarkMode={isDarkMode} />}
+        {activeTab === 'db-gateway' && user.username === '1' && <ConnectionTestPage />}
         
         {activeTab === 'kpi' && <KPIPage isDarkMode={isDarkMode} />}
         
