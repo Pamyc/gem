@@ -14,7 +14,7 @@ export const googleFileLinks: Record<string, string> = {
   "dolina": "https://drive.google.com/file/d/1I5IL8BLUvR-a8qg7GzU212TxkiS3coOJ/view?usp=drive_link",
   "dvigenie": "https://drive.google.com/file/d/1OPOyhh0BkHUkxzjHoJApV2yhdu8Dr8kP/view?usp=drive_link",
   "estet": "https://drive.google.com/file/d/1lmvLQGEYphCwHowy8bxFjZrsB7WtDECr/view?usp=drive_link",
-  "fontani": "https://drive.google.com/file/d/1guNnwbE7oDUgU0EjSIYw5pDhdMLdu0Ne/view?usp=drive_link",
+  "fontani": "https://drive.google.com/file/d/1Y4I-enP8jFigg3rtiO_2L3F4AJQ-Xb_9/view?usp=sharing",
   "kvartal1777": "https://drive.google.com/file/d/1xuhl3aHG2z1Zzzz15SR1cUEWtAejWByg/view?usp=drive_link",
   "levober": "https://drive.google.com/file/d/13xUjwtjAJkAC9DaPulBc30m79tCzeGom/view?usp=drive_link",
   "luchshiy": "https://drive.google.com/file/d/1NysKGjo8qDMAAAjVcGLIFikoJR_eT9om/view?usp=drive_link",
@@ -35,6 +35,10 @@ export const googleFileLinks: Record<string, string> = {
   "sberskola": "https://drive.google.com/file/d/13GVZubxEZqB5ZWk32bKKSvRkgVK5xnH2/view?usp=drive_link",
   "tc": "https://drive.google.com/file/d/1v4j0qRDZ1ODUSDVokUoif18g8Ba6Db0E/view?usp=drive_link",
   "medicina": "https://drive.google.com/file/d/1AARlCtBIcxl1ZfIg2oHEfv64C2bpvIHj/view?usp=drive_link",
+
+  "perviy": "https://drive.google.com/file/d/1g1Ki6Bc8GCecai9OkO9XSANrPf5mB-sH/view?usp=sharing",
+  "legenda": "https://drive.google.com/file/d/14ZUUtNoMTdLR6ZZkY3Y9mQc4nYuuE3MN/view?usp=sharing",
+  "yugniy": "https://drive.google.com/file/d/1EsmccZAfp8zUqnvZAC__HycNKVcPA606/view?usp=sharing",
 
   
   // Здесь можно добавлять новые файлы:

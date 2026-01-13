@@ -37,6 +37,10 @@ const jkImageMapping = [
   { name: "Усадьба", id: "usadba" },
   { name: "Высота", id: "visota" },
   { name: "Золотой берег", id: "zolotoi" },
+  { name: "Фонтаны", id: "fontani" },
+  { name: "Южный парк", id: "yugniy" },
+  { name: "Моя легенда", id: "legenda" },
+  { name: "Первый", id: "perviy" },
 
   { name: "ФОК", id: "fok" },
   { name: "Медцентр", id: "medicina" },
