@@ -89,21 +89,21 @@ const ConnectionTestPage: React.FC = () => {
                
                {loading && (
                    <div className="text-indigo-500 animate-pulse">
-                      > Initiating connection pool...<br/>
-                      > Sending query...
+                      &gt; Initiating connection pool...<br/>
+                      &gt; Sending query...
                    </div>
                )}
 
                {error && (
                    <div className="text-red-500">
-                      > Error connecting to database:<br/>
+                      &gt; Error connecting to database:<br/>
                       <span className="block mt-2 p-2 bg-red-500/10 rounded">{error}</span>
                    </div>
                )}
 
                {result && (
                    <div className="text-gray-700 dark:text-gray-300">
-                      <div className="text-emerald-500 mb-2">> Query executed successfully in {Math.random().toFixed(3)}ms</div>
+                      <div className="text-emerald-500 mb-2">&gt; Query executed successfully in {Math.random().toFixed(3)}ms</div>
                       <pre className="text-xs md:text-sm bg-white dark:bg-black/20 p-4 rounded-xl border border-gray-200 dark:border-white/5">
                         {JSON.stringify(result, null, 2)}
                       </pre>

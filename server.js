@@ -1,8 +1,9 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import pool from "./helperServer/db.js";
-import { DB_SCHEMA } from "./helperServer/schema.js";
+import { pool } from './helperServer/db.js';
+import { setupHandlers } from './helperServer/apiHandlers.js';
+import { runWorkerCycle } from './helperServer/worker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,27 +11,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Инициализация базы данных
+app.use(express.json({ limit: '50mb' }));
+app.use(express.static(path.join(__dirname, "dist")));
+
+// Инициализация БД при запуске
 async function initializeDatabase() {
-  try {
-    const client = await pool.connect();
-    console.log("Database connected successfully.");
-    
-    for (const query of DB_SCHEMA) {
-      await client.query(query);
-    }
-    console.log("Database schema initialized.");
-    client.release();
-  } catch (err) {
-    console.warn("Database initialization warning (might be unreachable in this env):", err.message);
-  }
+    // Логика создания таблиц отключена для теста соединения
+    console.log('[Server] Database initialization skipped (Connection Test Mode)');
+    return Promise.resolve();
 }
 
-// Запускаем инициализацию при старте, но не блокируем запуск сервера
-initializeDatabase();
-
-// Раздаём статические файлы из dist (после vite build)
-app.use(express.static(path.join(__dirname, "dist")));
+// Подключаем API обработчики (Telegram и пр.)
+setupHandlers(app, pool);
 
 // API Роут для теста соединения
 app.get("/api/db-test", async (req, res) => {
@@ -55,11 +47,17 @@ app.get("/api/db-test", async (req, res) => {
   }
 });
 
+// Запуск фонового воркера
+setInterval(() => runWorkerCycle(pool), 30000);
+
 // Для всех остальных маршрутов отдаём index.html (SPA)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
+// Старт сервера
+initializeDatabase().then(() => {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
 });
