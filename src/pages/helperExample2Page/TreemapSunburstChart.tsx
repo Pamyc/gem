@@ -28,7 +28,7 @@ const TreemapSunburstChart: React.FC<TreemapSunburstChartProps> = ({
   paletteType = 'default'
 }) => {
   const [chartType, setChartType] = useState<'treemap' | 'pie'>('treemap');
-  const colors = useMemo(() => getColorPalette(paletteType), [paletteType]);
+  const colors = useMemo(() => getColorPalette(paletteType as PaletteType), [paletteType]);
 
   // Pre-process data with colors for consistency across transitions
   const processedData = useMemo(() => {

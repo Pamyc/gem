@@ -25,7 +25,7 @@ const LineChart: React.FC<LineChartProps> = ({
   paletteType = 'default'
 }) => {
 
-  const colors = useMemo(() => getColorPalette(paletteType), [paletteType]);
+  const colors = useMemo(() => getColorPalette(paletteType as PaletteType), [paletteType]);
   // Use the first color of the palette as the primary color for line/area
   const primaryColor = colors[0] || '#8b5cf6';
 

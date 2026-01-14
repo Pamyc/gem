@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 export type ComparisonCategory = 'client' | 'city' | 'jk' | 'liter' | 'year' | 'status' | 'region';
 

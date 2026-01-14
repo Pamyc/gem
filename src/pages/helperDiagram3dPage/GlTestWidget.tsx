@@ -14,10 +14,7 @@ interface State {
 
 // 1. Error Boundary Component to catch WebGL/Library failures
 class GlErrorBoundary extends Component<{ children: ReactNode, isDarkMode: boolean }, State> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, errorInfo: '' };
-  }
+  public state: State = { hasError: false, errorInfo: '' };
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, errorInfo: error.message };

@@ -27,7 +27,7 @@ const PieDonutChart: React.FC<PieDonutChartProps> = ({
   paletteType = 'default'
 }) => {
 
-  const colors = useMemo(() => getColorPalette(paletteType), [paletteType]);
+  const colors = useMemo(() => getColorPalette(paletteType as PaletteType), [paletteType]);
 
   const processedData = useMemo(() => {
     return data.map((item, index) => ({

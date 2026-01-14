@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive } from 'lucide-react';
+import { executeDbQuery, DbConfig } from '../utils/dbGatewayApi';
 
 const ConnectionTestPage: React.FC = () => {
   const [result, setResult] = useState<any>(null);
@@ -7,7 +8,7 @@ const ConnectionTestPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Состояние для параметров подключения
-  const [dbConfig, setDbConfig] = useState({
+  const [dbConfig, setDbConfig] = useState<DbConfig>({
     host: '192.168.0.4',
     port: '5432',
     database: 'default_db',
@@ -18,7 +19,7 @@ const ConnectionTestPage: React.FC = () => {
   // Дефолтный запрос
   const [sqlQuery, setSqlQuery] = useState<string>("SELECT * FROM test ORDER BY id DESC LIMIT 5;");
 
-  const handleConfigChange = (field: string, value: string) => {
+  const handleConfigChange = (field: keyof DbConfig, value: string) => {
     setDbConfig(prev => ({ ...prev, [field]: value }));
   };
 
@@ -28,26 +29,11 @@ const ConnectionTestPage: React.FC = () => {
     setResult(null);
 
     try {
-      const response = await fetch('/api/db-test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-            sql: sqlQuery,
-            config: dbConfig // Отправляем параметры подключения
-        }),
-      });
-      
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.details || data.message || 'Server error');
-      }
-
+      // Используем отдельный модуль API для запроса
+      const data = await executeDbQuery(sqlQuery, dbConfig);
       setResult(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -82,7 +68,7 @@ const ConnectionTestPage: React.FC = () => {
           Шлюз управления БД
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Прямое управление базой данных PostgreSQL. Параметры подключения можно изменять.
+          Прямое управление базой данных PostgreSQL через API шлюз. 
         </p>
       </div>
 
@@ -90,7 +76,7 @@ const ConnectionTestPage: React.FC = () => {
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#1e2433]/50 flex items-center gap-2">
               <Shield size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Параметры подключения</h3>
+              <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Параметры подключения (Gateway Config)</h3>
           </div>
           
           <div className="p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -107,7 +93,7 @@ const ConnectionTestPage: React.FC = () => {
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Port</span>
                   <input 
                     type="text" 
-                    value={dbConfig.port}
+                    value={String(dbConfig.port)}
                     onChange={(e) => handleConfigChange('port', e.target.value)}
                     className={`${inputClass} text-indigo-500`}
                   />
@@ -217,9 +203,9 @@ const ConnectionTestPage: React.FC = () => {
                
                {loading && (
                    <div className="text-indigo-500 animate-pulse space-y-1">
-                      <div>&gt; Connecting to {dbConfig.host}:{dbConfig.port}...</div>
-                      <div>&gt; Authenticating as {dbConfig.user}...</div>
-                      <div>&gt; Executing Query...</div>
+                      <div>&gt; Initiating Gateway Request...</div>
+                      <div>&gt; Target: {dbConfig.host}:{dbConfig.port}</div>
+                      <div>&gt; Executing...</div>
                    </div>
                )}
 
