@@ -99,6 +99,9 @@ const SchemaSection: React.FC<SchemaSectionProps> = ({
         <div className="flex items-center gap-3 font-bold text-gray-700 dark:text-gray-200">
             <Columns size={18} className="text-indigo-500" />
             Структура таблицы
+            <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs rounded-full">
+              {schema.length}
+            </span>
         </div>
         <div className="text-gray-400">
             {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
@@ -111,31 +114,34 @@ const SchemaSection: React.FC<SchemaSectionProps> = ({
               <div className="py-8 flex justify-center text-indigo-500"><Loader2 className="animate-spin" /></div>
             ) : (
               <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {schema.map(col => (
-                        <div key={col.column_name} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0b0f19] group hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors">
-                          <div className="min-w-0 flex-1 mr-2">
-                              <div className="flex items-center gap-2">
-                                <EditableColumnName 
-                                  name={col.column_name} 
-                                  onRename={(newName) => onRenameColumn(col.column_name, newName)} 
-                                />
-                                {col.column_default?.includes('nextval') && <Key size={12} className="text-yellow-500 shrink-0" />}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex gap-2">
-                                <span className="font-mono text-indigo-500">{col.data_type}</span>
-                                {col.is_nullable === 'NO' && <span className="text-red-400">NOT NULL</span>}
-                              </div>
-                          </div>
-                          <button 
-                              onClick={() => onDeleteColumn(col.column_name)}
-                              className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                              title="Удалить колонку"
-                          >
-                              <Trash2 size={14} />
-                          </button>
-                        </div>
-                    ))}
+                  {/* Ограничиваем высоту и добавляем скролл */}
+                  <div className="max-h-[300px] overflow-y-auto hover-scrollbar pr-2 -mr-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {schema.map(col => (
+                            <div key={col.column_name} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0b0f19] group hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors">
+                            <div className="min-w-0 flex-1 mr-2">
+                                <div className="flex items-center gap-2">
+                                    <EditableColumnName 
+                                    name={col.column_name} 
+                                    onRename={(newName) => onRenameColumn(col.column_name, newName)} 
+                                    />
+                                    {col.column_default?.includes('nextval') && <Key size={12} className="text-yellow-500 shrink-0" />}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex gap-2">
+                                    <span className="font-mono text-indigo-500">{col.data_type}</span>
+                                    {col.is_nullable === 'NO' && <span className="text-red-400">NOT NULL</span>}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => onDeleteColumn(col.column_name)}
+                                className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                title="Удалить колонку"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                            </div>
+                        ))}
+                    </div>
                   </div>
                   
                   {/* Add Column Form */}

@@ -119,9 +119,6 @@ const CrudPage: React.FC = () => {
                     <div className="flex justify-between items-center shrink-0">
                        <h3 className="text-2xl font-black text-gray-800 dark:text-white flex items-center gap-3">
                           {activeTable}
-                          <span className="text-sm font-normal text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-lg">
-                             {totalRows} строк
-                          </span>
                        </h3>
                        <div className="flex gap-2">
                           <button 

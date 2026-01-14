@@ -14,7 +14,7 @@ interface DataSectionProps {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   pageSize: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
-  onDeleteRow: (id: any) => void;
+  onDeleteRow: (id: any, pkName?: string) => void;
   onAddRowClick: () => void;
   onUpdateCell?: (rowId: any, colName: string, value: string) => void;
 }
@@ -117,6 +117,10 @@ const DataSection: React.FC<DataSectionProps> = ({
     return '?';
   };
 
+  // Determine Primary Key Column (Heuristic: 'id' > first column)
+  const pkCol = schema.find(c => c.column_name === 'id') || schema[0];
+  const pkName = pkCol?.column_name || 'id';
+
   return (
     <div className="flex-1 flex flex-col border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden min-h-0">
         <button 
@@ -126,6 +130,9 @@ const DataSection: React.FC<DataSectionProps> = ({
           <div className="flex items-center gap-3 font-bold text-gray-700 dark:text-gray-200">
               <List size={18} className="text-emerald-500" />
               Данные таблицы
+              <span className="ml-2 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-full">
+                {totalRows}
+              </span>
           </div>
           <div className="text-gray-400">
               {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
@@ -203,7 +210,11 @@ const DataSection: React.FC<DataSectionProps> = ({
                           {rows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-indigo-50/50 dark:hover:bg-white/5 transition-colors group">
                                 {schema.map(col => {
+                                  // For Update: assuming id is primary, or fallback to first column
+                                  // NOTE: Updating requires a reliable PK. Currently hardcoded to 'id' in api.ts
+                                  // We should eventually make updateCell dynamic too, but for deletion it's critical now.
                                   const isIdCol = col.column_name === 'id';
+                                  
                                   return (
                                     <td key={col.column_name} className={`px-4 py-2 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-nowrap border-r border-transparent last:border-0 ${isIdCol ? 'w-[60px] max-w-[60px]' : 'max-w-[200px]'}`}>
                                         <EditableCell 
@@ -211,17 +222,18 @@ const DataSection: React.FC<DataSectionProps> = ({
                                           colName={col.column_name} 
                                           value={row[col.column_name]}
                                           onUpdate={(id, col, val) => onUpdateCell && onUpdateCell(id, col, val)}
-                                          isEditable={!isIdCol && !!row.id && !!onUpdateCell} // Can't edit ID or if no handler
+                                          isEditable={!isIdCol && !!row.id && !!onUpdateCell} 
                                         />
                                     </td>
                                   );
                                 })}
                                 <td className="px-2 py-2 text-right sticky right-0 bg-white dark:bg-[#151923] group-hover:bg-indigo-50/50 dark:group-hover:bg-[#151923] transition-colors border-l border-transparent dark:border-white/5">
-                                  {row.id && (
+                                  {/* Delete Button - Using Dynamic PK Logic */}
+                                  {row[pkName] !== undefined && (
                                       <button 
-                                        onClick={() => onDeleteRow(row.id)}
+                                        onClick={() => onDeleteRow(row[pkName], pkName)}
                                         className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-all"
-                                        title="Удалить строку"
+                                        title={`Удалить строку (${pkName}: ${row[pkName]})`}
                                       >
                                         <Trash2 size={14} />
                                       </button>

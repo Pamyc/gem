@@ -252,11 +252,11 @@ export const useCrudLogic = () => {
     }
   };
 
-  const handleDeleteRow = async (rowId: any) => {
-    if (!activeTable || !rowId || !confirm(`Удалить строку с ID ${rowId}?`)) return;
+  const handleDeleteRow = async (rowId: any, pkName: string = 'id') => {
+    if (!activeTable || !rowId || !confirm(`Удалить строку? (${pkName} = ${rowId})`)) return;
     setActionLoading(true);
     try {
-      const res = await API.deleteRow(selectedDb, activeTable, rowId);
+      const res = await API.deleteRow(selectedDb, activeTable, rowId, pkName);
       if (res.ok) {
         fetchTableData(activeTable, page, pageSize);
         setTotalRows(prev => Math.max(0, prev - 1));

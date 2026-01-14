@@ -82,12 +82,16 @@ export const insertRow = async (dbName: string, tableName: string, data: Record<
 export const updateCell = async (dbName: string, tableName: string, rowId: any, colName: string, value: string) => {
   // Экранирование одинарных кавычек
   const safeValue = value.replace(/'/g, "''");
-  const sql = `UPDATE "${tableName}" SET "${colName}" = '${safeValue}' WHERE id = '${rowId}';`;
+  // В идеале тоже нужно принимать pkName для WHERE, но пока предположим id, 
+  // если будет проблема с редактированием meta_dictionary - поправим.
+  // Для простоты пока оставим id, так как редактирование ячеек словаря редкость, а удаление - частое.
+  const sql = `UPDATE "${tableName}" SET "${colName}" = '${safeValue}' WHERE id = '${rowId}';`; 
   return await executeDbQuery(sql, getConfig(dbName));
 };
 
-export const deleteRow = async (dbName: string, tableName: string, rowId: any) => {
-  const sql = `DELETE FROM "${tableName}" WHERE id = '${rowId}';`;
+export const deleteRow = async (dbName: string, tableName: string, rowId: any, pkName: string = 'id') => {
+  // Используем переданное имя колонки или 'id' по умолчанию
+  const sql = `DELETE FROM "${tableName}" WHERE "${pkName}" = '${rowId}';`;
   return await executeDbQuery(sql, getConfig(dbName));
 };
 
