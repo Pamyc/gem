@@ -1,11 +1,15 @@
+
 import React, { useState, useMemo } from 'react';
 import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive, Link as LinkIcon, Copy, ExternalLink } from 'lucide-react';
-import { executeDbQuery, DbConfig } from '../utils/dbGatewayApi';
+import { executeDbQuery, DbConfig, isInternalNetwork } from '../utils/dbGatewayApi';
 
 const ConnectionTestPage: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Проверка окружения для UI
+  const isInternal = isInternalNetwork();
   
   // Состояние для параметров подключения
   const [dbConfig, setDbConfig] = useState<DbConfig>({
@@ -29,7 +33,7 @@ const ConnectionTestPage: React.FC = () => {
     setResult(null);
 
     try {
-      // Используем новый GAS Gateway
+      // Используем умный executeDbQuery (сам выберет маршрут)
       const data = await executeDbQuery(sqlQuery, dbConfig);
       setResult(data);
     } catch (err: any) {
@@ -76,7 +80,7 @@ const ConnectionTestPage: React.FC = () => {
           Шлюз Google Apps Script
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Запросы выполняются через прокси Google. База данных должна быть доступна из интернета (публичный IP).
+          Запросы выполняются {isInternal ? 'напрямую через backend сайта (Local Network)' : 'через прокси Google (Apps Script)'}. База данных должна быть доступна.
         </p>
       </div>
 
@@ -204,10 +208,10 @@ const ConnectionTestPage: React.FC = () => {
             <button
                 onClick={runQuery}
                 disabled={loading}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                className={`px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 ${isInternal ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/30' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30'}`}
             >
                 {loading ? <Activity className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />}
-                Выполнить через Apps Script
+                {isInternal ? 'Выполнить на сайте' : 'Выполнить через Apps Script'}
             </button>
         </div>
       </div>
@@ -238,8 +242,17 @@ const ConnectionTestPage: React.FC = () => {
                
                {loading && (
                    <div className="text-indigo-500 animate-pulse space-y-1">
-                      <div>&gt; Connecting to Google Apps Script...</div>
-                      <div>&gt; Proxying to {dbConfig.host}...</div>
+                      {isInternal ? (
+                          <>
+                            <div>&gt; Connecting to Local Backend (/api/db-test)...</div>
+                            <div>&gt; Direct Database Connection...</div>
+                          </>
+                      ) : (
+                          <>
+                            <div>&gt; Connecting to Google Apps Script...</div>
+                            <div>&gt; Proxying to {dbConfig.host}...</div>
+                          </>
+                      )}
                       <div>&gt; Executing...</div>
                    </div>
                )}
