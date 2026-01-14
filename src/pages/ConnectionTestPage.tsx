@@ -29,7 +29,7 @@ const ConnectionTestPage: React.FC = () => {
     setResult(null);
 
     try {
-      // Используем POST для надежности внутри приложения
+      // Используем новый GAS Gateway
       const data = await executeDbQuery(sqlQuery, dbConfig);
       setResult(data);
     } catch (err: any) {
@@ -39,25 +39,12 @@ const ConnectionTestPage: React.FC = () => {
     }
   };
 
-  // Генерация ссылки для внешнего доступа (GET)
-  const generatedLink = useMemo(() => {
-      const baseUrl = window.location.origin + '/api/db-test';
-      const params = new URLSearchParams();
-      params.append('sql', sqlQuery);
-      
-      // Добавляем параметры подключения только если они заполнены
-      if (dbConfig.host) params.append('host', dbConfig.host);
-      if (dbConfig.port) params.append('port', String(dbConfig.port));
-      if (dbConfig.database) params.append('database', dbConfig.database);
-      if (dbConfig.user) params.append('user', dbConfig.user);
-      if (dbConfig.password) params.append('password', dbConfig.password);
-      
-      return `${baseUrl}?${params.toString()}`;
-  }, [sqlQuery, dbConfig]);
+  // Ссылка на скрипт для отображения
+  const generatedLink = 'https://script.google.com/macros/s/AKfycbzCjczxYLar98d1mjJfEKHt2BbDcqLWgra6AUPkEe_AZ_mVUVKqk7F5sdzxCLVHWqQk/exec';
 
   const copyLink = () => {
       navigator.clipboard.writeText(generatedLink);
-      alert('Ссылка скопирована! Вы можете открыть её в браузере или использовать в Postman.');
+      alert('Ссылка скопирована!');
   };
 
   const applyTemplate = (type: 'check' | 'insert' | 'select' | 'create') => {
@@ -66,7 +53,7 @@ const ConnectionTestPage: React.FC = () => {
               setSqlQuery("SELECT NOW() as server_time, version();");
               break;
           case 'insert':
-              setSqlQuery(`INSERT INTO test (text) VALUES ('Test entry ${new Date().toLocaleTimeString()}') RETURNING *;`);
+              setSqlQuery(`INSERT INTO test (text) VALUES ('Test entry ${new Date().toLocaleTimeString()}')`);
               break;
           case 'select':
               setSqlQuery("SELECT * FROM test ORDER BY id DESC LIMIT 10;");
@@ -86,10 +73,10 @@ const ConnectionTestPage: React.FC = () => {
       <div className="flex flex-col gap-2 mb-4">
         <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
           <Server className="text-indigo-500" size={32} />
-          Шлюз управления БД
+          Шлюз Google Apps Script
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Универсальный API шлюз. Выполняйте SQL через интерфейс (POST) или используйте сгенерированную ссылку (GET).
+          Запросы выполняются через прокси Google. База данных должна быть доступна из интернета (публичный IP).
         </p>
       </div>
 
@@ -97,7 +84,7 @@ const ConnectionTestPage: React.FC = () => {
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#1e2433]/50 flex items-center gap-2">
               <Shield size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Параметры подключения (Gateway Config)</h3>
+              <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Параметры подключения (Config)</h3>
           </div>
           
           <div className="p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -188,7 +175,7 @@ const ConnectionTestPage: React.FC = () => {
         <div className="p-4 bg-gray-50 dark:bg-[#0b0f19] rounded-xl border border-gray-200 dark:border-white/10 flex flex-col gap-2">
             <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-                    <LinkIcon size={12} /> Внешняя ссылка (GET)
+                    <LinkIcon size={12} /> GAS Endpoint (POST Only)
                 </span>
                 <div className="flex gap-2">
                     <a 
@@ -220,7 +207,7 @@ const ConnectionTestPage: React.FC = () => {
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
             >
                 {loading ? <Activity className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />}
-                Выполнить (POST)
+                Выполнить через Apps Script
             </button>
         </div>
       </div>
@@ -233,9 +220,8 @@ const ConnectionTestPage: React.FC = () => {
                 </span>
                 {result && (
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-400 font-mono">Time: {result._meta?.duration_ms}ms</span>
                         <span className="text-xs font-bold text-emerald-500 flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-1 rounded">
-                            <CheckCircle2 size={12}/> {result.ok ? 'Success' : 'Error'}
+                            <CheckCircle2 size={12}/> Success
                         </span>
                     </div>
                 )}
@@ -252,8 +238,8 @@ const ConnectionTestPage: React.FC = () => {
                
                {loading && (
                    <div className="text-indigo-500 animate-pulse space-y-1">
-                      <div>&gt; Initiating Gateway Request...</div>
-                      <div>&gt; Target: {dbConfig.host}:{dbConfig.port}</div>
+                      <div>&gt; Connecting to Google Apps Script...</div>
+                      <div>&gt; Proxying to {dbConfig.host}...</div>
                       <div>&gt; Executing...</div>
                    </div>
                )}
