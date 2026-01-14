@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive, Link as LinkIcon, Copy, ExternalLink } from 'lucide-react';
 import { executeDbQuery, DbConfig } from '../utils/dbGatewayApi';
 
 const ConnectionTestPage: React.FC = () => {
@@ -29,7 +29,7 @@ const ConnectionTestPage: React.FC = () => {
     setResult(null);
 
     try {
-      // Используем отдельный модуль API для запроса
+      // Используем POST для надежности внутри приложения
       const data = await executeDbQuery(sqlQuery, dbConfig);
       setResult(data);
     } catch (err: any) {
@@ -37,6 +37,27 @@ const ConnectionTestPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Генерация ссылки для внешнего доступа (GET)
+  const generatedLink = useMemo(() => {
+      const baseUrl = window.location.origin + '/api/db-test';
+      const params = new URLSearchParams();
+      params.append('sql', sqlQuery);
+      
+      // Добавляем параметры подключения только если они заполнены
+      if (dbConfig.host) params.append('host', dbConfig.host);
+      if (dbConfig.port) params.append('port', String(dbConfig.port));
+      if (dbConfig.database) params.append('database', dbConfig.database);
+      if (dbConfig.user) params.append('user', dbConfig.user);
+      if (dbConfig.password) params.append('password', dbConfig.password);
+      
+      return `${baseUrl}?${params.toString()}`;
+  }, [sqlQuery, dbConfig]);
+
+  const copyLink = () => {
+      navigator.clipboard.writeText(generatedLink);
+      alert('Ссылка скопирована! Вы можете открыть её в браузере или использовать в Postman.');
   };
 
   const applyTemplate = (type: 'check' | 'insert' | 'select' | 'create') => {
@@ -68,7 +89,7 @@ const ConnectionTestPage: React.FC = () => {
           Шлюз управления БД
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Прямое управление базой данных PostgreSQL через API шлюз. 
+          Универсальный API шлюз. Выполняйте SQL через интерфейс (POST) или используйте сгенерированную ссылку (GET).
         </p>
       </div>
 
@@ -163,6 +184,34 @@ const ConnectionTestPage: React.FC = () => {
             />
         </div>
 
+        {/* Link Generator */}
+        <div className="p-4 bg-gray-50 dark:bg-[#0b0f19] rounded-xl border border-gray-200 dark:border-white/10 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                    <LinkIcon size={12} /> Внешняя ссылка (GET)
+                </span>
+                <div className="flex gap-2">
+                    <a 
+                        href={generatedLink} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-[10px] bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2 py-1 rounded hover:text-indigo-500 flex items-center gap-1 transition-colors"
+                    >
+                        <ExternalLink size={10} /> Открыть
+                    </a>
+                    <button 
+                        onClick={copyLink}
+                        className="text-[10px] bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2 py-1 rounded hover:text-indigo-500 flex items-center gap-1 transition-colors"
+                    >
+                        <Copy size={10} /> Копировать
+                    </button>
+                </div>
+            </div>
+            <code className="text-[10px] text-gray-500 dark:text-gray-400 font-mono break-all bg-white dark:bg-black/20 p-2 rounded border border-dashed border-gray-200 dark:border-white/10 select-all">
+                {generatedLink}
+            </code>
+        </div>
+
         {/* Action Bar */}
         <div className="flex justify-end">
             <button
@@ -171,7 +220,7 @@ const ConnectionTestPage: React.FC = () => {
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
             >
                 {loading ? <Activity className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />}
-                Выполнить запрос
+                Выполнить (POST)
             </button>
         </div>
       </div>
@@ -184,9 +233,9 @@ const ConnectionTestPage: React.FC = () => {
                 </span>
                 {result && (
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-400 font-mono">Time: {result.duration}</span>
+                        <span className="text-xs text-gray-400 font-mono">Time: {result._meta?.duration_ms}ms</span>
                         <span className="text-xs font-bold text-emerald-500 flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-1 rounded">
-                            <CheckCircle2 size={12}/> Success
+                            <CheckCircle2 size={12}/> {result.ok ? 'Success' : 'Error'}
                         </span>
                     </div>
                 )}
@@ -218,15 +267,11 @@ const ConnectionTestPage: React.FC = () => {
 
                {result && (
                    <div className="text-gray-700 dark:text-gray-300 space-y-4">
-                      {typeof result.result === 'string' ? (
-                          <div className="text-emerald-500 font-bold">{result.result}</div>
-                      ) : (
-                          <div className="overflow-x-auto">
-                            <pre className="text-xs md:text-sm whitespace-pre-wrap text-emerald-600 dark:text-emerald-400">
-                              {JSON.stringify(result.result, null, 2)}
-                            </pre>
-                          </div>
-                      )}
+                      <div className="overflow-x-auto">
+                        <pre className="text-xs md:text-sm whitespace-pre-wrap text-emerald-600 dark:text-emerald-400">
+                          {JSON.stringify(result, null, 2)}
+                        </pre>
+                      </div>
                    </div>
                )}
             </div>

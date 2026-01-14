@@ -24,8 +24,10 @@ async function initializeDatabase() {
 // Подключаем API обработчики
 setupHandlers(app, pool);
 
-// API Роут для выполнения произвольного SQL через шлюз
-// Логика вынесена в helperServer/dbGatewayController.js
+// --- DB API GATEWAY ---
+// Поддержка GET для ссылок (как в AmoCRM /api/v4/leads)
+app.get("/api/db-test", handleDbRequest);
+// Поддержка POST для сложных запросов и UI
 app.post("/api/db-test", handleDbRequest);
 
 // Запуск фонового воркера
