@@ -1,4 +1,4 @@
-import React, { ErrorInfo, ReactNode, useEffect, useState } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { Box, AlertTriangle, Loader2 } from 'lucide-react';
 import EChartComponent from './EChartComponent';
 
@@ -17,8 +17,8 @@ interface ErrorBoundaryProps {
 }
 
 // 1. Error Boundary Component to catch WebGL/Library failures
-class GlErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
-  state: State = { hasError: false, errorInfo: '' };
+class GlErrorBoundary extends Component<ErrorBoundaryProps, State> {
+  public state: State = { hasError: false, errorInfo: '' };
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, errorInfo: error.message };

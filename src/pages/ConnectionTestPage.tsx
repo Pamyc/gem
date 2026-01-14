@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive, Link as LinkIcon, Copy, ExternalLink } from 'lucide-react';
+import { Server, Activity, AlertTriangle, CheckCircle2, Play, Database, List, Clock, Terminal, Key, Shield, HardDrive, Link as LinkIcon, Copy, ExternalLink, Lock } from 'lucide-react';
 import { executeDbQuery, DbConfig, isInternalNetwork } from '../utils/dbGatewayApi';
 
 const ConnectionTestPage: React.FC = () => {
@@ -68,7 +68,7 @@ const ConnectionTestPage: React.FC = () => {
       }
   };
 
-  const inputClass = "w-full bg-transparent font-mono font-bold text-gray-800 dark:text-white outline-none border-b border-transparent focus:border-indigo-500 transition-colors text-sm py-1";
+  const inputClass = "w-full bg-transparent font-mono font-bold text-gray-800 dark:text-white outline-none border-b border-transparent focus:border-indigo-500 transition-colors text-sm py-1 disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="w-full max-w-[900px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -80,12 +80,22 @@ const ConnectionTestPage: React.FC = () => {
           Шлюз Google Apps Script
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
-          Запросы выполняются {isInternal ? 'напрямую через backend сайта (Local Network)' : 'через прокси Google (Apps Script)'}. База данных должна быть доступна.
+          Запросы выполняются {isInternal ? 'напрямую через backend сайта (Local Network)' : 'через прокси Google (Apps Script)'}.
         </p>
       </div>
 
-      {/* 1. Credentials Panel (Editable) */}
-      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
+      {/* 1. Credentials Panel (Editable only if Internal) */}
+      <div className={`bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden relative ${!isInternal ? 'opacity-80' : ''}`}>
+          {/* Overlay for External Mode */}
+          {!isInternal && (
+             <div className="absolute inset-0 z-10 bg-gray-50/50 dark:bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
+                 <div className="bg-white dark:bg-[#1e293b] px-4 py-2 rounded-xl shadow-lg border border-gray-200 dark:border-white/10 flex items-center gap-2">
+                    <Lock size={16} className="text-indigo-500" />
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Настройки управляются сервером (Безопасный режим)</span>
+                 </div>
+             </div>
+          )}
+
           <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#1e2433]/50 flex items-center gap-2">
               <Shield size={16} className="text-indigo-500" />
               <h3 className="text-sm font-bold uppercase text-gray-500 tracking-wider">Параметры подключения (Config)</h3>
@@ -99,6 +109,7 @@ const ConnectionTestPage: React.FC = () => {
                     value={dbConfig.host}
                     onChange={(e) => handleConfigChange('host', e.target.value)}
                     className={inputClass}
+                    disabled={!isInternal}
                   />
               </div>
               <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-indigo-500/20 transition-all">
@@ -108,6 +119,7 @@ const ConnectionTestPage: React.FC = () => {
                     value={String(dbConfig.port)}
                     onChange={(e) => handleConfigChange('port', e.target.value)}
                     className={`${inputClass} text-indigo-500`}
+                    disabled={!isInternal}
                   />
               </div>
               <div className="flex flex-col p-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 focus-within:ring-2 ring-emerald-500/20 transition-all">
@@ -119,6 +131,7 @@ const ConnectionTestPage: React.FC = () => {
                         value={dbConfig.database}
                         onChange={(e) => handleConfigChange('database', e.target.value)}
                         className={inputClass}
+                        disabled={!isInternal}
                       />
                   </div>
               </div>
@@ -129,6 +142,7 @@ const ConnectionTestPage: React.FC = () => {
                     value={dbConfig.user}
                     onChange={(e) => handleConfigChange('user', e.target.value)}
                     className={inputClass}
+                    disabled={!isInternal}
                   />
               </div>
               <div className="flex flex-col p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-500/20 group relative focus-within:ring-2 ring-red-500/20 transition-all">
@@ -138,6 +152,7 @@ const ConnectionTestPage: React.FC = () => {
                     value={dbConfig.password}
                     onChange={(e) => handleConfigChange('password', e.target.value)}
                     className={`${inputClass} text-red-600 dark:text-red-400`}
+                    disabled={!isInternal}
                   />
               </div>
           </div>
@@ -250,7 +265,7 @@ const ConnectionTestPage: React.FC = () => {
                       ) : (
                           <>
                             <div>&gt; Connecting to Google Apps Script...</div>
-                            <div>&gt; Proxying to {dbConfig.host}...</div>
+                            <div>&gt; Proxying (Server Credentials)...</div>
                           </>
                       )}
                       <div>&gt; Executing...</div>

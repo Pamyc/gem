@@ -35,13 +35,18 @@ export const isInternalNetwork = (): boolean => {
  */
 export const executeDbQuery = async (sql: string, config?: DbConfig): Promise<any> => {
   try {
+    const isInternal = isInternalNetwork();
+    const url = isInternal ? '/api/db-test' : GAS_URL;
+
     // 1. Маппинг конфигурации под формат Node.js сервера (pg)
-    // GAS просто перешлет этот объект
-    const pgConfig = config ? {
+    // ВАЖНО: Если мы используем внешний шлюз (GAS), мы НЕ отправляем конфиг с клиента.
+    // Сервер (backend) должен использовать свои внутренние настройки (pool) по умолчанию.
+    // Конфиг отправляется ТОЛЬКО если мы находимся во внутренней сети для отладки.
+    const pgConfig = (isInternal && config) ? {
         host: config.host,
         port: config.port,
-        database: config.database, // Node.js (pg) ждет 'database', не 'dbName'
-        user: config.user,         // Node.js (pg) ждет 'user'
+        database: config.database,
+        user: config.user,
         password: config.password,
         ssl: config.ssl
     } : {};
@@ -53,10 +58,6 @@ export const executeDbQuery = async (sql: string, config?: DbConfig): Promise<an
         config: pgConfig
     };
 
-    // 3. Выбор транспорта (Прямой или GAS)
-    const isInternal = isInternalNetwork();
-    const url = isInternal ? '/api/db-test' : GAS_URL;
-    
     const fetchOptions: RequestInit = {
       method: 'POST',
       body: JSON.stringify(payload)
