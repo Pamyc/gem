@@ -63,6 +63,11 @@ export const dropColumn = async (dbName: string, tableName: string, colName: str
   return await executeDbQuery(sql, getConfig(dbName));
 };
 
+export const renameColumn = async (dbName: string, tableName: string, oldName: string, newName: string) => {
+  const sql = `ALTER TABLE "${tableName}" RENAME COLUMN "${oldName}" TO "${newName}";`;
+  return await executeDbQuery(sql, getConfig(dbName));
+};
+
 export const insertRow = async (dbName: string, tableName: string, data: Record<string, any>) => {
   const entries = Object.entries(data).filter(([_, v]) => v !== undefined && v !== '');
   if (entries.length === 0) throw new Error("Нет данных для добавления");
@@ -74,7 +79,53 @@ export const insertRow = async (dbName: string, tableName: string, data: Record<
   return await executeDbQuery(sql, getConfig(dbName));
 };
 
+export const updateCell = async (dbName: string, tableName: string, rowId: any, colName: string, value: string) => {
+  // Экранирование одинарных кавычек
+  const safeValue = value.replace(/'/g, "''");
+  const sql = `UPDATE "${tableName}" SET "${colName}" = '${safeValue}' WHERE id = '${rowId}';`;
+  return await executeDbQuery(sql, getConfig(dbName));
+};
+
 export const deleteRow = async (dbName: string, tableName: string, rowId: any) => {
   const sql = `DELETE FROM "${tableName}" WHERE id = '${rowId}';`;
   return await executeDbQuery(sql, getConfig(dbName));
+};
+
+// --- UI SETTINGS STORAGE ---
+
+export const initSettingsTable = async (dbName: string) => {
+  const sql = `CREATE TABLE IF NOT EXISTS ui_settings (
+    setting_key VARCHAR(255) PRIMARY KEY,
+    setting_value TEXT
+  );`;
+  return await executeDbQuery(sql, getConfig(dbName));
+};
+
+export const saveTableOrder = async (dbName: string, order: string[]) => {
+  // Ensure table exists first (lazy check)
+  await initSettingsTable(dbName);
+  
+  const key = 'table_order';
+  const value = JSON.stringify(order).replace(/'/g, "''"); // Escape for SQL
+  
+  const sql = `
+    INSERT INTO ui_settings (setting_key, setting_value) 
+    VALUES ('${key}', '${value}') 
+    ON CONFLICT (setting_key) 
+    DO UPDATE SET setting_value = EXCLUDED.setting_value;
+  `;
+  return await executeDbQuery(sql, getConfig(dbName));
+};
+
+export const getTableOrder = async (dbName: string): Promise<string[]> => {
+  try {
+    const sql = `SELECT setting_value FROM ui_settings WHERE setting_key = 'table_order';`;
+    const res = await executeDbQuery(sql, getConfig(dbName));
+    if (res.ok && res.data && res.data.length > 0) {
+      return JSON.parse(res.data[0].setting_value);
+    }
+  } catch (e) {
+    // Table likely doesn't exist yet, ignore error
+  }
+  return [];
 };

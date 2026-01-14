@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { List, ChevronDown, ChevronRight, Plus, Loader2, ArrowLeft, ArrowRight, Trash2 } from 'lucide-react';
 import { ExistingColumn, PAGE_SIZES } from './types';
 
@@ -16,7 +16,82 @@ interface DataSectionProps {
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   onDeleteRow: (id: any) => void;
   onAddRowClick: () => void;
+  onUpdateCell?: (rowId: any, colName: string, value: string) => void;
 }
+
+const EditableCell: React.FC<{
+  rowId: any;
+  colName: string;
+  value: any;
+  onUpdate: (rowId: any, colName: string, newValue: string) => void;
+  isEditable: boolean;
+}> = ({ rowId, colName, value, onUpdate, isEditable }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(String(value ?? ''));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync temp value if prop changes from outside (e.g. refresh)
+  useEffect(() => {
+    setTempValue(String(value ?? ''));
+  }, [value]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const handleDoubleClick = () => {
+    if (!isEditable) return;
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    finishEditing();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') finishEditing();
+    if (e.key === 'Escape') {
+      setTempValue(String(value ?? ''));
+      setIsEditing(false);
+    }
+  };
+
+  const finishEditing = () => {
+    setIsEditing(false);
+    const originalStr = String(value ?? '');
+    if (tempValue !== originalStr) {
+      onUpdate(rowId, colName, tempValue);
+    }
+  };
+
+  const displayVal = value === null ? <span className="text-gray-300 italic">NULL</span> : String(value);
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={tempValue}
+        onChange={(e) => setTempValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className="w-full bg-white dark:bg-black/20 outline-none border border-indigo-500 rounded px-1 -mx-1 h-full text-xs"
+      />
+    );
+  }
+
+  return (
+    <div 
+      onDoubleClick={handleDoubleClick} 
+      className={`w-full h-full truncate cursor-text ${isEditable ? 'hover:text-indigo-600 dark:hover:text-indigo-400' : ''}`}
+      title={isEditable ? "Дважды кликните для редактирования" : ""}
+    >
+      {displayVal}
+    </div>
+  );
+};
 
 const DataSection: React.FC<DataSectionProps> = ({
   isOpen,
@@ -30,7 +105,8 @@ const DataSection: React.FC<DataSectionProps> = ({
   pageSize,
   setPageSize,
   onDeleteRow,
-  onAddRowClick
+  onAddRowClick,
+  onUpdateCell
 }) => {
 
   const getColIcon = (type: string) => {
@@ -126,11 +202,20 @@ const DataSection: React.FC<DataSectionProps> = ({
                       <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                           {rows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-indigo-50/50 dark:hover:bg-white/5 transition-colors group">
-                                {schema.map(col => (
-                                  <td key={col.column_name} className={`px-4 py-2 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-nowrap truncate border-r border-transparent last:border-0 ${col.column_name === 'id' ? 'w-[60px] max-w-[60px]' : 'max-w-[200px]'}`}>
-                                      {row[col.column_name] === null ? <span className="text-gray-300 italic">NULL</span> : String(row[col.column_name])}
-                                  </td>
-                                ))}
+                                {schema.map(col => {
+                                  const isIdCol = col.column_name === 'id';
+                                  return (
+                                    <td key={col.column_name} className={`px-4 py-2 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-nowrap border-r border-transparent last:border-0 ${isIdCol ? 'w-[60px] max-w-[60px]' : 'max-w-[200px]'}`}>
+                                        <EditableCell 
+                                          rowId={row.id} 
+                                          colName={col.column_name} 
+                                          value={row[col.column_name]}
+                                          onUpdate={(id, col, val) => onUpdateCell && onUpdateCell(id, col, val)}
+                                          isEditable={!isIdCol && !!row.id && !!onUpdateCell} // Can't edit ID or if no handler
+                                        />
+                                    </td>
+                                  );
+                                })}
                                 <td className="px-2 py-2 text-right sticky right-0 bg-white dark:bg-[#151923] group-hover:bg-indigo-50/50 dark:group-hover:bg-[#151923] transition-colors border-l border-transparent dark:border-white/5">
                                   {row.id && (
                                       <button 

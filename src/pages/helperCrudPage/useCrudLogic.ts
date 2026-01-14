@@ -61,11 +61,29 @@ export const useCrudLogic = () => {
     setActiveTable(null);
     setError(null);
     try {
+      // 1. Fetch Actual Tables
       const res = await API.getTables(dbName);
+      
+      // 2. Fetch Saved Order
+      const savedOrder = await API.getTableOrder(dbName);
+
       if (res.ok && res.data) {
-        const tbs = res.data.map((row: any) => row.table_name);
-        setTables(tbs);
-        if (tbs.length > 0) setActiveTable(tbs[0]);
+        const fetchedTables = res.data.map((row: any) => row.table_name);
+        
+        // 3. Sort logic
+        let finalTables: string[] = [];
+        if (savedOrder && savedOrder.length > 0) {
+            // First, add tables that are in savedOrder AND in fetchedTables
+            finalTables = savedOrder.filter((t: string) => fetchedTables.includes(t));
+            // Then append any new tables that weren't in savedOrder
+            const newTables = fetchedTables.filter((t: string) => !finalTables.includes(t));
+            finalTables = [...finalTables, ...newTables];
+        } else {
+            finalTables = fetchedTables;
+        }
+
+        setTables(finalTables);
+        if (finalTables.length > 0) setActiveTable(finalTables[0]);
       } else {
         if (res.error) setError(`Ошибка доступа к БД '${dbName}': ${res.error}`);
       }
@@ -117,6 +135,15 @@ export const useCrudLogic = () => {
 
   // --- ACTIONS ---
 
+  const handleTableReorder = async (newOrder: string[]) => {
+      setTables(newOrder); // Optimistic update
+      try {
+          await API.saveTableOrder(selectedDb, newOrder);
+      } catch (err) {
+          console.error("Failed to save table order", err);
+      }
+  };
+
   const handleCreateTable = async (tableName: string, columns: ColumnDef[]) => {
     if (!tableName) return;
     setActionLoading(true);
@@ -162,6 +189,21 @@ export const useCrudLogic = () => {
     }
   };
 
+  const handleRenameColumn = async (oldName: string, newName: string) => {
+    if (!activeTable || !newName || oldName === newName) return;
+    setActionLoading(true);
+    try {
+      await API.renameColumn(selectedDb, activeTable, oldName, newName);
+      await fetchTableSchema(activeTable);
+      // Data might depend on column names if we filter, but basic select * is fine
+      await fetchTableData(activeTable, page, pageSize);
+    } catch (err: any) {
+      alert("Ошибка переименования: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDeleteColumn = async (colName: string) => {
     if (!activeTable || !confirm(`Удалить колонку "${colName}"?`)) return;
     setActionLoading(true);
@@ -191,6 +233,22 @@ export const useCrudLogic = () => {
       alert("Ошибка: " + err.message);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleUpdateCell = async (rowId: any, colName: string, value: string) => {
+    if (!activeTable) return;
+    // Optimistic update could be done here, but for simplicity we await
+    try {
+      const res = await API.updateCell(selectedDb, activeTable, rowId, colName, value);
+      if (res.ok) {
+        // Refresh data silently (or update local state)
+        fetchTableData(activeTable, page, pageSize);
+      } else {
+        alert("Ошибка обновления: " + res.error);
+      }
+    } catch (err: any) {
+      alert("Ошибка: " + err.message);
     }
   };
 
@@ -232,10 +290,7 @@ export const useCrudLogic = () => {
 
   // Handle page change (distinct from table change)
   useEffect(() => {
-    if (activeTable && !loadingSchema) { // Small check to avoid double fetch on init
-        // Only fetch if page/size changed, but we need to ensure this doesn't conflict with the activeTable effect
-        // The activeTable effect resets page to 1. This effect reacts to page change.
-        // We can just call fetch here.
+    if (activeTable && !loadingSchema) { 
         fetchTableData(activeTable, page, pageSize);
     }
   }, [page, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -260,8 +315,11 @@ export const useCrudLogic = () => {
     handleCreateTable,
     handleDeleteTable,
     handleAddColumn,
+    handleRenameColumn,
     handleDeleteColumn,
     handleInsertRow,
-    handleDeleteRow
+    handleUpdateCell,
+    handleDeleteRow,
+    handleTableReorder
   };
 };

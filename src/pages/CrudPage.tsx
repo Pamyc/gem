@@ -31,9 +31,12 @@ const CrudPage: React.FC = () => {
     handleCreateTable,
     handleDeleteTable,
     handleAddColumn,
+    handleRenameColumn,
     handleDeleteColumn,
     handleInsertRow,
-    handleDeleteRow
+    handleUpdateCell,
+    handleDeleteRow,
+    handleTableReorder
   } = useCrudLogic();
 
   return (
@@ -100,6 +103,7 @@ const CrudPage: React.FC = () => {
               activeTable={activeTable}
               onSelectTable={setActiveTable}
               loading={loadingTables}
+              onReorder={handleTableReorder}
            />
 
            <div className="flex-1 overflow-hidden flex flex-col p-6 min-h-0 bg-white dark:bg-[#151923]">
@@ -144,6 +148,7 @@ const CrudPage: React.FC = () => {
                         schema={tableSchema}
                         onDeleteColumn={handleDeleteColumn}
                         onAddColumn={handleAddColumn}
+                        onRenameColumn={handleRenameColumn}
                         actionLoading={actionLoading}
                     />
 
@@ -160,6 +165,7 @@ const CrudPage: React.FC = () => {
                         setPageSize={setPageSize}
                         onDeleteRow={handleDeleteRow}
                         onAddRowClick={() => setIsAddRowModalOpen(true)}
+                        onUpdateCell={handleUpdateCell}
                     />
 
                  </div>

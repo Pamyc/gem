@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Columns, ChevronDown, ChevronRight, Loader2, Key, Trash2, Plus } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Columns, ChevronDown, ChevronRight, Loader2, Key, Trash2, Plus, Edit2 } from 'lucide-react';
 import { ExistingColumn } from './types';
 
 interface SchemaSectionProps {
@@ -10,8 +10,65 @@ interface SchemaSectionProps {
   schema: ExistingColumn[];
   onDeleteColumn: (name: string) => void;
   onAddColumn: (name: string, type: string) => Promise<void>;
+  onRenameColumn: (oldName: string, newName: string) => Promise<void>;
   actionLoading: boolean;
 }
+
+const EditableColumnName: React.FC<{ 
+  name: string; 
+  onRename: (newName: string) => void; 
+}> = ({ name, onRename }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const handleFinish = () => {
+    setIsEditing(false);
+    if (tempName && tempName !== name) {
+      onRename(tempName);
+    } else {
+      setTempName(name); // Revert
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleFinish();
+    if (e.key === 'Escape') {
+      setTempName(name);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={tempName}
+        onChange={(e) => setTempName(e.target.value)}
+        onBlur={handleFinish}
+        onKeyDown={handleKeyDown}
+        className="font-mono font-bold text-sm bg-white dark:bg-black/20 text-indigo-600 dark:text-indigo-400 outline-none border-b border-indigo-500 min-w-[80px]"
+      />
+    );
+  }
+
+  return (
+    <span 
+      onClick={() => setIsEditing(true)}
+      className="font-mono font-bold text-sm text-gray-800 dark:text-white truncate cursor-pointer hover:text-indigo-500 hover:underline decoration-dashed underline-offset-4" 
+      title="Нажмите для переименования"
+    >
+      {name}
+    </span>
+  );
+};
 
 const SchemaSection: React.FC<SchemaSectionProps> = ({
   isOpen,
@@ -20,6 +77,7 @@ const SchemaSection: React.FC<SchemaSectionProps> = ({
   schema,
   onDeleteColumn,
   onAddColumn,
+  onRenameColumn,
   actionLoading
 }) => {
   const [addColName, setAddColName] = useState('');
@@ -28,7 +86,7 @@ const SchemaSection: React.FC<SchemaSectionProps> = ({
   const handleAddClick = async () => {
     if (addColName) {
       await onAddColumn(addColName, addColType);
-      setAddColName(''); // Reset only on success handled by parent or optimistically
+      setAddColName(''); 
     }
   };
 
@@ -55,11 +113,14 @@ const SchemaSection: React.FC<SchemaSectionProps> = ({
               <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {schema.map(col => (
-                        <div key={col.column_name} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0b0f19] group">
-                          <div className="min-w-0">
+                        <div key={col.column_name} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0b0f19] group hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors">
+                          <div className="min-w-0 flex-1 mr-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-sm text-gray-800 dark:text-white truncate" title={col.column_name}>{col.column_name}</span>
-                                {col.column_default?.includes('nextval') && <Key size={12} className="text-yellow-500" />}
+                                <EditableColumnName 
+                                  name={col.column_name} 
+                                  onRename={(newName) => onRenameColumn(col.column_name, newName)} 
+                                />
+                                {col.column_default?.includes('nextval') && <Key size={12} className="text-yellow-500 shrink-0" />}
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex gap-2">
                                 <span className="font-mono text-indigo-500">{col.data_type}</span>
