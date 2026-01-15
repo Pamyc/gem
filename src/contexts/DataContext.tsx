@@ -1,4 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { executeDbQuery } from "../utils/dbGatewayApi"
 
 // Типы данных для разных источников
 export interface SheetDataWithHeaders {
@@ -11,17 +13,19 @@ export interface GoogleSheetsData {
   montag?: SheetDataWithHeaders
   all_pivot?: SheetDataWithHeaders
   ip_pivot?: SheetDataWithHeaders
+  database_clientGrowth?: SheetDataWithHeaders // Новый ключ для данных из БД
 }
 
 export interface SheetConfig {
   key: string;
-  spreadsheetId: string;
+  spreadsheetId: string; // Для БД это будет игнорироваться или использоваться как маркер
   sheetName: string;
   range: string;
   headerRows: number;
+  sourceType?: 'google' | 'database'; // Тип источника
 }
 
-// Конфигурация для разных листов Google Sheets вынесена в константу
+// Конфигурация для разных листов
 export const SHEET_CONFIGS: SheetConfig[] = [
   {
     key: "clientGrowth",
@@ -29,6 +33,15 @@ export const SHEET_CONFIGS: SheetConfig[] = [
     sheetName: "ТЕСТ Сводная",
     range: "A1:AG500",
     headerRows: 3,
+    sourceType: 'google'
+  },
+  {
+    key: "database_clientGrowth",
+    spreadsheetId: "DB_SOURCE", 
+    sheetName: "База Данных (PostgreSQL)",
+    range: "",
+    headerRows: 1, // В БД у нас плоские заголовки
+    sourceType: 'database'
   },
   {
     key: "montag",
@@ -36,6 +49,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
     sheetName: "ТЕСТ Сводная (копия)",
     range: "A1:AG500",
     headerRows: 3,
+    sourceType: 'google'
   },
   {
     key: "all_pivot",
@@ -43,6 +57,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
     sheetName: "Сводная (общая)",
     range: "A1:BB500",
     headerRows: 3,
+    sourceType: 'google'
   },
   {
     key: "ip_pivot",
@@ -50,8 +65,28 @@ export const SHEET_CONFIGS: SheetConfig[] = [
     sheetName: "Сводная (по ИП)",
     range: "A1:AA500",
     headerRows: 2,
+    sourceType: 'google'
   },
 ]
+
+// Маппинг полей БД -> Заголовки таблицы (для совместимости с графиками)
+const DB_MAPPING = [
+  { db: 'city', header: 'Город', type: 'string' },
+  { db: 'housing_complex', header: 'ЖК', type: 'string' },
+  { db: 'liter', header: 'Литер', type: 'string' },
+  { db: 'is_handed_over', header: 'Сдан да/нет', type: 'boolean' },
+  { db: 'region', header: 'Регион', type: 'string' },
+  { db: 'is_total', header: 'Итого (Да/Нет)', type: 'boolean' },
+  { db: 'no_liter_breakdown', header: 'Без разбивки на литеры (Да/Нет)', type: 'boolean' },
+  { db: 'is_separate_liter', header: 'Отдельный литер (Да/Нет)', type: 'boolean' },
+  { db: 'object_type', header: 'Тип объекта', type: 'string' },
+  { db: 'client_name', header: 'Клиент', type: 'string' },
+  { db: 'year', header: 'Год', type: 'number' },
+  { db: 'elevators_count', header: 'Кол-во лифтов', type: 'number' },
+  { db: 'floors_count', header: 'Кол-во этажей', type: 'number' },
+  { db: 'gross_profit', header: 'Валовая', type: 'number' },
+  // Можно добавить финансовые поля при необходимости
+];
 
 export interface DataStore {
   googleSheets: GoogleSheetsData
@@ -83,19 +118,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setDataStore((prev) => ({ ...prev, isLoading: true, error: null }))
 
-      // Загружаем данные из Google Sheets
-      const googleSheetsData = await loadGoogleSheetsData()
+      // Параллельная загрузка из Google Sheets и БД
+      const [googleSheetsData, dbData] = await Promise.all([
+        loadGoogleSheetsData(),
+        loadDatabaseData()
+      ]);
+
+      // Объединяем результаты
+      const allData = { ...googleSheetsData, ...dbData };
 
       setDataStore({
-        googleSheets: googleSheetsData,
+        googleSheets: allData,
         sheetConfigs: SHEET_CONFIGS,
         isLoading: false,
         error: null,
       })
 
-      console.log("[App] Все данные загружены:", {
-        googleSheets: googleSheetsData,
-      })
+      console.log("[App] Все данные загружены:", { allData })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Ошибка загрузки данных"
       setDataStore((prev) => ({
@@ -110,9 +149,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadGoogleSheetsData = async (): Promise<GoogleSheetsData> => {
     const results: GoogleSheetsData = {}
 
-    // Загружаем все листы параллельно, используя SHEET_CONFIGS
     await Promise.all(
-      SHEET_CONFIGS.map(async (config) => {
+      SHEET_CONFIGS.filter(c => c.sourceType !== 'database').map(async (config) => {
         try {
           const data = await fetchGoogleSheet(
             config.spreadsheetId,
@@ -128,6 +166,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     )
 
     return results
+  }
+
+  const loadDatabaseData = async (): Promise<GoogleSheetsData> => {
+    const results: GoogleSheetsData = {};
+    
+    // Находим конфиги для БД
+    const dbConfigs = SHEET_CONFIGS.filter(c => c.sourceType === 'database');
+    
+    for (const config of dbConfigs) {
+        if (config.key === 'database_clientGrowth') {
+            try {
+                // Запрашиваем данные из БД
+                const sql = "SELECT * FROM data_contracts ORDER BY id ASC LIMIT 5000";
+                const response = await executeDbQuery(sql);
+                
+                if (response.ok && Array.isArray(response.data)) {
+                    // 1. Формируем заголовки (Header Row)
+                    const headers = [DB_MAPPING.map(m => m.header)];
+                    
+                    // 2. Преобразуем строки объектов в массивы значений
+                    const rows = response.data.map((row: any) => {
+                        return DB_MAPPING.map(mapping => {
+                            const val = row[mapping.db];
+                            
+                            // Форматирование значений под стиль Google Sheets
+                            if (mapping.type === 'boolean') {
+                                return val ? 'Да' : 'Нет';
+                            }
+                            if (mapping.type === 'number') {
+                                // Превращаем null/undefined в 0 или оставляем как есть
+                                return val !== null && val !== undefined ? Number(val) : 0;
+                            }
+                            // String
+                            return val !== null && val !== undefined ? String(val) : '';
+                        });
+                    });
+
+                    results[config.key as keyof GoogleSheetsData] = {
+                        headers: headers,
+                        rows: rows
+                    };
+                }
+            } catch (err) {
+                console.error(`[App] Ошибка загрузки БД для ${config.key}:`, err);
+            }
+        }
+    }
+    return results;
   }
 
   const refreshData = async () => {
