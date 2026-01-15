@@ -122,7 +122,7 @@ const DataSection: React.FC<DataSectionProps> = ({
   const pkName = pkCol?.column_name || 'id';
 
   return (
-    <div className="flex-1 flex flex-col border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden min-h-0">
+    <div className="flex-1 flex flex-col border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden min-h-[500px]">
         <button 
           onClick={onToggle}
           className="w-full flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-[#1e293b] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors shrink-0"

@@ -64,7 +64,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </header>
 
         {/* Scrollable Content Area */}
-        <div id="main-scroll-container" className="flex-1 overflow-y-auto p-8 z-10 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+        <div id="main-scroll-container" className="flex-1 overflow-y-auto p-8 z-10 hover-scrollbar">
           {children}
         </div>
       </main>

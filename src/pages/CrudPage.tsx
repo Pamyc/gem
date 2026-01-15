@@ -42,29 +42,6 @@ const CrudPage: React.FC = () => {
   return (
     <div className="w-full h-[calc(100vh-8rem)] flex flex-col gap-6 p-2 animate-in fade-in duration-500">
       
-      {/* Styles for hover scrollbar */}
-      <style>{`
-        .hover-scrollbar::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
-        }
-        .hover-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .hover-scrollbar::-webkit-scrollbar-thumb {
-          background-color: transparent;
-          border-radius: 5px;
-          border: 2px solid transparent;
-          background-clip: content-box;
-        }
-        .hover-scrollbar:hover::-webkit-scrollbar-thumb {
-          background-color: rgba(156, 163, 175, 0.5);
-        }
-        .dark .hover-scrollbar:hover::-webkit-scrollbar-thumb {
-          background-color: rgba(255, 255, 255, 0.2); 
-        }
-      `}</style>
-
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div>
@@ -113,7 +90,7 @@ const CrudPage: React.FC = () => {
                     <p>Выберите таблицу для просмотра</p>
                  </div>
               ) : (
-                 <div className="flex flex-col h-full gap-6 overflow-hidden">
+                 <div className="flex flex-col h-full gap-6 overflow-y-auto hover-scrollbar pr-2 pb-10">
                     
                     {/* Active Table Header */}
                     <div className="flex justify-between items-center shrink-0">
