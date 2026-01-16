@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Menu, ChevronLeft, Sun, Moon, LogOut } from 'lucide-react';
 import { MenuItem, TabId } from '../types';
@@ -72,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation */}
-        <nav className="py-6 px-3 space-y-2 overflow-y-auto scrollbar-none flex-1">
+        <nav className="py-6 px-3 space-y-2 overflow-y-auto hover-scrollbar flex-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;

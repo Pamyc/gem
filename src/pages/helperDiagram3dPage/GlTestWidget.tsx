@@ -1,4 +1,5 @@
-import React, { ErrorInfo, ReactNode, useEffect, useState } from 'react';
+
+import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { Box, AlertTriangle, Loader2 } from 'lucide-react';
 import EChartComponent from './EChartComponent';
 
@@ -6,7 +7,7 @@ interface Props {
   isDarkMode: boolean;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   errorInfo: string;
 }
@@ -17,8 +18,8 @@ interface ErrorBoundaryProps {
 }
 
 // 1. Error Boundary Component to catch WebGL/Library failures
-class GlErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
-  public state: State = { hasError: false, errorInfo: '' };
+class GlErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false, errorInfo: '' };
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, errorInfo: error.message };
@@ -56,8 +57,13 @@ const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
   useEffect(() => {
     // ECharts and ECharts-GL are loaded globally via <script> tags in index.html.
     // This ensures they share the same instance and registers 3D components correctly.
-    // We just set ready to true immediately.
-    setIsReady(true);
+    // Also try dynamic import to ensure it's loaded in bundle environment
+    import('echarts-gl').then(() => {
+        setIsReady(true);
+    }).catch(err => {
+        console.warn("echarts-gl dynamic import failed (might be using global script):", err);
+        setIsReady(true);
+    });
   }, []);
 
   const option = {
@@ -67,20 +73,20 @@ const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
       show: false,
       dimension: 2,
       min: 0,
-      max: 15,
+      max: 10,
       inRange: {
         color: ['#3b82f6', '#8b5cf6', '#ec4899']
       }
     },
     xAxis3D: {
       type: 'category',
-      data: ['X1', 'X2', 'X3', 'X4', 'X5'],
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       axisLabel: { textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' } },
       axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0' } }
     },
     yAxis3D: {
       type: 'category',
-      data: ['Y1', 'Y2', 'Y3'],
+      data: ['Work', 'Life', 'Rest'],
       axisLabel: { textStyle: { color: isDarkMode ? '#94a3b8' : '#64748b' } },
       axisLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0' } }
     },
@@ -108,71 +114,66 @@ const GlTestContent: React.FC<Props> = ({ isDarkMode }) => {
         }
       }
     },
-    series: [
-      {
-        type: 'bar3D',
-        data: [
-          [0, 0, 5], [1, 0, 11], [2, 0, 3], [3, 0, 8], [4, 0, 12],
-          [0, 1, 2], [1, 1, 8], [2, 1, 9], [3, 1, 4], [4, 1, 6],
-          [0, 2, 7], [1, 2, 3], [2, 2, 5], [3, 2, 10], [4, 2, 2]
-        ],
-        shading: 'lambert',
+    series: [{
+      type: 'bar3D',
+      data: [
+        [0,0,5], [1,0,8], [2,0,4], [3,0,6], [4,0,2], [5,0,1], [6,0,0],
+        [0,1,2], [1,1,3], [2,1,6], [3,1,8], [4,1,9], [5,1,4], [6,1,2],
+        [0,2,8], [1,2,5], [2,2,4], [3,2,2], [4,2,1], [5,2,9], [6,2,10]
+      ],
+      shading: 'lambert',
+      label: {
+        show: false,
+        fontSize: 16,
+        borderWidth: 1
+      },
+      itemStyle: {
+        opacity: 0.8
+      },
+      emphasis: {
         label: {
-          show: false,
-          fontSize: 16,
-          borderWidth: 1
+          fontSize: 20,
+          color: '#900'
         },
-        emphasis: {
-          label: {
-            fontSize: 20,
-            color: '#900'
-          },
-          itemStyle: {
-            color: '#900'
-          }
+        itemStyle: {
+          color: '#f43f5e'
         }
       }
-    ]
+    }]
   };
 
   if (!isReady) {
-      return (
-        <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 mb-8 h-64 flex items-center justify-center">
-            <Loader2 className="animate-spin text-indigo-500" size={32} />
-        </div>
-      );
+      return <div className="h-64 flex items-center justify-center text-indigo-500"><Loader2 className="animate-spin" /></div>;
   }
 
   return (
-    <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-0 relative mb-8">
-       {/* Status Badge */}
+    <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden relative">
+       {/* Header */}
        <div className="absolute top-6 left-6 z-10 pointer-events-none">
           <div className="flex items-center gap-3 backdrop-blur-md bg-white/80 dark:bg-black/40 p-2 pr-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
-             <div className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg">
+             <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg">
                 <Box size={20} />
              </div>
              <div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white">ECharts GL (3D)</h3>
-                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                   Библиотека активна
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">3D Test Widget</h3>
+                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                   WebGL Context
                 </p>
              </div>
           </div>
        </div>
-       
-       <div className="h-64 w-full">
+
+       <div className="h-[400px] w-full">
           <EChartComponent options={option} theme={isDarkMode ? 'dark' : 'light'} height="100%" />
        </div>
     </div>
   );
 };
 
-// Export wrapped component
-export default function GlTestWidget(props: Props) {
-  return (
-    <GlErrorBoundary isDarkMode={props.isDarkMode}>
-      <GlTestContent {...props} />
-    </GlErrorBoundary>
-  );
-}
+const GlTestWidget: React.FC<Props> = (props) => (
+  <GlErrorBoundary isDarkMode={props.isDarkMode}>
+    <GlTestContent {...props} />
+  </GlErrorBoundary>
+);
+
+export default GlTestWidget;
