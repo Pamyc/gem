@@ -70,22 +70,59 @@ export const SHEET_CONFIGS: SheetConfig[] = [
 ]
 
 // Маппинг полей БД -> Заголовки таблицы (для совместимости с графиками)
-const DB_MAPPING = [
+// Экспортируем, чтобы использовать в формах редактирования
+export const DB_MAPPING = [
+  // --- Служебные (ID обязательно для редактирования) ---
+  { db: 'id', header: 'id', type: 'number' },
+
+  // --- Основные данные ---
   { db: 'city', header: 'Город', type: 'string' },
   { db: 'housing_complex', header: 'ЖК', type: 'string' },
   { db: 'liter', header: 'Литер', type: 'string' },
   { db: 'is_handed_over', header: 'Сдан да/нет', type: 'boolean' },
   { db: 'region', header: 'Регион', type: 'string' },
-  { db: 'is_total', header: 'Итого (Да/Нет)', type: 'boolean' },
-  { db: 'no_liter_breakdown', header: 'Без разбивки на литеры (Да/Нет)', type: 'boolean' },
-  { db: 'is_separate_liter', header: 'Отдельный литер (Да/Нет)', type: 'boolean' },
   { db: 'object_type', header: 'Тип объекта', type: 'string' },
   { db: 'client_name', header: 'Клиент', type: 'string' },
   { db: 'year', header: 'Год', type: 'number' },
   { db: 'elevators_count', header: 'Кол-во лифтов', type: 'number' },
   { db: 'floors_count', header: 'Кол-во этажей', type: 'number' },
+  
+  // --- Флаги ---
+  { db: 'is_total', header: 'Итого (Да/Нет)', type: 'boolean' },
+  { db: 'no_liter_breakdown', header: 'Без разбивки на литеры (Да/Нет)', type: 'boolean' },
+  { db: 'is_separate_liter', header: 'Отдельный литер (Да/Нет)', type: 'boolean' },
+
+  // --- Финансы (Общие) ---
+  { db: 'income_total_plan', header: 'Доходы Итого (План)', type: 'number' },
+  { db: 'income_total_fact', header: 'Доходы Итого (Факт)', type: 'number' },
+  { db: 'expense_total_plan', header: 'Расходы Итого (План)', type: 'number' },
+  { db: 'expense_total_fact', header: 'Расходы Итого (Факт)', type: 'number' },
   { db: 'gross_profit', header: 'Валовая', type: 'number' },
-  // Можно добавить финансовые поля при необходимости
+  
+  // --- Финансы (Детализация) ---
+  { db: 'income_equip_plan', header: 'Дох. Оборуд. (План)', type: 'number' },
+  { db: 'income_equip_fact', header: 'Дох. Оборуд. (Факт)', type: 'number' },
+  { db: 'expense_equip_plan', header: 'Расх. Оборуд. (План)', type: 'number' },
+  { db: 'expense_equip_fact', header: 'Расх. Оборуд. (Факт)', type: 'number' },
+  
+  { db: 'income_frame_plan', header: 'Дох. Обрамл. (План)', type: 'number' },
+  { db: 'income_frame_fact', header: 'Дох. Обрамл. (Факт)', type: 'number' },
+  { db: 'expense_frame_plan', header: 'Расх. Обрамл. (План)', type: 'number' },
+  { db: 'expense_frame_fact', header: 'Расх. Обрамл. (Факт)', type: 'number' },
+  
+  { db: 'income_install_plan', header: 'Дох. Монтаж (План)', type: 'number' },
+  { db: 'income_install_fact', header: 'Дох. Монтаж (Факт)', type: 'number' },
+  { db: 'expense_install_plan', header: 'Расх. Монтаж (План)', type: 'number' },
+  { db: 'expense_install_fact', header: 'Расх. Монтаж (Факт)', type: 'number' },
+  
+  { db: 'expense_fot_fact', header: 'Расходы ФОТ', type: 'number' },
+
+  // --- Расчетные (обычно read-only, но пусть будут в маппинге) ---
+  { db: 'profit_per_lift_calculated', header: 'Прибыль с 1 лифта', type: 'number' },
+  { db: 'rentability_calculated', header: 'Рентабельность', type: 'number' },
+
+  // --- Служебные 2 ---
+  { db: 'contract_id', header: 'contract_id', type: 'number' },
 ];
 
 export interface DataStore {

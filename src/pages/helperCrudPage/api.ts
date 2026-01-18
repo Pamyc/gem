@@ -82,9 +82,7 @@ export const insertRow = async (dbName: string, tableName: string, data: Record<
 export const updateCell = async (dbName: string, tableName: string, rowId: any, colName: string, value: string) => {
   // Экранирование одинарных кавычек
   const safeValue = value.replace(/'/g, "''");
-  // В идеале тоже нужно принимать pkName для WHERE, но пока предположим id, 
-  // если будет проблема с редактированием meta_dictionary - поправим.
-  // Для простоты пока оставим id, так как редактирование ячеек словаря редкость, а удаление - частое.
+  // В идеале тоже нужно принимать pkName для WHERE, но пока предположим id
   const sql = `UPDATE "${tableName}" SET "${colName}" = '${safeValue}' WHERE id = '${rowId}';`; 
   return await executeDbQuery(sql, getConfig(dbName));
 };
@@ -95,41 +93,39 @@ export const deleteRow = async (dbName: string, tableName: string, rowId: any, p
   return await executeDbQuery(sql, getConfig(dbName));
 };
 
-// --- UI SETTINGS STORAGE ---
+// --- UI SETTINGS STORAGE (USING app_dictionaries) ---
 
-export const initSettingsTable = async (dbName: string) => {
-  const sql = `CREATE TABLE IF NOT EXISTS ui_settings (
-    setting_key VARCHAR(255) PRIMARY KEY,
-    setting_value TEXT
-  );`;
-  return await executeDbQuery(sql, getConfig(dbName));
-};
-
+// Используем category='ui_config' и code=1 для хранения порядка таблиц
 export const saveTableOrder = async (dbName: string, order: string[]) => {
-  // Ensure table exists first (lazy check)
-  await initSettingsTable(dbName);
-  
-  const key = 'table_order';
+  const key = 'ui_config';
+  const code = 1; // Маркер для table_order
   const value = JSON.stringify(order).replace(/'/g, "''"); // Escape for SQL
   
-  const sql = `
-    INSERT INTO ui_settings (setting_key, setting_value) 
-    VALUES ('${key}', '${value}') 
-    ON CONFLICT (setting_key) 
-    DO UPDATE SET setting_value = EXCLUDED.setting_value;
-  `;
-  return await executeDbQuery(sql, getConfig(dbName));
+  // 1. Проверяем существование
+  const checkSql = `SELECT id FROM app_dictionaries WHERE category = '${key}' AND code = ${code}`;
+  const checkRes = await executeDbQuery(checkSql, getConfig(dbName));
+  
+  if (checkRes.ok && checkRes.data && checkRes.data.length > 0) {
+      // Update
+      const id = checkRes.data[0].id;
+      const updateSql = `UPDATE app_dictionaries SET value = '${value}' WHERE id = ${id}`;
+      return await executeDbQuery(updateSql, getConfig(dbName));
+  } else {
+      // Insert
+      const insertSql = `INSERT INTO app_dictionaries (category, value, code) VALUES ('${key}', '${value}', ${code})`;
+      return await executeDbQuery(insertSql, getConfig(dbName));
+  }
 };
 
 export const getTableOrder = async (dbName: string): Promise<string[]> => {
   try {
-    const sql = `SELECT setting_value FROM ui_settings WHERE setting_key = 'table_order';`;
+    const sql = `SELECT value FROM app_dictionaries WHERE category = 'ui_config' AND code = 1;`;
     const res = await executeDbQuery(sql, getConfig(dbName));
     if (res.ok && res.data && res.data.length > 0) {
-      return JSON.parse(res.data[0].setting_value);
+      return JSON.parse(res.data[0].value);
     }
   } catch (e) {
-    // Table likely doesn't exist yet, ignore error
+    // Table might not exist or be empty
   }
   return [];
 };

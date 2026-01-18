@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box, Share2, Server, TableProperties, Trophy } from 'lucide-react';
+import { FileText, Settings, BarChart3, Database, PenTool, Target, Layout, Filter, Copy, Box, Share2, Server, TableProperties, Trophy, FileSignature } from 'lucide-react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import StatsPage from './pages/StatsPage';
@@ -17,6 +17,7 @@ import TestEmbedChart from './pages/TestEmbedChart';
 import ConnectionTestPage from './pages/ConnectionTestPage';
 import CrudPage from './pages/CrudPage';
 import TopTenPage from './pages/TopTenPage'; 
+import ContractsPage from './pages/ContractsPage';
 import { TabId, MenuItem } from './types';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -73,6 +74,7 @@ const AppContent: React.FC = () => {
   const menuItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [
       { id: 'stats', label: 'Статистика', icon: BarChart3 },
+      { id: 'contracts', label: 'Договора', icon: FileSignature }, // Новая вкладка
       { id: 'top-ten', label: 'Топ-10 ЖК', icon: Trophy }, 
       { id: 'home', label: 'Источник данных', icon: Database },
       { id: 'diagram3d', label: '3D Диаграмма', icon: Box },
@@ -99,7 +101,8 @@ const AppContent: React.FC = () => {
         item.id !== 'test-embed' &&
         item.id !== 'db-gateway' &&
         item.id !== 'crud' &&
-        item.id !== 'top-ten' // Скрываем Топ-10 для обычных юзеров
+        item.id !== 'top-ten' &&
+        item.id !== 'contracts' // Скрываем Договора для обычных юзеров
       );
     }
 
@@ -108,7 +111,7 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
-    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed', 'db-gateway', 'crud', 'top-ten'];
+    const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed', 'db-gateway', 'crud', 'top-ten', 'contracts'];
     if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
       setActiveTab('stats');
     }
@@ -134,6 +137,7 @@ const AppContent: React.FC = () => {
           {activeTab === 'home' && <HomePage />}
           
           {/* Рендерим админские страницы только если пользователь имеет доступ */}
+          {activeTab === 'contracts' && user.username === '1' && <ContractsPage isDarkMode={isDarkMode} />}
           {activeTab === 'top-ten' && user.username === '1' && <TopTenPage isDarkMode={isDarkMode} />}
           {activeTab === 'constructor' && user.username === '1' && <ConstructorPage isDarkMode={isDarkMode}  />}
           {activeTab === 'card-constructor' && user.username === '1' && <CardConstructorPage isDarkMode={isDarkMode} />}
