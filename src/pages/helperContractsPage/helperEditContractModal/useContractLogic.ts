@@ -312,6 +312,40 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
   const handleSave = async () => {
       setLoading(true);
       try {
+          // --- 1. АВТО-ДОБАВЛЕНИЕ НОВЫХ ЗНАЧЕНИЙ В СПРАВОЧНИКИ ---
+          // Проверяем и добавляем: JK, Region, ObjectType, Client, Year
+          const dictMappings = [
+              { category: 'jk', value: formData.housing_complex },
+              { category: 'region', value: formData.region },
+              { category: 'object_type', value: formData.object_type },
+              { category: 'client', value: formData.client_name },
+              { category: 'year', value: formData.year }
+          ];
+
+          for (const mapping of dictMappings) {
+              const val = mapping.value ? String(mapping.value).trim() : '';
+              if (!val) continue;
+
+              const safeVal = val.replace(/'/g, "''");
+
+              // Проверяем, существует ли уже такое значение
+              const checkRes = await executeDbQuery(`
+                  SELECT id FROM app_dictionaries 
+                  WHERE category = '${mapping.category}' 
+                  AND value = '${safeVal}'
+              `);
+
+              if (checkRes.ok && (!checkRes.data || checkRes.data.length === 0)) {
+                  // Если нет - добавляем
+                  await executeDbQuery(`
+                      INSERT INTO app_dictionaries (category, value, is_active, sort_order, code)
+                      VALUES ('${mapping.category}', '${safeVal}', true, 0, 0)
+                  `);
+                  console.log(`Auto-added to dictionary: [${mapping.category}] ${val}`);
+              }
+          }
+
+          // --- 2. ЛОГИКА ГЕНЕРАЦИИ ID ДОГОВОРА (ГОРОД) ---
           let baseId = 0;
           if (isEditMode && formData.contract_id) {
               baseId = Math.floor(formData.contract_id);
@@ -334,7 +368,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               if (cityRes.ok && cityRes.data && cityRes.data.length > 0) {
                   cityStartId = parseInt(cityRes.data[0].code);
               } else {
-                  // Генерируем новый код
+                  // Генерируем новый код для нового города
                   const maxSeriesRes = await executeDbQuery(`
                       SELECT MAX(code) as max_id 
                       FROM app_dictionaries 
@@ -372,6 +406,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               baseId = lastContractId > 0 ? lastContractId + 1 : cityStartId;
           }
 
+          // --- 3. ПОДГОТОВКА ДАННЫХ ДОГОВОРА ---
           const isSingleLiter = liters.length === 1;
           const commonFields = { ...formData };
           commonFields.contract_id = baseId + 0.999;
@@ -427,7 +462,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               });
           }
 
-          // Последовательное выполнение запросов
+          // --- 4. ВЫПОЛНЕНИЕ ЗАПРОСОВ ---
           for (const query of queries) {
               await executeDbQuery(query);
           }
