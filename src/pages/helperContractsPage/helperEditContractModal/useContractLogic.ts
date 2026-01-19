@@ -1,14 +1,21 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { executeDbQuery } from '../../../utils/dbGatewayApi';
-import { DB_MAPPING } from '../../../contexts/DataContext';
 import { EXCLUDED_FIELDS, FINANCIAL_KEYWORDS } from './constants';
+import { DB_MAPPING } from '../../../contexts/DataContext';
 
 export interface LiterItem {
   id?: number;
   name: string;
   elevators: number;
   floors: number;
+}
+
+export interface Transaction {
+  id?: number;
+  date: string;
+  value: number;
+  text: string;
 }
 
 interface UseContractLogicProps {
@@ -28,11 +35,47 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
   const [optionsMap, setOptionsMap] = useState<Record<string, string[]>>({});
   const [previewSql, setPreviewSql] = useState<string>('');
 
+  // Хранилище транзакций
+  const [transactionsMap, setTransactionsMap] = useState<Record<string, Transaction[]>>({});
+
   const isEditMode = !!(nodeData && nodeData.dbId);
+
+  // Load Transactions from DB
+  const loadTransactions = async (contractId: number) => {
+      if (!contractId) return;
+      try {
+          const sql = `SELECT * FROM contract_transactions WHERE contract_id = ${contractId}`;
+          const res = await executeDbQuery(sql);
+          if (res.ok && res.data) {
+              const grouped: Record<string, Transaction[]> = {};
+              res.data.forEach((row: any) => {
+                  if (!grouped[row.type]) grouped[row.type] = [];
+                  grouped[row.type].push({
+                      id: row.id,
+                      date: row.date ? String(row.date).split('T')[0] : new Date().toISOString().split('T')[0],
+                      value: Number(row.value),
+                      text: row.text || ''
+                  });
+              });
+              setTransactionsMap(grouped);
+              
+              // Синхронизируем суммы формы с транзакциями (Source of Truth)
+              const updates: Record<string, number> = {};
+              Object.keys(grouped).forEach(key => {
+                  updates[key] = grouped[key].reduce((sum, t) => sum + t.value, 0);
+              });
+              setFormData(prev => ({ ...prev, ...updates }));
+          }
+      } catch (e) {
+          console.error("Error loading transactions:", e);
+      }
+  };
 
   // Инициализация
   useEffect(() => {
       if (isOpen) {
+          setTransactionsMap({}); // Сброс
+
           if (nodeData && nodeData.fullData) {
               const data = nodeData.fullData;
               setFormData({
@@ -41,440 +84,201 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
                   floors_count: data.floors_count ?? 0
               });
 
-              const isAggregatorByFlag = data.no_liter_breakdown === true || String(data.no_liter_breakdown) === 'true';
-              const isSeparate = data.is_separate_liter === true || String(data.is_separate_liter) === 'true';
-
-              if (isAggregatorByFlag && !isSeparate && data.contract_id) {
-                  fetchLitersForContract(data.contract_id);
-              } else {
-                  setLiters([{ 
-                      id: data.id,
-                      name: data.liter || 'Основной', 
-                      elevators: data.elevators_count || 0, 
-                      floors: data.floors_count || 0 
-                  }]);
+              // Загружаем транзакции, если есть ID контракта
+              if (data.contract_id) {
+                  loadTransactions(data.contract_id);
               }
           } else {
+              // Новый договор
               setFormData({
+                  city: '',
+                  housing_complex: '',
+                  contract_id: 0, 
+                  year: new Date().getFullYear(),
                   elevators_count: 0,
-                  floors_count: 0,
-                  no_liter_breakdown: true, 
-                  is_total: false
-              }); 
+                  floors_count: 0
+              });
               setLiters([{ name: 'Литер 1', elevators: 0, floors: 0 }]);
           }
+          
+          // Загрузка справочников
+          const fetchOptions = async () => {
+             const sql = "SELECT category, value FROM app_dictionaries WHERE is_active = true ORDER BY sort_order ASC";
+             const res = await executeDbQuery(sql);
+             
+             if (res.ok && res.data) {
+                 const map: Record<string, string[]> = {};
+                 res.data.forEach((r: any) => {
+                     let field = '';
+                     
+                     // Mapping dictionary categories to DB fields
+                     if (r.category === 'region') field = 'region';
+                     if (r.category === 'client') field = 'client_name';
+                     if (r.category === 'object_type') field = 'object_type';
+                     if (r.category === 'jk') field = 'housing_complex';
+                     
+                     // FIX: Добавлена поддержка поля Город
+                     if (r.category === 'city_base_index' || r.category === 'city') field = 'city';
+                     
+                     if (field) {
+                         if (!map[field]) map[field] = [];
+                         // Избегаем дублей
+                         if (!map[field].includes(r.value)) {
+                            map[field].push(r.value);
+                         }
+                     }
+                 });
+                 setOptionsMap(map);
+             }
+          };
+          fetchOptions();
       }
-  }, [nodeData, isOpen]);
-
-  const fetchLitersForContract = async (contractId: number) => {
-      try {
-          setLoading(true);
-          const baseId = Math.floor(contractId);
-          const sql = `
-            SELECT id, liter, elevators_count, floors_count 
-            FROM data_contracts 
-            WHERE floor(contract_id) = ${baseId} 
-              AND is_separate_liter = true 
-            ORDER BY contract_id ASC
-          `;
-          const res = await executeDbQuery(sql);
-          if (res.ok && res.data && res.data.length > 0) {
-              setLiters(res.data.map((r: any) => ({
-                  id: r.id,
-                  name: r.liter,
-                  elevators: Number(r.elevators_count) || 0,
-                  floors: Number(r.floors_count) || 0
-              })));
-          } else {
-              setLiters([]);
-          }
-      } catch (e) {
-          console.error("Error fetching liters:", e);
-      } finally {
-          setLoading(false);
-      }
-  };
-
-  // Пересчет итогов
-  useEffect(() => {
-      const totalElevators = liters.reduce((sum, l) => sum + (Number(l.elevators) || 0), 0);
-      const totalFloors = liters.reduce((sum, l) => sum + (Number(l.floors) || 0), 0);
-      const literNames = liters.map(l => l.name).filter(Boolean).join(', ');
-
-      setFormData(prev => ({
-          ...prev,
-          elevators_count: totalElevators,
-          floors_count: totalFloors,
-          liter: literNames
-      }));
-  }, [liters]);
-
-  // Загрузка опций из единого справочника app_dictionaries
-  useEffect(() => {
-      const fetchOptions = async () => {
-          try {
-              // Один запрос вместо множества
-              const sql = `
-                SELECT category, value 
-                FROM app_dictionaries 
-                WHERE is_active = true 
-                  AND category IN ('city_base_index', 'jk', 'region', 'object_type', 'client', 'year')
-                ORDER BY sort_order ASC, value ASC
-              `;
-              
-              const res = await executeDbQuery(sql);
-              
-              const newOptions: Record<string, string[]> = {
-                  city: [],
-                  housing_complex: [],
-                  region: [],
-                  object_type: [],
-                  client_name: [],
-                  year: []
-              };
-
-              if (res.ok && res.data) {
-                  res.data.forEach((r: any) => {
-                      const val = r.value;
-                      if (!val) return;
-
-                      // Маппинг категорий справочника на поля формы
-                      switch (r.category) {
-                          case 'city_base_index':
-                              newOptions.city.push(val);
-                              break;
-                          case 'jk':
-                              newOptions.housing_complex.push(val);
-                              break;
-                          case 'region':
-                              newOptions.region.push(val);
-                              break;
-                          case 'object_type':
-                              newOptions.object_type.push(val);
-                              break;
-                          case 'client':
-                              newOptions.client_name.push(val);
-                              break;
-                          case 'year':
-                              newOptions.year.push(val);
-                              break;
-                      }
-                  });
-              }
-
-              setOptionsMap(newOptions);
-          } catch (e) {
-              console.error("Failed to fetch autocomplete options", e);
-          }
-      };
-
-      if (isOpen) fetchOptions();
-  }, [isOpen]);
-
-  const { generalFields, financialFields } = useMemo(() => {
-      const general = [];
-      const financial = [];
-      const hiddenFields = ['liter', 'elevators_count', 'floors_count', 'contract_id']; 
-
-      for (const field of DB_MAPPING) {
-          if (EXCLUDED_FIELDS.includes(field.db)) continue;
-          if (hiddenFields.includes(field.db)) continue;
-
-          const isFinancial = FINANCIAL_KEYWORDS.some(kw => field.db.includes(kw));
-          if (isFinancial) {
-              financial.push(field);
-          } else {
-              general.push(field);
-          }
-      }
-      return { generalFields: general, financialFields: financial };
-  }, []);
+  }, [isOpen, nodeData]);
 
   const handleChange = (key: string, value: any) => {
       setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleCurrencyChange = (fieldKey: string, symbol: string) => {
-      setFieldCurrencies(prev => ({ ...prev, [fieldKey]: symbol }));
-  };
-
-  const addLiter = () => {
-      const nextNum = liters.length + 1;
-      setLiters([...liters, { name: `Литер ${nextNum}`, elevators: 0, floors: 0 }]);
-  };
-
-  const removeLiter = (index: number) => {
-      setLiters(liters.filter((_, i) => i !== index));
-  };
-
-  const updateLiter = (index: number, field: keyof LiterItem, value: any) => {
-      const newLiters = [...liters];
-      newLiters[index] = { ...newLiters[index], [field]: value };
-      setLiters(newLiters);
-  };
-
-  // --- SQL Generation Helpers ---
-  const toSql = (val: any, type: string) => {
-      if (val === undefined || val === null || val === '') return 'NULL';
-      if (type === 'string') return `'${String(val).replace(/'/g, "''")}'`;
-      if (type === 'boolean') return val === true || String(val).toLowerCase() === 'да' ? 'true' : 'false';
-      if (type === 'number') return String(val).replace(/\s/g, '').replace(/,/g, '.');
-      return `'${val}'`;
-  };
-
-  const buildInsert = (data: any) => {
-      const cols: string[] = [];
-      const vals: string[] = [];
-      DB_MAPPING.forEach(f => {
-          if (f.db === 'id' || f.db === 'created_at') return;
-          if (data[f.db] !== undefined) {
-              cols.push(f.db);
-              vals.push(toSql(data[f.db], f.type));
+  const handleTransactionChange = (fieldKey: string, newTransactions: Transaction[]) => {
+      // 1. Обновляем список транзакций в стейте
+      setTransactionsMap(prev => ({
+          ...prev,
+          [fieldKey]: newTransactions
+      }));
+      
+      // 2. Пересчитываем сумму для отображения
+      const newSum = newTransactions.reduce((acc, t) => acc + (Number(t.value) || 0), 0);
+      
+      setFormData(prev => {
+          const nextData = { ...prev, [fieldKey]: newSum };
+          
+          // Live Recalculation for Gross Profit in UI
+          if (fieldKey === 'income_total_fact' || fieldKey === 'expense_total_fact') {
+              const income = fieldKey === 'income_total_fact' ? newSum : (nextData.income_total_fact || 0);
+              const expense = fieldKey === 'expense_total_fact' ? newSum : (nextData.expense_total_fact || 0);
+              nextData.gross_profit = income - expense;
           }
+          
+          return nextData;
       });
-      return `INSERT INTO data_contracts (${cols.join(', ')}) VALUES (${vals.join(', ')})`;
   };
 
-  // --- Preview SQL Generation (Effect) ---
+  const handleCurrencyChange = (key: string, value: string) => {
+      setFieldCurrencies(prev => ({ ...prev, [key]: value }));
+  };
+
+  const addLiter = () => setLiters([...liters, { name: `Литер ${liters.length + 1}`, elevators: 0, floors: 0 }]);
+  const removeLiter = (idx: number) => setLiters(liters.filter((_, i) => i !== idx));
+  const updateLiter = (idx: number, field: keyof LiterItem, value: any) => {
+      const newLiters = [...liters];
+      newLiters[idx] = { ...newLiters[idx], [field]: value };
+      setLiters(newLiters);
+      
+      const totalElevators = newLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
+      const totalFloors = newLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
+      setFormData(prev => ({ ...prev, elevators_count: totalElevators, floors_count: totalFloors }));
+  };
+
+  // Preview SQL generator
   useEffect(() => {
-      if (!isOpen) return;
-
-      const generatePreview = () => {
-          let baseId = 0;
-          let idPlaceholder = false;
-          if (isEditMode && formData.contract_id) {
-              baseId = Math.floor(formData.contract_id);
-          } else {
-              idPlaceholder = true;
-              baseId = 999999; // Dummy ID for preview
-          }
-
-          const queries: string[] = [];
-          if (idPlaceholder) queries.push('-- Contract ID will be generated upon save based on City');
-
-          const isSingleLiter = liters.length === 1;
-          const commonFields = { ...formData };
-          commonFields.contract_id = baseId + 0.999;
-          commonFields.is_total = false;
-          commonFields.no_liter_breakdown = true; 
-          commonFields.is_separate_liter = isSingleLiter;
-
-          if (isEditMode && formData.id) {
-              queries.push(`-- Deleting siblings for full update`);
-              queries.push(`DELETE FROM data_contracts WHERE floor(contract_id) = ${baseId} AND id != ${formData.id}`);
-              
-              const updates: string[] = [];
-              DB_MAPPING.forEach(f => {
-                  if (EXCLUDED_FIELDS.includes(f.db)) return;
-                  if (f.db === 'contract_id') return;
-                  if (commonFields[f.db] !== undefined) {
-                      updates.push(`${f.db} = ${toSql(commonFields[f.db], f.type)}`);
-                  }
-              });
-              updates.push(`contract_id = ${baseId}.999`);
-              updates.push(`no_liter_breakdown = true`);
-              updates.push(`is_separate_liter = ${isSingleLiter}`);
-              
-              queries.push(`UPDATE data_contracts SET ${updates.join(', ')} WHERE id = ${formData.id}`);
-          } else {
-              queries.push(`${buildInsert(commonFields)}`);
-          }
-
-          if (!isSingleLiter) {
-              liters.forEach((liter, idx) => {
-                  const literData = { ...commonFields };
-                  delete literData.id;
-                  
-                  literData.contract_id = baseId + ((idx + 1) * 0.001);
-                  literData.liter = liter.name;
-                  literData.elevators_count = liter.elevators;
-                  literData.floors_count = liter.floors;
-                  
-                  literData.no_liter_breakdown = false;
-                  literData.is_separate_liter = true;
-                  literData.is_total = false;
-
-                  FINANCIAL_KEYWORDS.forEach(kw => {
-                      Object.keys(literData).forEach(key => {
-                          if (key.includes(kw)) literData[key] = 0;
-                      });
-                  });
-
-                  queries.push(`${buildInsert(literData)}`);
-              });
-          }
-          setPreviewSql(queries.join(';\n') + ';');
-      };
-
-      generatePreview();
-  }, [formData, liters, isEditMode, isOpen]);
+      const fields = Object.keys(formData).filter(k => !EXCLUDED_FIELDS.includes(k) && k !== 'gross_profit' && formData[k] !== undefined && formData[k] !== '');
+      if (fields.length === 0) {
+          setPreviewSql('-- Нет изменений');
+          return;
+      }
+      const setClause = fields.map(k => `${k} = '${formData[k]}'`).join(',\n  ');
+      setPreviewSql(`UPDATE data_contracts SET\n  ${setClause}\nWHERE id = ${formData.id || 'NEW'};`);
+  }, [formData]);
 
   const handleSave = async () => {
       setLoading(true);
       try {
-          // --- 1. АВТО-ДОБАВЛЕНИЕ НОВЫХ ЗНАЧЕНИЙ В СПРАВОЧНИКИ ---
-          // Проверяем и добавляем: JK, Region, ObjectType, Client, Year
-          const dictMappings = [
-              { category: 'jk', value: formData.housing_complex },
-              { category: 'region', value: formData.region },
-              { category: 'object_type', value: formData.object_type },
-              { category: 'client', value: formData.client_name },
-              { category: 'year', value: formData.year }
-          ];
-
-          for (const mapping of dictMappings) {
-              const val = mapping.value ? String(mapping.value).trim() : '';
-              if (!val) continue;
-
-              const safeVal = val.replace(/'/g, "''");
-
-              // Проверяем, существует ли уже такое значение
-              const checkRes = await executeDbQuery(`
-                  SELECT id FROM app_dictionaries 
-                  WHERE category = '${mapping.category}' 
-                  AND value = '${safeVal}'
-              `);
-
-              if (checkRes.ok && (!checkRes.data || checkRes.data.length === 0)) {
-                  // Если нет - добавляем
-                  await executeDbQuery(`
-                      INSERT INTO app_dictionaries (category, value, is_active, sort_order, code)
-                      VALUES ('${mapping.category}', '${safeVal}', true, 0, 0)
-                  `);
-                  console.log(`Auto-added to dictionary: [${mapping.category}] ${val}`);
-              }
-          }
-
-          // --- 2. ЛОГИКА ГЕНЕРАЦИИ ID ДОГОВОРА (ГОРОД) ---
-          let baseId = 0;
-          if (isEditMode && formData.contract_id) {
-              baseId = Math.floor(formData.contract_id);
+          const payload = { ...formData };
+          
+          // Генерируем contract_id для новых, если его нет
+          if (!payload.contract_id || payload.contract_id === 0) {
+              payload.contract_id = Math.floor(Date.now() / 1000); 
           }
           
-          if (!baseId || baseId === 0) {
-              const city = String(formData.city || '').trim();
-              if (!city) throw new Error("Не указан город для генерации номера договора.");
-
-              // Ищем существующий код города в app_dictionaries
-              const cityRes = await executeDbQuery(`
-                  SELECT code 
-                  FROM app_dictionaries 
-                  WHERE category = 'city_base_index' 
-                    AND value = '${city.replace(/'/g, "''")}'
-              `);
-              
-              let cityStartId = 0;
-
-              if (cityRes.ok && cityRes.data && cityRes.data.length > 0) {
-                  cityStartId = parseInt(cityRes.data[0].code);
-              } else {
-                  // Генерируем новый код для нового города
-                  const maxSeriesRes = await executeDbQuery(`
-                      SELECT MAX(code) as max_id 
-                      FROM app_dictionaries 
-                      WHERE category = 'city_base_index'
-                  `);
-                  
-                  let maxId = 0;
-                  if (maxSeriesRes.ok && maxSeriesRes.data && maxSeriesRes.data[0] && maxSeriesRes.data[0].max_id) {
-                      maxId = parseInt(maxSeriesRes.data[0].max_id);
-                  }
-                  
-                  // Базовый старт 1001, шаг 1000
-                  cityStartId = maxId > 0 ? maxId + 1000 : 1001;
-                  
-                  // Сохраняем новый город в справочник
-                  await executeDbQuery(`
-                      INSERT INTO app_dictionaries (category, value, code) 
-                      VALUES ('city_base_index', '${city.replace(/'/g, "''")}', ${cityStartId})
-                  `);
-              }
-
-              // Ищем свободный contract_id в диапазоне города
-              const nextSeriesStart = cityStartId + 1000;
-              const maxContractRes = await executeDbQuery(`
-                  SELECT MAX(FLOOR(contract_id)) as max_c 
-                  FROM data_contracts 
-                  WHERE contract_id >= ${cityStartId} AND contract_id < ${nextSeriesStart}
-              `);
-
-              let lastContractId = 0;
-              if (maxContractRes.ok && maxContractRes.data && maxContractRes.data[0] && maxContractRes.data[0].max_c) {
-                  lastContractId = parseInt(maxContractRes.data[0].max_c);
-              }
-
-              baseId = lastContractId > 0 ? lastContractId + 1 : cityStartId;
-          }
-
-          // --- 3. ПОДГОТОВКА ДАННЫХ ДОГОВОРА ---
-          const isSingleLiter = liters.length === 1;
-          const commonFields = { ...formData };
-          commonFields.contract_id = baseId + 0.999;
-          commonFields.is_total = false;
-          commonFields.no_liter_breakdown = true; 
-          commonFields.is_separate_liter = isSingleLiter;
-
-          const queries: string[] = [];
-
-          if (isEditMode && formData.id) {
-              queries.push(`DELETE FROM data_contracts WHERE floor(contract_id) = ${baseId} AND id != ${formData.id}`);
-          }
-
-          if (isEditMode && formData.id) {
-              const updates: string[] = [];
-              DB_MAPPING.forEach(f => {
-                  if (EXCLUDED_FIELDS.includes(f.db)) return;
-                  if (f.db === 'contract_id') return;
-                  if (commonFields[f.db] !== undefined) {
-                      updates.push(`${f.db} = ${toSql(commonFields[f.db], f.type)}`);
-                  }
-              });
-              updates.push(`contract_id = ${baseId}.999`);
-              updates.push(`no_liter_breakdown = true`);
-              updates.push(`is_separate_liter = ${isSingleLiter}`);
-              
-              queries.push(`UPDATE data_contracts SET ${updates.join(', ')} WHERE id = ${formData.id}`);
+          // 1. Сохранение data_contracts
+          let saveContractSql = '';
+          
+          // Список полей, которые НЕЛЬЗЯ писать в базу (PK, Generated, Service)
+          const dbReadOnlyFields = [
+              'id', 
+              'created_at', 
+              'updated_at', 
+              'rentability_calculated', 
+              'profit_per_lift_calculated',
+              'gross_profit', // Generated Column
+              'is_total',
+              'no_liter_breakdown',
+              'is_separate_liter'
+          ];
+          
+          // Фильтруем payload для data_contracts
+          // contract_id должен остаться!
+          const cleanEntries = Object.entries(payload).filter(([k, v]) => 
+              !dbReadOnlyFields.includes(k) && v !== undefined
+          );
+          
+          if (isEditMode && payload.id) {
+              const setClause = cleanEntries.map(([k, v]) => {
+                  const val = typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v;
+                  return `"${k}" = ${val}`;
+              }).join(', ');
+              saveContractSql = `UPDATE data_contracts SET ${setClause} WHERE id = ${payload.id}`;
           } else {
-              queries.push(`${buildInsert(commonFields)}`);
+              const cols = cleanEntries.map(([k]) => `"${k}"`).join(', ');
+              const vals = cleanEntries.map(([_, v]) => typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
+              saveContractSql = `INSERT INTO data_contracts (${cols}) VALUES (${vals})`;
           }
+          await executeDbQuery(saveContractSql);
 
-          if (!isSingleLiter) {
-              liters.forEach((liter, idx) => {
-                  const literData = { ...commonFields };
-                  delete literData.id;
+          // 2. Сохранение contract_transactions
+          const contractId = payload.contract_id;
+          for (const [type, txs] of Object.entries(transactionsMap)) {
+              // Удаляем старые
+              const deleteSql = `DELETE FROM contract_transactions WHERE contract_id = ${contractId} AND type = '${type}'`;
+              await executeDbQuery(deleteSql);
+
+              if (txs.length > 0) {
+                  // Вставляем новые
+                  const values = txs.map(t => {
+                      const val = t.value || 0;
+                      const txt = (t.text || '').replace(/'/g, "''");
+                      const dt = t.date || new Date().toISOString().split('T')[0];
+                      return `(${contractId}, '${type}', ${val}, '${txt}', '${dt}')`;
+                  }).join(', ');
                   
-                  literData.contract_id = baseId + ((idx + 1) * 0.001);
-                  literData.liter = liter.name;
-                  literData.elevators_count = liter.elevators;
-                  literData.floors_count = liter.floors;
-                  
-                  literData.no_liter_breakdown = false;
-                  literData.is_separate_liter = true;
-                  literData.is_total = false;
-
-                  FINANCIAL_KEYWORDS.forEach(kw => {
-                      Object.keys(literData).forEach(key => {
-                          if (key.includes(kw)) literData[key] = 0;
-                      });
-                  });
-
-                  queries.push(`${buildInsert(literData)}`);
-              });
-          }
-
-          // --- 4. ВЫПОЛНЕНИЕ ЗАПРОСОВ ---
-          for (const query of queries) {
-              await executeDbQuery(query);
+                  const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, date) VALUES ${values}`;
+                  await executeDbQuery(insertSql);
+              }
           }
 
           onSuccess();
           onClose();
-      } catch (e: any) {
-          alert("Ошибка сохранения: " + e.message);
+      } catch (err) {
+          console.error("Save Error:", err);
+          alert("Ошибка при сохранении: " + err);
       } finally {
           setLoading(false);
       }
   };
+
+  // Поля, которые мы скрываем из UI
+  const fieldsToExcludeFromUI = [
+      ...EXCLUDED_FIELDS,
+      'is_total', 
+      'no_liter_breakdown', 
+      'is_separate_liter'
+  ];
+
+  const generalFields = DB_MAPPING.filter(m => 
+      !FINANCIAL_KEYWORDS.some(k => m.db.includes(k)) && 
+      !fieldsToExcludeFromUI.includes(m.db) && 
+      !m.db.includes('count')
+  );
 
   return {
     formData,
@@ -483,10 +287,11 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
     fieldCurrencies,
     optionsMap,
     generalFields,
-    financialFields,
     isEditMode,
     previewSql,
+    transactionsMap,
     handleChange,
+    handleTransactionChange,
     handleCurrencyChange,
     addLiter,
     removeLiter,

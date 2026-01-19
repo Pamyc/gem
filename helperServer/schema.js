@@ -1,4 +1,5 @@
 
+
 export const DB_SCHEMA = [
     `CREATE TABLE IF NOT EXISTS telegram_pipelines (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, keywords TEXT, watched_chats TEXT[] DEFAULT '{}', blacklist TEXT[] DEFAULT '{}', stages JSONB DEFAULT '[]', message_exceptions INTEGER[] DEFAULT '{}', created_at TIMESTAMP DEFAULT NOW());`,
     `ALTER TABLE telegram_pipelines ADD COLUMN IF NOT EXISTS exclude_keywords TEXT;`,
@@ -72,6 +73,19 @@ export const DB_SCHEMA = [
         setting_key VARCHAR(255) UNIQUE,
         setting_value TEXT
     );`,
+
+    // 4. contract_transactions (ADDED for financial details)
+    `CREATE TABLE IF NOT EXISTS contract_transactions (
+        id SERIAL PRIMARY KEY,
+        contract_id NUMERIC NOT NULL,
+        type VARCHAR(255) NOT NULL,
+        value NUMERIC(15,2) DEFAULT 0,
+        text TEXT,
+        date DATE,
+        created_at TIMESTAMP DEFAULT NOW()
+    );`,
+    
+    `CREATE INDEX IF NOT EXISTS idx_contract_transactions_contract_id ON contract_transactions(contract_id);`,
 
     // --- ЗАПОЛНЕНИЕ meta_dictionary (SEED) ---
     `INSERT INTO meta_dictionary (id, db_column, sheet_header, ui_label, data_type) VALUES

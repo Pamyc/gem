@@ -2,7 +2,6 @@
 import React, { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import { MenuItem, TabId } from '../types';
-import HeaderStats from '../components/HeaderStats';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -49,13 +48,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Header */}
         <header className="min-h-[4rem] h-auto bg-white/80 dark:bg-[#151923]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-8 py-2 shadow-sm shrink-0 z-10 transition-colors duration-300">
           <div className="flex-1">
-            {activeTab === 'stats' ? (
-              <HeaderStats />
-            ) : (
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">
-                {currentTitle}
-              </h2>
-            )}
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">
+              {currentTitle}
+            </h2>
           </div>
           
           <div className="flex items-center gap-4 ml-4">

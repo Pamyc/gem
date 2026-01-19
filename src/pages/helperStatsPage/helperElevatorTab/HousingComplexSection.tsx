@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useDataStore } from '../../../contexts/DataContext';
-import { Loader2, MapPin, Maximize2, Users, Building, ArrowUpFromLine, Layers, X, FileSignature, Building2 } from 'lucide-react';
+import { Loader2, MapPin, Maximize2, Users, Building, ArrowUpFromLine, Layers, X, FileSignature, Building2, User } from 'lucide-react';
 import { getImgByName } from '../../../utils/driveUtils';
 import { getMergedHeaders } from '../../../utils/chartUtils';
 import DetailsModal from '../../../components/cards/helper/helperCustomCard/DetailsModal';
@@ -59,7 +59,6 @@ interface JKAggregatedData {
   elevators: number;
   floors: number;
   liters: number;
-  contracts: number; // New field
   city: string;
 }
 
@@ -91,7 +90,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
     const idxFloors = headers.indexOf('Кол-во этажей');
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
     const idxNoBreakdown = headers.indexOf('Без разбивки на литеры (Да/Нет)');
-    const idxContractId = headers.indexOf('contract_id'); // Try to find contract ID
+    const idxOneLiter = headers.indexOf('Отдельный литер (Да/Нет)'); // For accurate liters count
 
     if (idxJK === -1) return [];
 
@@ -132,39 +131,25 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
         if (idxCity !== -1) city = String(rows[0][idxCity] || '');
       }
 
-      // Metric Logic
-      let contractsCount = 0;
+      // Logic for Liters:
+      // Try to use "Отдельный литер (Да/Нет)" column first (as per modal fix)
       let litersCount = 0;
+      if (idxOneLiter !== -1) {
+        litersCount = rows.filter(r => String(r[idxOneLiter]).trim().toLowerCase() === 'да').length;
+      } else {
+        // Fallback logic: count rows that are NOT aggregations (detail rows)
+        const detailRows = idxNoBreakdown !== -1
+          ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'нет')
+          : rows;
+        litersCount = detailRows.length;
+      }
 
-      rows.forEach(r => {
-          let contractId = 0;
-          if (idxContractId !== -1) {
-              contractId = parseFloat(String(r[idxContractId])) || 0;
-          }
+      // If count is 0 but we have data for the JK, assume 1 (the main building/complex itself).
+      if (litersCount === 0 && rows.length > 0) {
+        litersCount = 1;
+      }
 
-          // Fallback logic if contract_id is missing or 0: assume standard row is both liter and contract
-          if (contractId <= 0) {
-              // If no breakdown => standard row
-              const isNoBreakdown = idxNoBreakdown !== -1 && String(r[idxNoBreakdown]).trim().toLowerCase() === 'да';
-              if (!isNoBreakdown) {
-                  litersCount++;
-                  contractsCount++;
-              }
-          } else {
-              const decimalPart = Math.round((contractId % 1) * 1000);
-              const is999 = decimalPart === 999;
-              const isDecimal = contractId % 1 > 0.0001;
-
-              if (!is999) {
-                  litersCount++;
-                  if (!isDecimal) {
-                      contractsCount++;
-                  }
-              }
-          }
-      });
-
-      // Summing metrics - use rows where "Без разбивки на литеры" is "Да" to match Modal/KPI logic
+      // Summing metrics - use rows where "Без разбивки на литеры" is "Да" to match Modal/KPI logic (Sums from Aggregate Rows)
       const sumRows = idxNoBreakdown !== -1
         ? rows.filter(r => String(r[idxNoBreakdown]).trim().toLowerCase() === 'да')
         : rows;
@@ -178,8 +163,7 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
         city,
         elevators,
         floors,
-        liters: litersCount,
-        contracts: contractsCount
+        liters: litersCount
       });
     });
 
@@ -368,30 +352,30 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 bg-slate-800 text-white text-xs rounded-xl shadow-lg p-3 opacity-0 group-hover/stats:opacity-100 transition-opacity pointer-events-none z-50">
                         <div className="font-bold border-b border-white/10 pb-1 mb-1">{item.name}</div>
                         <div className="space-y-1">
-                            <div className="flex justify-between"><span>Договоров:</span> <span className="font-bold text-indigo-300">{item.contracts}</span></div>
+                            <div className="flex justify-between"><span>Заказчик:</span> <span className="font-bold text-white">{item.client}</span></div>
                             <div className="flex justify-between"><span>Литеров:</span> <span className="font-bold text-orange-300">{item.liters}</span></div>
-                            <div className="flex justify-between"><span>Лифтов:</span> <span className="font-bold">{item.elevators}</span></div>
-                            <div className="flex justify-between"><span>Этажей:</span> <span className="font-bold">{item.floors}</span></div>
+                            <div className="flex justify-between"><span>Лифтов:</span> <span className="font-bold text-indigo-300">{item.elevators}</span></div>
+                            <div className="flex justify-between"><span>Этажей:</span> <span className="font-bold text-fuchsia-300">{item.floors}</span></div>
                         </div>
                         <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-slate-800 rotate-45"></div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 ">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
 
-                    {/* Contracts (Was Client) */}
+                    {/* Client */}
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1">
-                        <FileSignature size={10} className="text-indigo-300"/> Договоров
+                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1.5">
+                        <User size={12} className="text-white/80"/> ЗАКАЗЧИК
                       </span>
-                      <span className="text-sm font-bold text-white truncate">
-                        {item.contracts}
+                      <span className="text-sm font-bold text-white truncate uppercase">
+                        {item.client || '—'}
                       </span>
                     </div>
 
                     {/* Liters */}
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1">
-                        <Building2 size={10} className="text-orange-300"/> Литеров
+                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1.5">
+                        <Building2 size={12} className="text-white/80"/> ЛИТЕРЫ
                       </span>
                       <span className="text-sm font-bold text-white">
                         {item.liters}
@@ -400,8 +384,8 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
                     {/* Elevators */}
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1">
-                        <ArrowUpFromLine size={10} /> Лифтов
+                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1.5">
+                        <ArrowUpFromLine size={12} className="text-white/80" /> ЛИФТОВ
                       </span>
                       <span className="text-sm font-bold text-indigo-300">
                         {item.elevators}
@@ -410,8 +394,8 @@ const HousingComplexSection: React.FC<HousingComplexSectionProps> = ({ selectedC
 
                     {/* Floors */}
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1">
-                        <Layers size={10} /> Этажей
+                      <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5 flex items-center gap-1.5">
+                        <Layers size={12} className="text-white/80" /> ЭТАЖЕЙ
                       </span>
                       <span className="text-sm font-bold text-fuchsia-300">
                         {item.floors}

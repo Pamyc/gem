@@ -6,6 +6,7 @@ import ModalHeader from './helperEditContractModal/ModalHeader';
 import ModalFooter from './helperEditContractModal/ModalFooter';
 import InputField from './helperEditContractModal/InputField';
 import LitersList from './helperEditContractModal/LitersList';
+import FinancialSection from './helperEditContractModal/FinancialSection';
 import { useContractLogic } from './helperEditContractModal/useContractLogic';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -26,7 +27,6 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     fieldCurrencies,
     optionsMap,
     generalFields,
-    financialFields,
     isEditMode,
     previewSql,
     handleChange,
@@ -34,7 +34,9 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     addLiter,
     removeLiter,
     updateLiter,
-    handleSave
+    handleSave,
+    transactionsMap,
+    handleTransactionChange 
   } = useContractLogic({ isOpen, nodeData, onSuccess, onClose });
 
   if (!isOpen) return null;
@@ -50,7 +52,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
             />
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                <div className="grid grid-cols-1 md:grid-cols-[45%_55%] gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-8">
                     
                     {/* Left Column: General & Liters */}
                     <div className="space-y-6">
@@ -92,7 +94,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
 
                     </div>
 
-                    {/* Right Column: Financials */}
+                    {/* Right Column: Financials (New Grouped Layout) */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-white/10">
                             <div className="flex items-center gap-2">
@@ -106,23 +108,14 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                             </div>
                         </div>
 
-                        <div className="space-y-0.5 bg-emerald-50/30 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20 p-2 max-h-[500px] overflow-y-auto custom-scrollbar">
-                            {financialFields.length > 0 ? (
-                                financialFields.map(f => (
-                                    <InputField 
-                                        key={f.db}
-                                        field={f}
-                                        value={formData[f.db]}
-                                        onChange={handleChange}
-                                        isFinancial={true}
-                                        currency={fieldCurrencies[f.db] || '₽'}
-                                        onCurrencyChange={handleCurrencyChange}
-                                        options={optionsMap[f.db]}
-                                    />
-                                ))
-                            ) : (
-                                <div className="p-4 text-center text-xs text-gray-400">Финансовые показатели отсутствуют</div>
-                            )}
+                        {/* New Financial Section Component */}
+                        <div className="max-h-[550px] overflow-y-auto custom-scrollbar pr-1">
+                            <FinancialSection 
+                                formData={formData} 
+                                onChange={handleChange} 
+                                transactionsMap={transactionsMap}
+                                onTransactionChange={handleTransactionChange}
+                            />
                         </div>
                     </div>
 
