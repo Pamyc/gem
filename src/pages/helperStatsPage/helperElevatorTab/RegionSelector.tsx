@@ -65,7 +65,7 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({ selectedRegion, onSelec
         className="inline-flex items-center gap-3 cursor-pointer select-none group transition-opacity hover:opacity-80"
         title="Нажмите для выбора региона"
       >
-        <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-700 dark:text-gray-200 tracking-tight flex items-center gap-2">
             {selectedRegion || "Все регионы"}
         </h1>
         
