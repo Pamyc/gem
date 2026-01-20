@@ -253,7 +253,7 @@ const ElevatorsPerYearList: React.FC<ElevatorsPerYearListProps> = ({ isDarkMode,
       tooltip: {
         trigger: 'item',
         padding: 0,
-        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.6)',
         borderColor: isDarkMode ? '#334155' : '#e2e8f0',
         textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
         formatter: (params: any) => {
