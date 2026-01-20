@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  /* Резервируем место под скроллбар, чтобы контент не скакал при его появлении */
+  scrollbar-gutter: stable;
+}
+
 /* Global Hover Scrollbar */
 .hover-scrollbar {
   overflow-y: auto;

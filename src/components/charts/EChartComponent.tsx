@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import * as echarts from 'echarts';
 import { ChartProps } from '../../types';
@@ -57,10 +58,22 @@ const EChartComponent = forwardRef<EChartInstance, ChartProps>(({ options, heigh
   // Эффект для обновления данных (опций)
   useEffect(() => {
     if (chartInstance.current) {
+      // Создаем копию опций, чтобы безопасно модифицировать
+      const finalOptions = { ...options };
+
+      // Принудительно устанавливаем confine: true для тултипа,
+      // чтобы он не выходил за границы графика и не вызывал появление скроллбаров
+      if (finalOptions.tooltip && typeof finalOptions.tooltip === 'object' && !Array.isArray(finalOptions.tooltip)) {
+        finalOptions.tooltip = {
+          ...finalOptions.tooltip,
+          confine: true
+        };
+      }
+
       // Важно: используем второй параметр (notMerge).
       // Если merge = true, то notMerge = false.
       // По умолчанию merge = false, значит notMerge = true (старое поведение).
-      chartInstance.current.setOption(options, !merge);
+      chartInstance.current.setOption(finalOptions, !merge);
     }
   }, [options, merge]);
 

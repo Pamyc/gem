@@ -130,6 +130,7 @@ const ElevatorsByYearChart: React.FC<ElevatorsByYearChartProps> = ({ isDarkMode,
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
+      appendToBody: true, // Всплывающая подсказка поверх всего
       axisPointer: { type: 'shadow' }, // 'shadow' as default; can also be 'line' or 'cross'
       backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
       borderColor: isDarkMode ? '#334155' : '#e2e8f0',

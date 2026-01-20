@@ -3,8 +3,11 @@ import React, { useMemo } from 'react';
 import GeneralChartCard from './GeneralChartCard';
 import PieDonutChart from './PieDonutChart';
 import TreemapSunburstChart from './TreemapSunburstChart';
+import NestedDonutChart from '../helperGeneralTab/NestedDonutChart'; // Import new component
 import { ChartConfig } from '../../../types/chart';
 import ElevatorsByCustomerChart from './ElevatorsByCustomerChart';
+import { useProcessedChartData } from '../../../hooks/useProcessedChartData'; // Import hook
+import { Loader2 } from 'lucide-react';
 
 interface ChartsSectionProps {
   isDarkMode: boolean;
@@ -52,9 +55,6 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
     };
   };
 
-  // Конфигурация для PieDonutChart
-
-
   const TreemapDataConfig = useMemo(() => withFilters({
     title: 'Кол-во лифтов по ЖК',
     sheetKey: 'clientGrowth',
@@ -99,36 +99,43 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
     ]
   }), [selectedCity, selectedYear, selectedRegion]);
 
-  // Новая конфигурация: Кол-во ЖК по заказчикам
+  // Конфигурация 1: Кол-во ЖК по заказчикам
   const SumJkClientDataConfig = useMemo(() => withFilters({
-    title: 'Кол-во ЖК по заказчикам',
+    title: 'Кол-во ЖК',
     sheetKey: 'clientGrowth',
     xAxisColumn: 'Клиент',
     yAxisColumn: 'ЖК',
     aggregation: 'unique',
-    uniqueTarget: 'yAxis', // ВАЖНО: Явно указываем считать уникальные значения из столбца Y (ЖК)
+    uniqueTarget: 'yAxis',
     filters: [
-      {
-        id: "o09z9l2b4",
-        column: "Итого (Да/Нет)",
-        operator: "equals",
-        value: "Нет"
-      },
-      {
-        id: "aagerz8uy",
-        column: "Без разбивки на литеры (Да/Нет)",
-        operator: "equals",
-        value: "Да"
-      }
+      { id: "o09z9l2b4", column: "Итого (Да/Нет)", operator: "equals", value: "Нет" },
+      { id: "aagerz8uy", column: "Без разбивки на литеры (Да/Нет)", operator: "equals", value: "Да" }
     ]
   }), [selectedCity, selectedYear, selectedRegion]);
 
+  // Конфигурация 2: Кол-во Литеров по заказчикам
+  const SumLiterClientDataConfig = useMemo(() => withFilters({
+    title: 'Кол-во литеров',
+    sheetKey: 'clientGrowth',
+    xAxisColumn: 'Клиент',
+    yAxisColumn: 'Литер',
+    aggregation: 'count',
+    filters: [
+      { id: "o09z9l2b4_liter", column: "Итого (Да/Нет)", operator: "equals", value: "Нет" },
+      { id: "separate_liter_filter", column: "Отдельный литер (Да/Нет)", operator: "equals", value: "Да" }
+    ]
+  }), [selectedCity, selectedYear, selectedRegion]);
+
+  // Загружаем данные для двойного графика напрямую через хуки
+  const { data: jkData, isLoading: jkLoading } = useProcessedChartData(SumJkClientDataConfig);
+  const { data: literData, isLoading: literLoading } = useProcessedChartData(SumLiterClientDataConfig);
+
+  const isLoadingNested = jkLoading || literLoading;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
-      {/* Круговые диаграммы оставляем с лимитом по умолчанию (7), чтобы не было каши */}
-
-
-      {/* Treemap можно показать чуть больше, например 10 */}
+      
+      {/* Treemap */}
       <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valueSuffix=" шт.">
         {(data, isExpanded) => (
           <TreemapSunburstChart
@@ -141,7 +148,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
         )}
       </GeneralChartCard>
 
-      {/* Для горизонтального бара увеличим до 15 */}
+      {/* Pie Chart (Status) */}
       <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
         {(data, isExpanded) => (
           <PieDonutChart
@@ -154,32 +161,46 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
         )}
       </GeneralChartCard>
 
-      {/* Для линейных графиков ставим limit={0}, чтобы показать ВСЕ данные, так как там есть скролл/зум */}
-      <GeneralChartCard config={SumJkClientDataConfig} limit={7} showTotal valuePrefix="" valueSuffix="">
-        {(data, isExpanded) => (
-          <PieDonutChart
-            isDarkMode={isDarkMode}
-            data={data}
-            title=""
-            valueSuffix=""
-            className={isExpanded ? "w-full h-full" : undefined}
-          />
-        )}
-      </GeneralChartCard>
+      {/* Double Nested Donut Chart Card (JKs & Liters by Client) */}
+      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+              Объекты по заказчикам
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Внутренний: <b>Кол-во ЖК</b> / Внешний: <b>Кол-во Литеров</b>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 w-full min-h-[350px] relative">
+           {isLoadingNested ? (
+              <div className="absolute inset-0 flex items-center justify-center text-indigo-500">
+                 <Loader2 className="animate-spin" />
+              </div>
+           ) : (
+              <NestedDonutChart 
+                 isDarkMode={isDarkMode} 
+                 innerData={jkData} 
+                 outerData={literData}
+                 innerTitle="ЖК"
+                 outerTitle="Литеры"
+              />
+           )}
+        </div>
+      </div>
 
       {/* Custom Chart Card: Elevators By Customer */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
         <div className="flex items-center justify-between mb-6 shrink-0">
-          <div className="flex items-center gap-3">
-            
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                Статус по заказчикам
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Сданы / В работе
-              </p>
-            </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+              Количество/Статус лифтов по заказчикам
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Сданы / В работе
+            </p>
           </div>
         </div>
 

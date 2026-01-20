@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, ArrowUpFromLine, Banknote, Hammer, FlaskConical, ArrowRightLeft } from 'lucide-react';
 import GeneralTab from './GeneralTab';
 import TestTab from './TestTab';
@@ -14,22 +14,68 @@ interface DashboardChartsProps {
 }
 
 type TabType = 'general' | 'elevator_tab' | 'test' | 'lifts' | 'finance' | 'montag' | 'comparison';
+type PanelState = 'active' | 'hidden';
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
+  
+  // Sticky & Animation State
   const [isSticky, setIsSticky] = useState(false);
+  const [panelState, setPanelState] = useState<PanelState>('active');
+
+  // Timers refs
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimer = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = null;
+  };
 
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
     if (!container) return;
 
     const handleScroll = () => {
-      setIsSticky(container.scrollTop > 20);
+      const shouldBeSticky = container.scrollTop > 20;
+      setIsSticky(shouldBeSticky);
     };
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Auto-hide Effect based on Sticky State
+  useEffect(() => {
+    if (isSticky) {
+      // Как только панель прилипла, запускаем таймер скрытия
+      clearTimer();
+      hideTimer.current = setTimeout(() => {
+        setPanelState('hidden');
+      }, 1500); // 1.5 сек задержка перед скрытием
+    } else {
+      // Если вернулись наверх - показываем панель
+      setPanelState('active');
+      clearTimer();
+    }
+
+    return () => clearTimer();
+  }, [isSticky]);
+
+  const handleMouseEnter = () => {
+    // Пробуждение: мгновенный возврат
+    clearTimer();
+    setPanelState('active');
+  };
+
+  const handleMouseLeave = () => {
+    // Запускаем скрытие только если панель "липкая"
+    if (!isSticky) return;
+
+    clearTimer();
+    hideTimer.current = setTimeout(() => {
+      setPanelState('hidden');
+    }, 1000);
+  };
 
   const tabs = [
     { 
@@ -69,26 +115,38 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ isDarkMode }) => {
     },
   ];
 
+  // Dynamic classes for sticky container
+  const getStickyClasses = () => {
+    const base = "sticky top-0 z-50 transition-all duration-700 ease-in-out origin-top";
+    
+    if (!isSticky) {
+      return `${base} py-0`;
+    }
+
+    if (panelState === 'active') {
+      return `${base} py-2 bg-slate-50/90 dark:bg-[#0b0f19]/10 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-white/5 -mx-8 px-8 scale-100 opacity-100 translate-y-0`;
+    }
+
+    // Hidden State
+    return `${base} py-2 bg-transparent -mx-8 px-8 scale-90 opacity-0 -translate-y-4 pointer-events-auto`;
+  };
+
   return (
     <div className="w-full space-y-8">
       
       {/* Tab Navigation Menu (Sticky) */}
       <div 
-        className={`
-          sticky top-0 z-50 transition-all duration-500 ease-in-out origin-top
-          ${isSticky 
-            ? 'py-2 bg-slate-50/90 dark:bg-[#0b0f19]/10 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-white/5 -mx-8 px-8' 
-            : 'py-0'
-          }
-        `}
+        className={getStickyClasses()}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div 
           className={`
-            flex flex-col sm:flex-row items-center justify-between gap-4 transition-transform duration-300 origin-top-left
-            ${isSticky ? 'scale-90 opacity-90 hover:scale-100 hover:opacity-100' : 'scale-100'}
+            flex flex-col sm:flex-row items-center justify-between gap-4 transition-transform duration-300 origin-top
+            ${isSticky && panelState === 'active' ? 'scale-95' : 'scale-100'}
           `}
         >
-          <div className="w-full sm:w-auto bg-white dark:bg-[#151923] p-1.5 rounded-2xl border border-gray-200 dark:border-white/5 flex overflow-x-auto scrollbar-none">
+          <div className="w-full sm:w-auto bg-white dark:bg-[#151923] p-1.5 rounded-2xl border border-gray-200 dark:border-white/5 flex overflow-x-auto scrollbar-none shadow-sm">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

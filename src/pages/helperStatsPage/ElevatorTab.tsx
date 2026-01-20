@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import KPISection from './helperElevatorTab/KPISection';
-import KPISection2 from './helperElevatorTab/KPISection2';
 import ChartsSection from './helperElevatorTab/ChartsSection';
 import RegionSelector from './helperElevatorTab/RegionSelector';
 import CitySelector from './helperElevatorTab/CitySelector';
@@ -161,9 +160,7 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
         selectedRegion={selectedRegion}
       />
 
-      {/* KPI Section 2 with filtering */}
-      <KPISection2 selectedCity={selectedCity} selectedYear={selectedYear} selectedRegion={selectedRegion} />
-
+      
       {/* NEW: Complex Comparisons (Elevators/Floors per Liter) */}
       <div className="w-full">
         <ComplexComparisons 
