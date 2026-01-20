@@ -80,7 +80,7 @@ const SideList: React.FC<SideListProps> = ({
   };
 
   return (
-    <div className="w-1/4 min-w-[200px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-2 pl-1 py-2 animate-in slide-in-from-left-4 duration-500 relative">
+    <div className="w-1/5 min-w-[150px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-2 pl-1 py-2 animate-in slide-in-from-left-4 duration-500 relative">
         <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-[#151923] py-2 z-10 mb-2 border-b border-gray-100 dark:border-white/5">
           <div className="flex flex-col">
              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">

@@ -341,7 +341,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
       />
 
       {/* Main Content Area */}
-      <div className="flex h-[550px] relative">
+      <div className="flex h-[650px] relative">
         
         {/* Left Side List */}
         <SideList
@@ -359,7 +359,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         />
 
         {/* Central Info Panel (Fixed) */}
-        <div className="w-[300px] border-r border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#0b0f19]/30 flex flex-col relative shrink-0">
+        <div className="w-[350px] border-r border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#0b0f19]/30 flex flex-col relative shrink-0">
             <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
                <div 
                   className="bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-200 dark:border-white/5 p-3 min-h-[200px]"
