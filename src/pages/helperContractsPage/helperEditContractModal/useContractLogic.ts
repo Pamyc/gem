@@ -78,12 +78,12 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
           // Используем диапазон для поиска всех записей группы (например, 1004, 1004.001, 1004.002)
           // Ищем всё, что >= contractId и < (contractId + 1)
           const baseId = Math.floor(contractId);
-          let sql = `SELECT id, liter, elevators_count, floors_count FROM data_contracts WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1}`;
           
-          // Исключаем саму текущую редактируемую запись
-          if (currentRecordId) {
-              sql += ` AND id != ${currentRecordId}`;
-          }
+          // Обновленная логика:
+          // 1. Ищем по диапазону ID группы.
+          // 2. Фильтруем только записи, являющиеся литерами (is_separate_liter = true).
+          // 3. НЕ исключаем текущую запись (currentRecordId), чтобы одиночный литер тоже был в списке.
+          let sql = `SELECT id, liter, elevators_count, floors_count FROM data_contracts WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1} AND is_separate_liter = true`;
           
           sql += ` ORDER BY id ASC`;
 
@@ -249,124 +249,132 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
   const handleSave = async () => {
       setLoading(true);
       try {
-          const payload = { ...formData };
-          
-          // Генерируем contract_id для новых, если его нет
-          if (!payload.contract_id || payload.contract_id === 0) {
-              payload.contract_id = Math.floor(Date.now() / 1000); 
+          // 1. Calculate Base ID
+          let baseContractId = Math.floor(formData.contract_id || 0);
+          if (baseContractId === 0) {
+              baseContractId = Math.floor(Date.now() / 1000);
           }
-          
-          const contractId = payload.contract_id;
 
-          // --- 1. Сохранение data_contracts (Основная запись договора) ---
-          let saveContractSql = '';
-          
-          const dbReadOnlyFields = [
-              'id', 
-              'created_at', 
-              'updated_at', 
-              'rentability_calculated', 
-              'profit_per_lift_calculated',
-              'gross_profit',
-              'is_total',
-              'no_liter_breakdown',
-              'is_separate_liter'
-          ];
-          
-          // Основной договор: флаг no_liter_breakdown = true
-          payload.no_liter_breakdown = true; 
-          payload.is_total = false; 
-          payload.is_separate_liter = false;
+          // 2. Determine Scenario
+          // If liters array is empty (unlikely but safe check), treat as 1 dummy
+          const effectiveLiters = liters.length === 0 ? [{name: 'Литер 1', elevators: 0, floors: 0}] : liters;
+          const litersCount = effectiveLiters.length;
+          const isSingle = litersCount === 1;
 
-          const cleanEntries = Object.entries(payload).filter(([k, v]) => 
-              !dbReadOnlyFields.includes(k) && v !== undefined
-          );
+          // 3. Define Main Contract ID
+          // Single (Scenario A): Integer X
+          // Group (Scenario B): X.999
+          const mainContractId = isSingle ? baseContractId : (baseContractId + 0.999);
+
+          // 4. Clear Old Data (Full Wipe of the range)
+          const deleteContractsSql = `DELETE FROM data_contracts WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
+          const deleteTransactionsSql = `DELETE FROM contract_transactions WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
           
-          if (isEditMode && payload.id) {
-              const setClause = cleanEntries.map(([k, v]) => {
-                  const val = typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v;
-                  return `"${k}" = ${val}`;
+          await executeDbQuery(deleteContractsSql);
+          await executeDbQuery(deleteTransactionsSql);
+
+          // 5. Insert New Records
+          
+          // Helper: Generate INSERT SQL
+          const generateInsert = (data: Record<string, any>) => {
+              // Exclude read-only/generated fields
+              const safeData = { ...data };
+              delete safeData.id;
+              delete safeData.created_at;
+              delete safeData.updated_at;
+              delete safeData.rentability_calculated;
+              delete safeData.profit_per_lift_calculated;
+              delete safeData.gross_profit; // Can be recalculated by DB, or we pass it if we trust frontend calc
+              
+              const keys = Object.keys(safeData);
+              const cols = keys.map(k => `"${k}"`).join(', ');
+              const vals = keys.map(k => {
+                  const val = safeData[k];
+                  if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`;
+                  if (val === undefined || val === null) return 'NULL';
+                  if (typeof val === 'boolean') return val ? 'true' : 'false';
+                  return val;
               }).join(', ');
-              saveContractSql = `UPDATE data_contracts SET ${setClause}, no_liter_breakdown = true WHERE id = ${payload.id}`;
-          } else {
-              const cols = [...cleanEntries.map(([k]) => `"${k}"`), 'no_liter_breakdown'].join(', ');
-              const vals = [...cleanEntries.map(([_, v]) => typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v), 'true'].join(', ');
-              saveContractSql = `INSERT INTO data_contracts (${cols}) VALUES (${vals})`;
-          }
-          await executeDbQuery(saveContractSql);
+              return `INSERT INTO data_contracts (${cols}) VALUES (${vals})`;
+          };
 
-          // --- 2. Сохранение Литеров (Sync Liters) ---
+          // Prepare Base Data (Common fields)
+          const baseData = { ...formData };
           
-          // A. Удаляем литеры (которые не являются основной записью), которых больше нет в списке UI
-          const existingIds = liters.map(l => l.id).filter(id => id !== undefined);
-          
-          // Важно: удаляем только те, которые принадлежат этому контракту И не являются самим контрактом (id != payload.id)
-          // Если это создание, payload.id еще может не быть, но contract_id уникален.
-          let deleteCondition = `contract_id = ${contractId}`;
-          
-          // Исключаем текущий ID редактируемой записи (чтобы случайно не удалить родителя, если флаги кривые)
-          if (payload.id) {
-              deleteCondition += ` AND id != ${payload.id}`;
-          } else {
-              // Если создание, то родителя еще нет или мы его только что вставили (но ID не знаем без RETURNING).
-              // Для упрощения считаем, что при создании мы сначала удаляем "мусор" (которого быть не должно), а потом вставляем.
-              // Но лучше добавить условие no_liter_breakdown = false для удаления.
-              deleteCondition += ` AND no_liter_breakdown = false`;
+          // Ensure gross_profit is consistent if we decide to save it explicitly
+          if (baseData.income_total_fact !== undefined && baseData.expense_total_fact !== undefined) {
+              baseData.gross_profit = Number(baseData.income_total_fact) - Number(baseData.expense_total_fact);
           }
 
-          if (existingIds.length > 0) {
-              deleteCondition += ` AND id NOT IN (${existingIds.join(',')})`;
-          }
-          await executeDbQuery(`DELETE FROM data_contracts WHERE ${deleteCondition}`);
-
-          // B. Upsert (Обновление или Вставка) для каждого литера
-          for (const liter of liters) {
-              const literData: Record<string, any> = {
-                  contract_id: contractId,
+          if (isSingle) {
+              // --- SCENARIO A: Single Contract ---
+              const liter = effectiveLiters[0];
+              const record = {
+                  ...baseData,
+                  contract_id: mainContractId,
                   liter: liter.name,
                   elevators_count: liter.elevators,
                   floors_count: liter.floors,
-                  
-                  // Наследуем контекст
-                  city: payload.city,
-                  housing_complex: payload.housing_complex,
-                  region: payload.region,
-                  client_name: payload.client_name,
-                  year: payload.year,
-                  object_type: payload.object_type,
-                  is_handed_over: payload.is_handed_over,
-                  
-                  no_liter_breakdown: false, // Это дочерний элемент
+                  no_liter_breakdown: true,
                   is_separate_liter: true,
                   is_total: false
               };
+              await executeDbQuery(generateInsert(record));
+          } else {
+              // --- SCENARIO B: Group Contract ---
+              
+              // Step 1: Parent (Aggregator)
+              const totalElevators = effectiveLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
+              const totalFloors = effectiveLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
+              
+              const parentRecord = {
+                  ...baseData,
+                  contract_id: mainContractId,
+                  liter: '', // Empty for parent
+                  elevators_count: totalElevators,
+                  floors_count: totalFloors,
+                  no_liter_breakdown: true,
+                  is_separate_liter: false,
+                  is_total: false
+              };
+              await executeDbQuery(generateInsert(parentRecord));
 
-              if (liter.id) {
-                  const updates = Object.entries(literData)
-                      .map(([k, v]) => {
-                          const val = typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v;
-                          return `"${k}" = ${val}`;
-                      })
-                      .join(', ');
-                  await executeDbQuery(`UPDATE data_contracts SET ${updates} WHERE id = ${liter.id}`);
-              } else {
-                  const cols = Object.keys(literData).map(k => `"${k}"`).join(', ');
-                  const vals = Object.values(literData).map(v => typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
-                  await executeDbQuery(`INSERT INTO data_contracts (${cols}) VALUES (${vals})`);
+              // Step 2: Children (Liters)
+              for (let i = 0; i < effectiveLiters.length; i++) {
+                  const liter = effectiveLiters[i];
+                  // ID format: X.001, X.002 ...
+                  const childId = baseContractId + (i + 1) / 1000;
+                  
+                  const childRecord = {
+                      ...baseData,
+                      contract_id: childId,
+                      liter: liter.name,
+                      elevators_count: liter.elevators,
+                      floors_count: liter.floors,
+                      no_liter_breakdown: false,
+                      is_separate_liter: true,
+                      is_total: false
+                  };
+                  
+                  // Clear financials for children (they are on parent)
+                  FINANCIAL_KEYWORDS.forEach(kw => {
+                      Object.keys(childRecord).forEach(key => {
+                          if (key.includes(kw)) (childRecord as any)[key] = 0;
+                      });
+                  });
+
+                  await executeDbQuery(generateInsert(childRecord));
               }
           }
 
-          // --- 3. Сохранение транзакций ---
+          // 6. Save Transactions (Linked to MAIN Contract ID)
           for (const [type, txs] of Object.entries(transactionsMap)) {
-              const deleteSql = `DELETE FROM contract_transactions WHERE contract_id = ${contractId} AND type = '${type}'`;
-              await executeDbQuery(deleteSql);
-
               if (txs.length > 0) {
                   const values = txs.map(t => {
                       const val = t.value || 0;
                       const txt = (t.text || '').replace(/'/g, "''");
                       const dt = t.date || new Date().toISOString().split('T')[0];
-                      return `(${contractId}, '${type}', ${val}, '${txt}', '${dt}')`;
+                      return `(${mainContractId}, '${type}', ${val}, '${txt}', '${dt}')`;
                   }).join(', ');
                   
                   const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, date) VALUES ${values}`;
