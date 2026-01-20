@@ -20,11 +20,11 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  
+
   // Sticky & Animation State
   const [isSticky, setIsSticky] = useState(false);
   const [panelState, setPanelState] = useState<PanelState>('active');
-  
+
   // Timers refs with correct types
   const shrinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const vanishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,8 +59,8 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
       clearTimers();
       shrinkTimer.current = setTimeout(() => {
         setPanelState('hidden');
-        
-        
+
+
       }, 1000);
     } else {
       // Если вернулись наверх - показываем панель
@@ -86,8 +86,8 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
     // Фаза 1: Сжатие через 1 сек
     shrinkTimer.current = setTimeout(() => {
       setPanelState('hidden');
-      
-      
+
+
     }, 1000);
   };
 
@@ -99,50 +99,50 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
 
   // Dynamic classes based on state
   const getContainerClasses = () => {
-    const baseClasses = "sticky top-[60px] z-40 flex flex-col items-start gap-1 transition-all duration-700 ease-in-out origin-top-left";
-    
-    if (!isSticky) {
-      return `${baseClasses} w-full`;
+    const base =
+      "sticky top-[60px] z-40 flex flex-col items-start gap-1 " +
+      "transition-all duration-700 ease-in-out origin-top-left " +
+      "w-[250px] max-w-[250px] box-border overflow-visible"; // <-- важно
+
+    if (!isSticky) return base;
+
+    if (panelState === "active") {
+      return `${base} bg-slate-50/90 dark:bg-[#0b0f19]/0 backdrop-blur-md p-3 rounded-b-2xl shadow-md border-b border-gray-200/10 scale-100 opacity-100`;
     }
 
-    // Sticky Active
-    if (panelState === 'active') {
-      return `${baseClasses} bg-slate-50/90 dark:bg-[#0b0f19]/0 backdrop-blur-md p-4 -mx-4 px-8 rounded-b-2xl shadow-md border-b border-gray-200/10 w-[133%] scale-100 opacity-100`;
+    if (panelState === "hidden") {
+      // оставляем overflow-visible, иначе снова порежешь выпадашки
+      return `${base} bg-slate-50/0 dark:bg-[#0b0f19]/0 p-3 scale-50 opacity-0 -translate-y-5 pointer-events-auto`;
     }
 
-
-    // Sticky Hidden (0%)
-    if (panelState === 'hidden') {
-      return `${baseClasses} bg-slate-50/0 dark:bg-[#0b0f19]/0 p-4 -mx-4 px-8 w-[133%] scale-50 opacity-0 translate-y-[-20px] pointer-events-auto`; // pointer-events-auto allows hover to wake it up
-    }
-
-    return baseClasses;
+    return base;
   };
+
 
   return (
     <div className="flex flex-col gap-8">
       {/* Sticky Header for Selectors */}
-      <div 
+      <div
         className={getContainerClasses()}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Region Selector */}
-        <RegionSelector 
+        <RegionSelector
           selectedRegion={selectedRegion}
           onSelectRegion={handleRegionChange}
         />
 
         {/* City Selector (Filtered by Region) */}
-        <CitySelector 
-          selectedCity={selectedCity} 
-          onSelectCity={setSelectedCity} 
+        <CitySelector
+          selectedCity={selectedCity}
+          onSelectCity={setSelectedCity}
           selectedRegion={selectedRegion}
         />
-        
+
         {/* Year Selector */}
-        <YearSelector 
-          selectedYear={selectedYear} 
+        <YearSelector
+          selectedYear={selectedYear}
           onSelectYear={setSelectedYear}
           selectedCity={selectedCity}
           selectedRegion={selectedRegion}
@@ -151,19 +151,19 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
 
       {/* KPI Section with filtering */}
       <KPISection selectedCity={selectedCity} selectedYear={selectedYear} selectedRegion={selectedRegion} />
-      
+
       {/* New Housing Complex Section */}
-      <HousingComplexSection 
+      <HousingComplexSection
         isDarkMode={isDarkMode}
-        selectedCity={selectedCity} 
+        selectedCity={selectedCity}
         selectedYear={selectedYear}
         selectedRegion={selectedRegion}
       />
 
-      
+
       {/* NEW: Complex Comparisons (Elevators/Floors per Liter) */}
       <div className="w-full">
-        <ComplexComparisons 
+        <ComplexComparisons
           isDarkMode={isDarkMode}
           selectedCity={selectedCity}
           selectedYear={selectedYear}
@@ -173,31 +173,31 @@ const ElevatorTab: React.FC<ElevatorTabProps> = ({ isDarkMode }) => {
 
       {/* General Sunburst Chart */}
       <div className="w-full">
-         <ElevatorsByLiterGeneralChart 
-            isDarkMode={isDarkMode} 
-            selectedCity={selectedCity}
-            selectedYear={selectedYear}
-            selectedRegion={selectedRegion}
-         />
+        <ElevatorsByLiterGeneralChart
+          isDarkMode={isDarkMode}
+          selectedCity={selectedCity}
+          selectedYear={selectedYear}
+          selectedRegion={selectedRegion}
+        />
       </div>
 
       {/* Charts Grid with filtering */}
-      <ChartsSection 
-        isDarkMode={isDarkMode} 
-        selectedCity={selectedCity} 
-        selectedYear={selectedYear} 
+      <ChartsSection
+        isDarkMode={isDarkMode}
+        selectedCity={selectedCity}
+        selectedYear={selectedYear}
         selectedRegion={selectedRegion}
       />
 
       {/* Dynamics Section (New) */}
       <div className="w-full">
-        <ElevatorDynamicsSection 
+        <ElevatorDynamicsSection
           isDarkMode={isDarkMode}
           selectedCity={selectedCity}
           selectedRegion={selectedRegion}
         />
       </div>
-      
+
     </div>
   );
 };
