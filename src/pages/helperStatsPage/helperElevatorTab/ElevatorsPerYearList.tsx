@@ -130,15 +130,22 @@ const ElevatorsPerYearList: React.FC<ElevatorsPerYearListProps> = ({ isDarkMode,
     });
 
     const allYearsSorted = Array.from(uniqueYearsSet).sort((a, b) => b - a);
+    
+    // Convert map to array
+    const rawList = Array.from(aggMap.values());
+
+    // Calculate Totals per Year
+    const yearTotals = new Map<number, number>();
+    rawList.forEach(item => {
+        yearTotals.set(item.year, (yearTotals.get(item.year) || 0) + item.value);
+    });
 
     // Build Legend Data (Fixed colors for years)
     const legend = allYearsSorted.map((y, idx) => ({
         year: y,
-        color: YEAR_COLORS[idx % YEAR_COLORS.length]
+        color: YEAR_COLORS[idx % YEAR_COLORS.length],
+        total: yearTotals.get(y) || 0
     }));
-
-    // Convert map to array
-    const rawList = Array.from(aggMap.values());
 
     // Build History Map (Entity -> All Years Data) - This includes HIDDEN years too for context
     const history = new Map<string, JKSnapshot[]>();
@@ -253,16 +260,20 @@ const ElevatorsPerYearList: React.FC<ElevatorsPerYearListProps> = ({ isDarkMode,
       tooltip: {
         trigger: 'item',
         padding: 0,
-        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.5)',
         borderColor: isDarkMode ? '#334155' : '#e2e8f0',
         textStyle: { color: isDarkMode ? '#f8fafc' : '#1e293b' },
         formatter: (params: any) => {
             const data = params.data as FlatDataItem;
             const entityName = data.name;
             const history = historyMap.get(entityName) || [];
+            
+            // Calculate Total for this Entity
+            const totalForEntity = history.reduce((sum, snap) => sum + snap.value, 0);
 
             let html = `<div style="padding: 10px; min-width: 180px;">`;
-            html += `<div style="font-weight:bold; font-size:14px; margin-bottom:8px; border-bottom:1px solid ${isDarkMode?'#ffffff20':'#00000010'}; padding-bottom:4px;">${entityName}</div>`;
+            html += `<div style="font-weight:bold; font-size:14px; margin-bottom:2px;">${entityName}</div>`;
+            html += `<div style="font-size:11px; color:${isDarkMode?'#94a3b8':'#64748b'}; margin-bottom:8px; border-bottom:1px solid ${isDarkMode?'#ffffff20':'#00000010'}; padding-bottom:4px;">Всего: <b>${totalForEntity}</b> шт.</div>`;
             
             history.forEach(snap => {
                 const isCurrent = snap.year === data.year;
@@ -399,6 +410,9 @@ const ElevatorsPerYearList: React.FC<ElevatorsPerYearListProps> = ({ isDarkMode,
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
                     Динамика ввода лифтов
                 </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    Рейтинг по годам (Лесенка)
+                </p>
             </div>
           </div>
 
@@ -436,7 +450,7 @@ const ElevatorsPerYearList: React.FC<ElevatorsPerYearListProps> = ({ isDarkMode,
                                 className={`w-2.5 h-2.5 rounded-full transition-colors ${isDisabled ? 'bg-gray-400' : ''}`} 
                                 style={{ backgroundColor: isDisabled ? undefined : item.color }}
                             ></div>
-                            <span>{item.year}</span>
+                            <span>{item.year} <span className="opacity-60 text-[10px]">({item.total})</span></span>
                         </button>
                       );
                   })}
