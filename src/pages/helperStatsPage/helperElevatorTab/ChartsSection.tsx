@@ -6,6 +6,7 @@ import TreemapSunburstChart from './TreemapSunburstChart';
 import NestedDonutChart from '../helperGeneralTab/NestedDonutChart'; // Import new component
 import { ChartConfig } from '../../../types/chart';
 import ElevatorsByCustomerChart from './ElevatorsByCustomerChart';
+import FloorsByCustomerChart from './FloorsByCustomerChart';
 import { useProcessedChartData } from '../../../hooks/useProcessedChartData'; // Import hook
 import { Loader2 } from 'lucide-react';
 
@@ -133,83 +134,110 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ isDarkMode, selectedCity,
   const isLoadingNested = jkLoading || literLoading;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
-      
-      {/* Treemap */}
-      <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valueSuffix=" шт.">
-        {(data, isExpanded) => (
-          <TreemapSunburstChart
-            isDarkMode={isDarkMode}
-            data={data}
-            title=""
-            valueSuffix=" шт."
-            className={isExpanded ? "w-full h-full" : undefined}
-          />
-        )}
-      </GeneralChartCard>
+    <div className="grid grid-cols-1 lg:grid-cols-1 2xl:grid-cols-1 min-[2000px]:grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 min-[2000px]:grid-cols-2 gap-6">
 
-      {/* Pie Chart (Status) */}
-      <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
-        {(data, isExpanded) => (
-          <PieDonutChart
-            isDarkMode={isDarkMode}
-            data={data}
-            title=""
-            valueSuffix=" шт."
-            className={isExpanded ? "w-full h-full" : undefined}
-          />
-        )}
-      </GeneralChartCard>
+        {/* Treemap */}
+        <GeneralChartCard config={TreemapDataConfig} limit={7} showTotal valueSuffix=" шт.">
+          {(data, isExpanded) => (
+            <TreemapSunburstChart
+              isDarkMode={isDarkMode}
+              data={data}
+              title=""
+              valueSuffix=" шт."
+              className={isExpanded ? "w-full h-full" : undefined}
+            />
+          )}
+        </GeneralChartCard>
 
-      {/* Double Nested Donut Chart Card (JKs & Liters by Client) */}
-      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
-        <div className="flex items-center justify-between mb-4 shrink-0">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-              Объекты по заказчикам
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Внутренний: <b>Кол-во ЖК</b> / Внешний: <b>Кол-во Литеров</b>
-            </p>
-          </div>
-        </div>
+        {/* Pie Chart (Status) */}
+        <GeneralChartCard config={SumElevatorDataConfig} limit={8} showTotal valueSuffix=" шт.">
+          {(data, isExpanded) => (
+            <PieDonutChart
+              isDarkMode={isDarkMode}
+              data={data}
+              title=""
+              valueSuffix=" шт."
+              className={isExpanded ? "w-full h-full" : undefined}
+            />
+          )}
+        </GeneralChartCard>
 
-        <div className="flex-1 w-full min-h-[350px] relative">
-           {isLoadingNested ? (
-              <div className="absolute inset-0 flex items-center justify-center text-indigo-500">
-                 <Loader2 className="animate-spin" />
-              </div>
-           ) : (
-              <NestedDonutChart 
-                 isDarkMode={isDarkMode} 
-                 innerData={jkData} 
-                 outerData={literData}
-                 innerTitle="ЖК"
-                 outerTitle="Литеры"
-              />
-           )}
-        </div>
       </div>
+      <div className="grid grid-cols-3 lg:grid-cols-3 2xl:grid-cols-3 min-[2000px]:grid-cols-3 gap-6">
+        {/* Double Nested Donut Chart Card (JKs & Liters by Client) */}
+        <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
+          <div className="flex items-center justify-between mb-4 shrink-0">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                Объекты по заказчикам
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Внутренний: <b>Кол-во ЖК</b> / Внешний: <b>Кол-во Литеров</b>
+              </p>
+            </div>
+          </div>
 
-      {/* Custom Chart Card: Elevators By Customer */}
-      <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
-        <div className="flex items-center justify-between mb-6 shrink-0">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-              Количество/Статус лифтов по заказчикам
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Сданы / В работе
-            </p>
+          <div className="flex-1 w-full min-h-[350px] relative">
+            {isLoadingNested ? (
+              <div className="absolute inset-0 flex items-center justify-center text-indigo-500">
+                <Loader2 className="animate-spin" />
+              </div>
+            ) : (
+              <NestedDonutChart
+                isDarkMode={isDarkMode}
+                innerData={jkData}
+                outerData={literData}
+                innerTitle="ЖК"
+                outerTitle="Литеры"
+              />
+            )}
           </div>
         </div>
 
-        <div className="flex-1 w-full min-h-[350px]">
-          <ElevatorsByCustomerChart 
-              isDarkMode={isDarkMode} 
+        {/* Custom Chart Card: Elevators By Customer */}
+        <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
+          <div className="flex items-center justify-between mb-6 shrink-0">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                Количество/Статус лифтов по заказчикам
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Сданы / В работе
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 w-full min-h-[350px]">
+            <ElevatorsByCustomerChart
+              isDarkMode={isDarkMode}
               selectedCity={selectedCity}
               selectedRegion={selectedRegion}
-          />
+            />
+          </div>
+
+        </div>
+        {/* Custom Chart Card: Elevators By Customer */}
+        <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 flex flex-col hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-colors">
+          <div className="flex items-center justify-between mb-6 shrink-0">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                Количество/Статус этажей по заказчикам
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Сданы / В работе
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 w-full min-h-[350px]">
+            <FloorsByCustomerChart
+              isDarkMode={isDarkMode}
+              selectedCity={selectedCity}
+              selectedRegion={selectedRegion}
+            />
+          </div>
+
         </div>
       </div>
     </div>
