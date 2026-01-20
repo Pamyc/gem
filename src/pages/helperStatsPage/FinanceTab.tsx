@@ -20,7 +20,7 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  
+
   // Sticky & Animation State
   const [isSticky, setIsSticky] = useState(false);
   const [panelState, setPanelState] = useState<PanelState>('active');
@@ -59,7 +59,7 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
       clearTimers();
       shrinkTimer.current = setTimeout(() => {
         setPanelState('hidden');
-        
+
       }, 1000);
     } else {
       // Если вернулись наверх - показываем панель
@@ -85,7 +85,7 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
     // Фаза 1: Сжатие через 1 сек
     shrinkTimer.current = setTimeout(() => {
       setPanelState('hidden');
-      
+
     }, 1000);
   };
 
@@ -97,49 +97,49 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
 
   // Dynamic classes based on state
   const getContainerClasses = () => {
-    const baseClasses = "sticky top-[60px] z-40 flex flex-col items-start gap-1 transition-all duration-700 ease-in-out origin-top-left";
-    
-    if (!isSticky) {
-      return `${baseClasses} w-full`;
+    const base =
+      "sticky top-[60px] z-40 flex flex-col items-start gap-1 " +
+      "transition-all duration-700 ease-in-out origin-top-left " +
+      "w-[250px] max-w-[250px] box-border overflow-visible"; // <-- важно
+
+    if (!isSticky) return base;
+
+    if (panelState === "active") {
+      return `${base} bg-slate-50/90 dark:bg-[#0b0f19]/0 backdrop-blur-md p-3 rounded-b-2xl shadow-md border-b border-gray-200/10 scale-100 opacity-100`;
     }
 
-    // Sticky Active
-    if (panelState === 'active') {
-      return `${baseClasses} bg-slate-50/90 dark:bg-[#0b0f19]/0 backdrop-blur-md p-4 -mx-4 px-8 rounded-b-2xl shadow-md border-b border-gray-200/10 w-[133%] scale-100 opacity-100`;
+    if (panelState === "hidden") {
+      // оставляем overflow-visible, иначе снова порежешь выпадашки
+      return `${base} bg-slate-50/0 dark:bg-[#0b0f19]/0 p-3 scale-50 opacity-0 -translate-y-5 pointer-events-auto`;
     }
 
-    // Sticky Hidden (0%)
-    if (panelState === 'hidden') {
-      return `${baseClasses} bg-slate-50/0 dark:bg-[#0b0f19]/0 p-4 -mx-4 px-8 w-[133%] scale-50 opacity-0 translate-y-[-20px] pointer-events-auto`; // pointer-events-auto allows hover to wake it up
-    }
-
-    return baseClasses;
+    return base;
   };
 
   return (
     <div className="flex flex-col gap-8">
       {/* Sticky Header for Selectors */}
-      <div 
+      <div
         className={getContainerClasses()}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Region Selector */}
-        <RegionSelector 
+        <RegionSelector
           selectedRegion={selectedRegion}
           onSelectRegion={handleRegionChange}
         />
 
         {/* City Selector (Filtered by Region) */}
-        <CitySelector 
-          selectedCity={selectedCity} 
-          onSelectCity={setSelectedCity} 
+        <CitySelector
+          selectedCity={selectedCity}
+          onSelectCity={setSelectedCity}
           selectedRegion={selectedRegion}
         />
-        
+
         {/* Year Selector */}
-        <YearSelector 
-          selectedYear={selectedYear} 
+        <YearSelector
+          selectedYear={selectedYear}
           onSelectYear={setSelectedYear}
           selectedCity={selectedCity}
           selectedRegion={selectedRegion}
@@ -147,47 +147,47 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
       </div>
 
       {/* KPI Section */}
-      <KPISection 
-        selectedCity={selectedCity} 
-        selectedYear={selectedYear} 
+      <KPISection
+        selectedCity={selectedCity}
+        selectedYear={selectedYear}
         selectedRegion={selectedRegion}
       />
-      
+
       {/* Housing Complex Section */}
-      <HousingComplexSection 
+      <HousingComplexSection
         isDarkMode={isDarkMode}
-        selectedCity={selectedCity} 
+        selectedCity={selectedCity}
         selectedYear={selectedYear}
         selectedRegion={selectedRegion}
       />
 
       {/* KPI Section 2 */}
-      <KPISection2 
-        selectedCity={selectedCity} 
-        selectedYear={selectedYear} 
+      <KPISection2
+        selectedCity={selectedCity}
+        selectedYear={selectedYear}
         selectedRegion={selectedRegion}
       />
 
       {/* Timeline Finance Chart (Vertical) */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
-         <TimelineFinanceChart 
-            isDarkMode={isDarkMode}
-            selectedCity={selectedCity}
-            selectedYear={selectedYear}
-            selectedRegion={selectedRegion}
-         />
+        <TimelineFinanceChart
+          isDarkMode={isDarkMode}
+          selectedCity={selectedCity}
+          selectedYear={selectedYear}
+          selectedRegion={selectedRegion}
+        />
       </div>
 
       {/* Stacked Bar Finance Chart (Horizontal) */}
       <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-6 w-full">
-         <StackedBarFinanceChart 
-            isDarkMode={isDarkMode}
-            selectedCity={selectedCity}
-            // selectedYear is typically handled internally by this chart or passed if needed
-            selectedRegion={selectedRegion}
-         />
+        <StackedBarFinanceChart
+          isDarkMode={isDarkMode}
+          selectedCity={selectedCity}
+          // selectedYear is typically handled internally by this chart or passed if needed
+          selectedRegion={selectedRegion}
+        />
       </div>
-      
+
     </div>
   );
 };
