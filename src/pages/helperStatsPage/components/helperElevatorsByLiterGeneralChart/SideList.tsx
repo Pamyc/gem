@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+
+import React from 'react';
 import { ChevronDown, ChevronRight, Building } from 'lucide-react';
 import { CitySummaryItem, ColorMode, SEPARATOR, STATUS_COLORS, TooltipData, JKItem, LiterItem, MetricKey, METRIC_OPTIONS } from './types';
-import { getTooltipHtml } from './useChartOptions';
 
 interface SideListProps {
   citySummary: CitySummaryItem[];
@@ -10,14 +10,12 @@ interface SideListProps {
   toggleCity: (name: string) => void;
   expandedJK: string | null;
   toggleJK: (name: string) => void;
-  onHoverItem: (name: string) => void;
-  onLeaveItem: (name: string) => void;
+  onHoverItem: (name: string) => void; // For chart highlight
+  onLeaveItem: (name: string) => void; // For chart highlight
+  onHoverData: (title: string, data: TooltipData | null) => void; // Used for tooltip updates (via context menu now)
   colorMode: ColorMode;
   activeMetric: MetricKey;
 }
-
-const SHOW_DELAY = 700; // Задержка появления при покое (мс)
-const HIDE_MOVE_DELAY = 70; // Задержка скрытия при движении (мс)
 
 const SideList: React.FC<SideListProps> = ({
   citySummary,
@@ -28,14 +26,11 @@ const SideList: React.FC<SideListProps> = ({
   toggleJK,
   onHoverItem,
   onLeaveItem,
+  onHoverData,
   colorMode,
   activeMetric
 }) => {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get active metric label info
   const metricInfo = METRIC_OPTIONS.find(m => m.key === activeMetric);
   const metricSuffix = metricInfo?.suffix || '';
   const metricPrefix = metricInfo?.prefix || '';
@@ -45,13 +40,8 @@ const SideList: React.FC<SideListProps> = ({
       return `${metricPrefix}${n.toLocaleString('ru-RU')}${metricSuffix}`;
   };
 
-  const showTooltipInternal = (
-    mouseX: number, 
-    mouseY: number, 
-    title: string, 
-    item: CitySummaryItem | JKItem | LiterItem
-  ) => {
-    const data: TooltipData = {
+  const buildTooltipData = (item: CitySummaryItem | JKItem | LiterItem): TooltipData => {
+      return {
         value: item.elevators,
         floors: item.floors,
         profit: item.profit,
@@ -71,109 +61,26 @@ const SideList: React.FC<SideListProps> = ({
         statuses: item.statuses || [],
         objectTypes: item.objectTypes || [],
         years: item.years || []
-    };
-
-    const htmlContent = getTooltipHtml(title, data, true, activeMetric);
-    const tooltipHeight = 450;
-    const windowHeight = window.innerHeight;
-
-    let top = mouseY + 10;
-    if (mouseY + tooltipHeight + 20 > windowHeight) {
-       top = mouseY - tooltipHeight - 10;
-       if (top < 10) top = 10;
-    }
-
-    setTooltip({
-      x: mouseX,
-      y: top,
-      content: htmlContent
-    });
+      };
   };
 
-  const handleMouseEnterItem = (
-      e: React.MouseEvent, 
-      title: string, 
-      item: CitySummaryItem | JKItem | LiterItem
-  ) => {
-    // Очищаем все текущие таймеры
-    if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    // Планируем показ через 700мс покоя
-    tooltipTimeoutRef.current = setTimeout(() => {
-        showTooltipInternal(mouseX, mouseY, title, item);
-        tooltipTimeoutRef.current = null;
-    }, SHOW_DELAY);
+  // RIGHT CLICK HANDLER (Context Menu)
+  const handleRightClick = (e: React.MouseEvent, name: string, item: CitySummaryItem | JKItem | LiterItem) => {
+      e.preventDefault(); // Prevent browser menu
+      onHoverData(item.name || name, buildTooltipData(item));
   };
 
-  const handleMouseMoveItem = (
-    e: React.MouseEvent, 
-    title: string, 
-    item: CitySummaryItem | JKItem | LiterItem
-  ) => {
-    // Любое движение сбрасывает таймер ПОКАЗА (нужно замереть на 700мс)
-    if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-    }
-    
-    // Если тултип УЖЕ виден, планируем его скрытие через 70мс движения
-    if (tooltip && !hideTimeoutRef.current) {
-        hideTimeoutRef.current = setTimeout(() => {
-            setTooltip(null);
-            hideTimeoutRef.current = null;
-        }, HIDE_MOVE_DELAY);
-    }
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    // Снова планируем показ — он сработает только если движение прекратится
-    tooltipTimeoutRef.current = setTimeout(() => {
-        // Если покой наступил, отменяем запланированное скрытие (если оно было)
-        if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
-        }
-        showTooltipInternal(mouseX, mouseY, title, item);
-        tooltipTimeoutRef.current = null;
-    }, SHOW_DELAY);
+  // Hover only highlights chart, does NOT update tooltip
+  const handleMouseEnter = (name: string) => {
+      onHoverItem(name);
   };
 
-  const handleMouseLeaveItem = () => {
-    if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-    
-    tooltipTimeoutRef.current = setTimeout(() => {
-        setTooltip(null);
-        tooltipTimeoutRef.current = null;
-    }, 150); 
-  };
-
-  const handleTooltipMouseEnter = () => {
-      // Если курсор попал в тултип — отменяем все таймеры скрытия и перепоказа
-      if (tooltipTimeoutRef.current) {
-          clearTimeout(tooltipTimeoutRef.current);
-          tooltipTimeoutRef.current = null;
-      }
-      if (hideTimeoutRef.current) {
-          clearTimeout(hideTimeoutRef.current);
-          hideTimeoutRef.current = null;
-      }
-  };
-
-  const handleTooltipMouseLeave = () => {
-      tooltipTimeoutRef.current = setTimeout(() => {
-          setTooltip(null);
-          tooltipTimeoutRef.current = null;
-      }, 150);
+  const handleMouseLeave = (name: string) => {
+      onLeaveItem(name);
   };
 
   return (
-    <>
-      <div className="w-1/3 min-w-[220px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-4 pl-2 py-2 animate-in slide-in-from-left-4 duration-500 relative">
+    <div className="w-1/4 min-w-[200px] h-full overflow-y-auto custom-scrollbar border-r border-gray-100 dark:border-white/5 pr-2 pl-1 py-2 animate-in slide-in-from-left-4 duration-500 relative">
         <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-[#151923] py-2 z-10 mb-2 border-b border-gray-100 dark:border-white/5">
           <div className="flex flex-col">
              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -197,15 +104,16 @@ const SideList: React.FC<SideListProps> = ({
             return (
               <div key={city.name} className="flex flex-col">
                 <div
-                  onMouseEnter={(e) => { onHoverItem(city.name); handleMouseEnterItem(e, city.name, city); }}
-                  onMouseMove={(e) => handleMouseMoveItem(e, city.name, city)}
-                  onMouseLeave={() => { onLeaveItem(city.name); handleMouseLeaveItem(); }}
+                  onMouseEnter={() => handleMouseEnter(city.name)}
+                  onMouseLeave={() => handleMouseLeave(city.name)}
+                  onContextMenu={(e) => handleRightClick(e, city.name, city)}
                   onClick={() => toggleCity(city.name)}
                   className={`flex items-center justify-between group p-2 rounded-lg transition-all cursor-pointer ${
                     isCityExpanded
                       ? 'bg-gray-100 dark:bg-white/10 shadow-sm'
                       : 'hover:bg-gray-50 dark:hover:bg-white/5'
                   }`}
+                  title="Правая кнопка: Инфо"
                 >
                   <div className="flex items-center gap-2 overflow-hidden flex-1">
                     <div
@@ -235,16 +143,19 @@ const SideList: React.FC<SideListProps> = ({
                   <div className="pl-3 pr-1 py-1 space-y-0.5 animate-in slide-in-from-top-1 duration-200 border-l border-gray-100 dark:border-white/5 ml-3">
                     {city.childrenJKs.map((jk, idx) => {
                       const isJKExpanded = expandedJK === jk.name;
+                      const jkUniqueId = `${city.name}${SEPARATOR}${jk.name}`;
+                      
                       return (
                         <div key={`${city.name}-${jk.name}-${idx}`} className="flex flex-col">
                           <div
                             className={`flex justify-between items-center px-2 py-1.5 rounded-md transition-colors cursor-pointer group/jk ${
                               isJKExpanded ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'
                             }`}
-                            onMouseEnter={(e) => { onHoverItem(`${city.name}${SEPARATOR}${jk.name}`); handleMouseEnterItem(e, jk.name, jk); }}
-                            onMouseMove={(e) => handleMouseMoveItem(e, jk.name, jk)}
-                            onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}`); handleMouseLeaveItem(); }}
+                            onMouseEnter={() => handleMouseEnter(jkUniqueId)}
+                            onMouseLeave={() => handleMouseLeave(jkUniqueId)}
+                            onContextMenu={(e) => handleRightClick(e, jkUniqueId, jk)}
                             onClick={(e) => { e.stopPropagation(); toggleJK(jk.name); }}
+                            title="Правая кнопка: Инфо"
                           >
                             <div className="flex items-center gap-2 overflow-hidden flex-1">
                               <Building size={10} className="text-gray-400" />
@@ -266,35 +177,39 @@ const SideList: React.FC<SideListProps> = ({
 
                           {isJKExpanded && (
                             <div className="pl-3 py-0.5 space-y-0.5 animate-in slide-in-from-top-1 duration-200 border-l border-gray-100 dark:border-white/5 ml-2 mb-1">
-                              {jk.liters.map((liter, lIdx) => (
-                                <div
-                                  key={`${city.name}-${jk.name}-${liter.name}-${lIdx}`}
-                                  className="flex justify-between items-center px-2 py-1 rounded-md hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-default"
-                                  onMouseEnter={(e) => { onHoverItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`); handleMouseEnterItem(e, liter.name, liter); }}
-                                  onMouseMove={(e) => handleMouseMoveItem(e, liter.name, liter)}
-                                  onMouseLeave={() => { onLeaveItem(`${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`); handleMouseLeaveItem(); }}
-                                >
-                                  <div className="flex items-center gap-2 overflow-hidden">
-                                    {colorMode === 'status' && (
-                                      <div
-                                        className={`w-1.5 h-1.5 rounded-full shrink-0`}
-                                        style={{ backgroundColor: liter.isHandedOver ? STATUS_COLORS.yes : STATUS_COLORS.no }}
-                                      />
-                                    )}
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[90px]">
-                                      {liter.name}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500">
-                                      {liter.percent}%
-                                    </span>
-                                    <span className="text-[10px] font-mono text-gray-600 dark:text-gray-400">
-                                      {formatValue(liter.value)}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
+                              {jk.liters.map((liter, lIdx) => {
+                                  const literUniqueId = `${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${liter.name}`;
+                                  return (
+                                    <div
+                                      key={`${city.name}-${jk.name}-${liter.name}-${lIdx}`}
+                                      className="flex justify-between items-center px-2 py-1 rounded-md hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-default"
+                                      onMouseEnter={() => handleMouseEnter(literUniqueId)}
+                                      onMouseLeave={() => handleMouseLeave(literUniqueId)}
+                                      onContextMenu={(e) => handleRightClick(e, literUniqueId, liter)}
+                                      title="Правая кнопка: Инфо"
+                                    >
+                                      <div className="flex items-center gap-2 overflow-hidden">
+                                        {colorMode === 'status' && (
+                                          <div
+                                            className={`w-1.5 h-1.5 rounded-full shrink-0`}
+                                            style={{ backgroundColor: liter.isHandedOver ? STATUS_COLORS.yes : STATUS_COLORS.no }}
+                                          />
+                                        )}
+                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[90px]">
+                                          {liter.name}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500">
+                                          {liter.percent}%
+                                        </span>
+                                        <span className="text-[10px] font-mono text-gray-600 dark:text-gray-400">
+                                          {formatValue(liter.value)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                              })}
                             </div>
                           )}
                         </div>
@@ -306,28 +221,7 @@ const SideList: React.FC<SideListProps> = ({
             );
           })}
         </div>
-      </div>
-
-      {tooltip && (
-        <div
-          onMouseEnter={handleTooltipMouseEnter}
-          onMouseLeave={handleTooltipMouseLeave}
-          style={{
-            position: 'fixed',
-            top: tooltip.y,
-            left: tooltip.x + 15,
-            zIndex: 9999,
-            backgroundColor: 'rgba(30, 41, 59, 0.98)',
-            border: '1px solid #334155',
-            borderRadius: '16px',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(12px)',
-            pointerEvents: 'auto',
-          }}
-          dangerouslySetInnerHTML={{ __html: tooltip.content }}
-        />
-      )}
-    </>
+    </div>
   );
 };
 

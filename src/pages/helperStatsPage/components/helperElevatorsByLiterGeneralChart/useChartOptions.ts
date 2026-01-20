@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { SEPARATOR, ROOT_ID, ChartType, TooltipData, MetricKey } from './types';
 import { formatLargeNumber } from '../../../../utils/formatUtils';
@@ -27,9 +28,9 @@ const renderTextList = (label: string, items: string[]) => {
     return item;
   });
 
-  const labelStyle = 'color: #94a3b8; font-size: 13px; font-weight: 500; min-width: 80px;';
-  const valueStyle = 'color: #fff; font-size: 13px; font-weight: 600; text-align: right;';
-  const rowStyle = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 2px; gap: 10px;';
+  const labelStyle = 'color: #94a3b8; font-size: 11px; font-weight: 500; min-width: 80px;';
+  const valueStyle = 'color: #fff; font-size: 12px; font-weight: 600; text-align: right;';
+  const rowStyle = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 2px; gap: 6px;';
 
   const maxItems = 2;
   const isExpandable = unique.length > maxItems;
@@ -46,9 +47,9 @@ const renderTextList = (label: string, items: string[]) => {
     content = `
             <details style="width: 100%;">
                 <summary style="cursor: pointer; outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="text-align: right; color: #fff; font-weight: 600;">${visible}, ... <span style="color: #a78bfa; font-size: 11px;">(+${remainingCount})</span></span>
+                    <span style="text-align: right; color: #fff; font-weight: 600;">${visible}, ... <span style="color: #a78bfa; font-size: 10px;">(+${remainingCount})</span></span>
                 </summary>
-                <div style="margin-top: 4px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 12px; color: #e2e8f0; white-space: normal;">
+                <div style="margin-top: 2px; padding: 2px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; color: #e2e8f0; white-space: normal;">
                     ${hidden}
                 </div>
             </details>
@@ -67,9 +68,9 @@ const renderTextList = (label: string, items: string[]) => {
 
 // --- SINGLE SOURCE OF TRUTH FOR TOOLTIP HTML ---
 export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boolean, activeMetric: MetricKey) => {
-  const textColor = '#ffffff';
-  const labelColor = '#94a3b8'; // Slate-400
-  const valColor = '#ffffff';
+  const textColor = isDarkMode ? '#ffffff' : '#334155';
+  const labelColor = isDarkMode ? '#94a3b8' : '#64748b'; // Slate-400
+  const valColor = isDarkMode ? '#ffffff' : '#1e293b';
   const percentColor = '#a78bfa'; // Light Violet
 
   // Format helpers
@@ -78,15 +79,19 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
 
   // Generic row creator
   const row = (label: string, val: string, pct?: string, arrowHtml: string = '', isPrimary: boolean = false, valueColorOverride?: string) => {
-    const finalValueColor = valueColorOverride ? valueColorOverride : (isPrimary ? '#fff' : valColor);
+    const finalValueColor = valueColorOverride ? valueColorOverride : (isPrimary ? (isDarkMode ? '#fff' : '#4f46e5') : valColor);
 
+    // Adjusted styles for compactness
+    // Margin bottom: 1px or 2px
+    // Padding: 2px 6px (for primary)
+    // Font: 11px Label, 12px/14px Value
     return `
-    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 4px; ${isPrimary ? 'background: rgba(139, 92, 246, 0.15); padding: 4px 8px; margin: 4px -4px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);' : ''}">
-      <span style="color: ${isPrimary ? '#c4b5fd' : labelColor}; font-size: ${isPrimary ? '14px' : '13px'}; font-weight: ${isPrimary ? '700' : '500'};">${label}:</span>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 2px; ${isPrimary ? 'background: rgba(139, 92, 246, 0.15); padding: 2px 6px; margin: 2px -2px; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);' : ''}">
+      <span style="color: ${isPrimary ? '#c4b5fd' : labelColor}; font-size: ${isPrimary ? '12px' : '11px'}; font-weight: ${isPrimary ? '700' : '500'};">${label}:</span>
       <div style="text-align: right; white-space: nowrap;">
-        <span style="color: ${finalValueColor}; font-size: ${isPrimary ? '16px' : '14px'}; font-weight: 700; margin-right: ${pct ? '8px' : '0'};">${val}</span>
+        <span style="color: ${finalValueColor}; font-size: ${isPrimary ? '14px' : '12px'}; font-weight: 700; margin-right: ${pct ? '6px' : '0'};">${val}</span>
         ${arrowHtml}
-        ${pct ? `<span style="color: ${percentColor}; font-size: 12px; font-weight: 600;">(${pct}%)</span>` : ''}
+        ${pct ? `<span style="color: ${percentColor}; font-size: 10px; font-weight: 600;">(${pct}%)</span>` : ''}
       </div>
     </div>
   `;
@@ -100,8 +105,8 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
     const isIncomeHigher = v1 > v2;
     const isExpenseHigher = v2 > v1;
 
-    const arrow1 = isIncomeHigher ? '<span style="color: #4ade80; margin-left: 6px; font-size: 12px;">▲</span>' : '';
-    const arrow2 = isExpenseHigher ? '<span style="color: #f87171; margin-left: 6px; font-size: 12px;">▼</span>' : '';
+    const arrow1 = isIncomeHigher ? '<span style="color: #4ade80; margin-left: 4px; font-size: 10px;">▲</span>' : '';
+    const arrow2 = isExpenseHigher ? '<span style="color: #f87171; margin-left: 4px; font-size: 10px;">▼</span>' : '';
 
     const color1 = isIncomeHigher ? '#4ade80' : undefined;
     const color2 = isExpenseHigher ? '#f87171' : undefined;
@@ -115,8 +120,9 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
       `;
   };
 
-  const divider = `<div style="height: 1px; background-color: rgba(255,255,255,0.1); margin: 8px 0;"></div>`;
-  const titleHtml = `<div style="font-size: 16px; font-weight: 800; color: ${textColor}; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${title}</div>`;
+  const divider = `<div style="height: 1px; background-color: rgba(255,255,255,0.1); margin: 6px 0;"></div>`;
+  // Reduced title size
+  const titleHtml = `<div style="font-size: 14px; font-weight: 800; color: ${textColor}; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">${title}</div>`;
 
   // --- Logic to reorder items based on selection ---
   const metricRows = [
@@ -179,14 +185,11 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
   // Wrapper with max-height and scroll
   // Pointer-events auto is CRITICAL for <details> interaction
   return `
-    <div style="font-family: sans-serif; min-width: 320px; max-width: 350px; padding: 4px; max-height: 400px; overflow-y: auto; overflow-x: hidden; pointer-events: auto;">
-      
-      
+    <div style="font-family: sans-serif; padding: 2px; max-height: 520px; overflow-y: auto; overflow-x: hidden; pointer-events: auto;">
       ${titleHtml}
       ${primaryHtml}
       ${textMetadataHtml} 
       ${remainingRows.map(fn => fn()).join('')}
-      
     </div>
   `;
 };
@@ -249,81 +252,6 @@ export const useChartOptions = ({
       title: { show: false },
     };
 
-    // Enhanced tooltip config with interaction enabled
-    // triggerOn: 'none' allows manual triggering via dispatchAction in the main component
-    const tooltipCommon = {
-      trigger: 'item',
-      triggerOn: 'none',
-      enterable: true, // IMPORTANT: Allows mouse to enter the tooltip for scrolling/clicking
-      appendToBody: true, // Prevents z-index clipping
-      backgroundColor: 'rgba(30, 41, 59, 0.98)',
-      borderColor: '#334155',
-      textStyle: { color: '#f8fafc' },
-      padding: 12,
-      extraCssText: 'box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6); border-radius: 16px; backdrop-filter: blur(10px); z-index: 99999; pointer-events: auto;',
-      confine: true,
-      position: (point: number[]) => {
-        // point = [x, y] — точка, которую мы даём через dispatchAction showTip
-        return [point[0], point[1] + 12];
-      },
-
-      showDelay: 0 // Manual handling via setTimeout in component
-    };
-
-    const formatTooltip = (params: any) => {
-      // Handle axis trigger (array of params) or single item
-      const p = Array.isArray(params) ? params[0] : params;
-
-      // Safety check for p and p.data
-      if (!p || !p.data) return '';
-
-      // Handle Sunburst root skipping
-      if (p.data.id === sunburstRootId) return '';
-
-      let label = '';
-      let extra: any = {};
-
-      // Determine source of data (Sunburst node vs Bar item)
-      if (p.seriesType === 'sunburst') {
-        const parts = p.name.split(SEPARATOR);
-        label = parts[parts.length - 1];
-        extra = p.data.data || {};
-      } else {
-        // Bar chart
-        const data = p.data;
-        label = `${data.cityName} / ${data.jkName} / ${data.literName}`;
-        extra = data; // Bar data structure is flat
-      }
-
-      const tooltipData: TooltipData = {
-        value: extra.value || extra.elevators || 0, // Fallback logic
-        floors: extra.floors || 0,
-        profit: extra.profit || 0,
-
-        percent: extra.percent,
-
-        incomeFact: extra.incomeFact,
-        expenseFact: extra.expenseFact,
-        incomeLO: extra.incomeLO,
-        expenseLO: extra.expenseLO,
-        incomeObr: extra.incomeObr,
-        expenseObr: extra.expenseObr,
-        incomeMont: extra.incomeMont,
-        expenseMont: extra.expenseMont,
-        profitPerLift: extra.profitPerLift,
-
-        // Text Arrays
-        clients: extra.clients || [],
-        cities: extra.cities || [],
-        jks: extra.jks || [],
-        statuses: extra.statuses || [],
-        objectTypes: extra.objectTypes || [],
-        years: extra.years || []
-      };
-
-      return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
-    };
-
     // --- SUNBURST CONFIG ---
     if (chartType === 'sunburst') {
       return {
@@ -333,10 +261,8 @@ export const useChartOptions = ({
         grid: { show: false },
         dataZoom: [{ show: false }],
         legend: { show: false },
-        tooltip: {
-          ...tooltipCommon,
-          formatter: formatTooltip,
-        },
+        // IMPORTANT: Disable tooltip completely to use our custom panel
+        tooltip: { show: false },
         series: [
           {
             type: 'sunburst',
@@ -411,12 +337,7 @@ export const useChartOptions = ({
     return {
       ...common,
       legend: { show: false },
-      tooltip: {
-        ...tooltipCommon,
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        formatter: formatTooltip, // Use shared formatter
-      },
+      tooltip: { show: false }, // Disable tooltip here too
       grid: { left: '1%', right: '1%', bottom: '2%', top: '5%', containLabel: true },
       xAxis: {
         show: true,

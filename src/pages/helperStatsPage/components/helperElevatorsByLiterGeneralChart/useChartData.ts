@@ -4,7 +4,7 @@ import { useDataStore } from '../../../../contexts/DataContext';
 import { getMergedHeaders } from '../../../../utils/chartUtils';
 import { 
   COLORS, STATUS_COLORS, SEPARATOR, ALL_YEARS, ROOT_ID,
-  ColorMode, RawItem, CitySummaryItem, MetricKey, FilterState, FilterOptions
+  ColorMode, RawItem, CitySummaryItem, MetricKey, FilterState, FilterOptions, TooltipData
 } from './types';
 
 interface UseChartDataProps {
@@ -39,6 +39,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         uniqueJKs: [],
         citySummary: [],
         totalValue: 0,
+        globalStats: null as TooltipData | null,
         filterOptions: {
             years: [], regions: [], cities: [], jks: [], clients: [], statuses: [], objectTypes: []
         } as FilterOptions
@@ -64,7 +65,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     const idxYear = headers.indexOf('Год');
     const idxStatus = headers.indexOf('Сдан да/нет');
     const idxTotal = headers.indexOf('Итого (Да/Нет)');
-    const idxNoBreakdown = headers.indexOf('Отдельный литер (Да/Нет)');
+    const idxNoBreakdown = headers.indexOf('Без разбивки на литеры (Да/Нет)');
 
     // Text Fields
     const idxClient = headers.indexOf('Клиент');
@@ -211,7 +212,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     // --- Aggregation Structures ---
     type Aggregator = {
         count: number;
-        // We aggregate EVERYTHING so we can switch views or show tooltips
         value: number; // Elevators
         floors: number;
         profit: number;
@@ -221,7 +221,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         incomeMont: number; expenseMont: number;
         sumProfitPerLift: number;
         
-        // Sets for text aggregation
         clients: Set<string>;
         cities: Set<string>;
         jks: Set<string>;
@@ -229,7 +228,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         objectTypes: Set<string>;
         years: Set<string>;
 
-        // This is the aggregated value of the currently selected metric
         activeMetricSum: number; 
     }
 
@@ -269,7 +267,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         
         acc.sumProfitPerLift += item.profitPerLift;
 
-        // Text Aggregation
         if (item.client) acc.clients.add(item.client);
         if (item.city) acc.cities.add(item.city);
         if (item.jk) acc.jks.add(item.jk);
@@ -277,16 +274,19 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
         if (item.year) acc.years.add(item.year);
         acc.statuses.add(item.isHandedOver ? 'Сдан' : 'В работе');
 
-        // Accumulate active metric specifically
         acc.activeMetricSum += getValue(item, activeMetric);
     };
 
+    const globalAgg = createAggregator();
     const cityMap = new Map<string, { 
       agg: Aggregator;
       jks: Map<string, { agg: Aggregator; liters: RawItem[] }> 
     }>();
     
     rawItems.forEach(item => {
+      // Accumulate Global Stats
+      accumulate(globalAgg, item);
+
       if (!cityMap.has(item.city)) {
         cityMap.set(item.city, { agg: createAggregator(), jks: new Map() });
       }
@@ -300,6 +300,29 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
       accumulate(jkEntry.agg, item);
       jkEntry.liters.push(item);
     });
+
+    // Prepare Global Stats Data Object
+    const globalStats: TooltipData = {
+        value: globalAgg.value,
+        floors: globalAgg.floors,
+        profit: globalAgg.profit,
+        percent: '100.0',
+        incomeFact: globalAgg.incomeFact,
+        expenseFact: globalAgg.expenseFact,
+        incomeLO: globalAgg.incomeLO,
+        expenseLO: globalAgg.expenseLO,
+        incomeObr: globalAgg.incomeObr,
+        expenseObr: globalAgg.expenseObr,
+        incomeMont: globalAgg.incomeMont,
+        expenseMont: globalAgg.expenseMont,
+        profitPerLift: globalAgg.count > 0 ? globalAgg.sumProfitPerLift / globalAgg.count : 0,
+        clients: Array.from(globalAgg.clients),
+        cities: Array.from(globalAgg.cities),
+        jks: Array.from(globalAgg.jks),
+        statuses: Array.from(globalAgg.statuses),
+        objectTypes: Array.from(globalAgg.objectTypes),
+        years: Array.from(globalAgg.years)
+    };
 
     const citySummary: CitySummaryItem[] = Array.from(cityMap.entries())
       .map(([cityName, data], idx) => {
@@ -315,13 +338,9 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
                  const literActiveValue = getValue(l, activeMetric);
                  return {
                     name: l.liter,
-                    // DYNAMIC VALUE FOR CHART
                     value: literActiveValue, 
-                    
-                    // DYNAMIC PERCENT based on JK Total of active metric (or handle 0)
                     percent: jkActiveValue > 0 ? ((literActiveValue / jkActiveValue) * 100).toFixed(1) : '0',
                     
-                    // Static props for tooltip
                     elevators: l.value,
                     floors: l.floors,
                     profit: l.profit,
@@ -337,7 +356,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
                     expenseMont: l.expenseMont,
                     profitPerLift: l.profitPerLift,
 
-                    // Text Metadata
                     clients: l.client ? [l.client] : [],
                     cities: [l.city],
                     jks: [l.jk],
@@ -349,18 +367,14 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
 
              return {
                 name: jkName,
-                // DYNAMIC VALUE FOR CHART
                 value: jkActiveValue,
-                // DYNAMIC PERCENT based on City Total of active metric
                 percent: cityActiveValue > 0 ? ((jkActiveValue / cityActiveValue) * 100).toFixed(1) : '0',
                 
-                // Static props for tooltip
                 elevators: jkData.agg.value,
                 floors: jkData.agg.floors,
                 profit: jkData.agg.profit,
                 liters: litersArray,
 
-                // Aggregated Fields
                 incomeFact: jkData.agg.incomeFact,
                 expenseFact: jkData.agg.expenseFact,
                 incomeLO: jkData.agg.incomeLO,
@@ -371,7 +385,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
                 expenseMont: jkData.agg.expenseMont,
                 profitPerLift: jkData.agg.count > 0 ? jkData.agg.sumProfitPerLift / jkData.agg.count : 0,
 
-                // Text Aggregates
                 clients: Array.from(jkData.agg.clients),
                 cities: Array.from(jkData.agg.cities),
                 jks: Array.from(jkData.agg.jks),
@@ -384,20 +397,16 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
 
         return {
           name: cityName,
-          // DYNAMIC VALUE FOR CHART
           value: cityActiveValue,
-          // DYNAMIC PERCENT based on Grand Total of active metric
           percent: totalMetricValue > 0 ? ((cityActiveValue / totalMetricValue) * 100).toFixed(1) : '0',
           
           color: cityColor,
           childrenJKs: jksArray,
 
-          // Static props
           elevators: data.agg.value,
           floors: data.agg.floors,
           profit: data.agg.profit,
 
-          // City Aggregates
           incomeFact: data.agg.incomeFact,
           expenseFact: data.agg.expenseFact,
           incomeLO: data.agg.incomeLO,
@@ -408,7 +417,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
           expenseMont: data.agg.expenseMont,
           profitPerLift: data.agg.count > 0 ? data.agg.sumProfitPerLift / data.agg.count : 0,
 
-          // Text Aggregates
           clients: Array.from(data.agg.clients),
           cities: Array.from(data.agg.cities),
           jks: Array.from(data.agg.jks),
@@ -424,7 +432,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
       return COLORS[uniqueJKsList.indexOf(jkName) % COLORS.length];
     };
 
-    // Bar Data - Use Active Metric for Value
     const chartData = rawItems.map(item => ({
       value: getValue(item, activeMetric), // DYNAMIC VALUE
       name: `${item.city} / ${item.jk} / ${item.liter}`,
@@ -460,19 +467,16 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
     }));
     const xLabels = chartData.map(i => i.name);
 
-    // Sunburst Data with ROOT Node
     const sunburstChildren = citySummary.map((city) => {
       const cityId = `city:${city.name}`;
       
       return {
         id: cityId,
         name: city.name,
-        value: city.value, // Uses Active Metric
-        // Embed calculated percentages and ALL financials
+        value: city.value,
         data: {
-            percent: city.percent, // Already relative to active metric total
+            percent: city.percent,
             
-            // Raw values for tooltip
             elevators: city.elevators,
             floors: city.floors,
             profit: city.profit,
@@ -487,7 +491,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
             expenseMont: city.expenseMont,
             profitPerLift: city.profitPerLift,
 
-            // Text Aggregates
             clients: city.clients,
             cities: city.cities,
             jks: city.jks,
@@ -503,7 +506,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
           return {
             id: jkId,
             name: `${city.name}${SEPARATOR}${jk.name}`,
-            value: jk.value, // Uses Active Metric
+            value: jk.value,
             data: {
                 percent: jk.percent,
 
@@ -521,7 +524,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
                 expenseMont: jk.expenseMont,
                 profitPerLift: jk.profitPerLift,
 
-                // Text Aggregates
                 clients: jk.clients,
                 cities: jk.cities,
                 jks: jk.jks,
@@ -535,7 +537,7 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
               return {
                 id: literId,
                 name: `${city.name}${SEPARATOR}${jk.name}${SEPARATOR}${lit.name}`,
-                value: lit.value, // Uses Active Metric
+                value: lit.value,
                 data: {
                     percent: lit.percent,
 
@@ -553,7 +555,6 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
                     expenseMont: lit.expenseMont,
                     profitPerLift: lit.profitPerLift,
 
-                    // Text Aggregates
                     clients: lit.clients,
                     cities: lit.cities,
                     jks: lit.jks,
@@ -585,8 +586,9 @@ export const useChartData = ({ filters, colorMode, activeMetric }: UseChartDataP
       xLabels,
       uniqueJKs: uniqueJKsList,
       citySummary,
-      totalValue: totalMetricValue, // Total of active metric
-      filterOptions // Return collected options for the menu
+      totalValue: totalMetricValue,
+      globalStats, // Return calculated global stats
+      filterOptions 
     };
   }, [googleSheets, sheetConfigs, filters, colorMode, activeMetric]);
 };

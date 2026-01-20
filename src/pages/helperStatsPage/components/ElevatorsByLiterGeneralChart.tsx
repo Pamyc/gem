@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import EChartComponent, { EChartInstance } from '../../../components/charts/EChartComponent';
 import {
@@ -7,10 +8,12 @@ import {
   ChartType,
   ColorMode,
   MetricKey,
-  FilterState
+  FilterState,
+  TooltipData,
+  SEPARATOR
 } from './helperElevatorsByLiterGeneralChart/types';
 import { useChartData } from './helperElevatorsByLiterGeneralChart/useChartData';
-import { useChartOptions } from './helperElevatorsByLiterGeneralChart/useChartOptions';
+import { useChartOptions, getTooltipHtml } from './helperElevatorsByLiterGeneralChart/useChartOptions';
 import HeaderControls from './helperElevatorsByLiterGeneralChart/HeaderControls';
 import SideList from './helperElevatorsByLiterGeneralChart/SideList';
 
@@ -20,8 +23,6 @@ interface ElevatorsByLiterGeneralChartProps {
   selectedYear?: string;
   selectedRegion?: string;
 }
-
-const SHOW_DELAY = 1300;
 
 // Helper to parse ID to Breadcrumbs
 const getBreadcrumbs = (id: string | null) => {
@@ -55,11 +56,14 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
   // State
   const [chartType, setChartType] = useState<ChartType>('sunburst');
   const [colorMode, setColorMode] = useState<ColorMode>('jk');
-  const [activeMetric, setActiveMetric] = useState<MetricKey>('value'); // Default to Elevators
+  const [activeMetric, setActiveMetric] = useState<MetricKey>('value'); 
 
   // Side List Expansion States
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
   const [expandedJK, setExpandedJK] = useState<string | null>(null);
+
+  // Tooltip Panel State
+  const [activeTooltip, setActiveTooltip] = useState<{ title: string; data: TooltipData } | null>(null);
 
   // Filter State
   const [filters, setFilters] = useState<FilterState>({
@@ -77,15 +81,12 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
 
   const chartRef = useRef<EChartInstance>(null);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Sync external year prop with internal state if provided
   useEffect(() => {
     if (externalSelectedYear && externalSelectedYear !== 'Весь период') {
       setFilters(prev => ({ ...prev, years: [externalSelectedYear] }));
     } else {
-      // If "All years" or empty, clear the year filter, but keep others
       setFilters(prev => ({ ...prev, years: [] }));
     }
   }, [externalSelectedYear]);
@@ -110,12 +111,13 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     }
   }, [selectedRegion]);
 
-  // Handler needed for useEffect below
   const handleResetZoom = () => {
     setSunburstRootId(ROOT_ID);
     setBreadcrumbs([]);
     setExpandedCity(null);
     setExpandedJK(null);
+    // Reset tooltip to default
+    setActiveTooltip(null);
   };
 
   // --- 1. Get Data via Custom Hook ---
@@ -125,6 +127,7 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     uniqueJKs,
     citySummary,
     totalValue,
+    globalStats, // New default stats
     filterOptions
   } = useChartData({
     filters,
@@ -158,20 +161,24 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     }
   };
 
+  const handleTooltipUpdate = (title: string, data: TooltipData | null) => {
+      if (data) {
+          setActiveTooltip({ title, data });
+      } else {
+          setActiveTooltip(null);
+      }
+  };
+
   // Sync side list selection with Chart Drill-down
   const toggleCity = (cityName: string) => {
     if (expandedCity === cityName) {
-      // Collapse City -> Go to Root
       setExpandedCity(null);
       setExpandedJK(null);
-
       setSunburstRootId(ROOT_ID);
       setBreadcrumbs([]);
     } else {
-      // Expand City -> Drill into City
       setExpandedCity(cityName);
       setExpandedJK(null);
-
       const nextId = `city:${cityName}`;
       setSunburstRootId(nextId);
       setBreadcrumbs(getBreadcrumbs(nextId));
@@ -180,19 +187,16 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
 
   const toggleJK = (jkName: string) => {
     if (expandedJK === jkName) {
-      // Collapse JK -> Go back to City level
       setExpandedJK(null);
       if (expandedCity) {
         const parentId = `city:${expandedCity}`;
         setSunburstRootId(parentId);
         setBreadcrumbs(getBreadcrumbs(parentId));
       } else {
-        // Fallback if state drifted
         setSunburstRootId(ROOT_ID);
         setBreadcrumbs([]);
       }
     } else {
-      // Expand JK -> Drill into JK
       setExpandedJK(jkName);
       if (expandedCity) {
         const nextId = `city:${expandedCity}|jk:${jkName}`;
@@ -202,32 +206,30 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
     }
   };
 
-  // Click Handler for manual drill-down/up in Sunburst via Chart Click 
-  // AND Tooltip manual management (reset on move)
+  // Setup Chart Interaction for Central Panel Update
   useEffect(() => {
     const instance = chartRef.current?.getInstance();
     if (!instance) return;
+
+    // Remove existing listeners to avoid duplicates
+    instance.off('click');
+    instance.off('contextmenu');
 
     const handleClick = (params: any) => {
       const clickedId = params.data?.id;
       if (!clickedId) return;
 
       let nextRootId = clickedId;
-
-      // If we clicked the node that is currently the root (the center), go UP
       if (clickedId === sunburstRootId) {
         const parent = getParentId(clickedId);
         if (parent) nextRootId = parent;
-      }
-      // Otherwise, we clicked a child, so go DOWN (set it as root)
-      else {
+      } else {
         nextRootId = clickedId;
       }
 
       setSunburstRootId(nextRootId);
       setBreadcrumbs(getBreadcrumbs(nextRootId));
 
-      // Sync side panel expansion based on chart click
       if (nextRootId && nextRootId !== ROOT_ID) {
         const parts = nextRootId.split('|');
         const cityPart = parts.find(p => p.startsWith('city:'));
@@ -235,8 +237,6 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
         if (cityPart) {
           const cityName = cityPart.split(':')[1];
           setExpandedCity(cityName);
-
-          // If drill down goes to JK level, expand that too
           const jkPart = parts.find(p => p.startsWith('jk:'));
           if (jkPart) {
             setExpandedJK(jkPart.split(':')[1]);
@@ -253,77 +253,79 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
       }
     };
 
-    // MANUAL TOOLTIP DEBOUNCE LOGIC
-    const handleMouseMove = (params: any) => {
-      // 1. Clear any pending timeout immediately
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-        tooltipTimeoutRef.current = null;
-      }
+    // Right Click handler for Tooltip update
+    const handleRightClick = (params: any) => {
+        // Prevent default browser menu logic is handled on container div usually, 
+        // but ECharts event happens before bubbling sometimes.
+        // ECharts event doesn't pass the original DOM event directly in a way to preventDefault easily here,
+        // but we handle the state update.
+        
+        const p = params;
+        if (!p || !p.data) return;
+        
+        let label = '';
+        let extra: any = {};
 
-      // 2. Hide current tooltip while moving
-      instance.dispatchAction({ type: 'hideTip' });
+        if (p.seriesType === 'sunburst') {
+            const parts = p.name.split(SEPARATOR);
+            label = parts[parts.length - 1];
+            extra = p.data.data || {};
+        } else {
+            const data = p.data;
+            label = `${data.cityName} / ${data.jkName}`;
+            extra = data;
+        }
 
-      // 3. If we are over a data element, start a new timer
-      if (params.data && params.data.id !== sunburstRootId) {
-        // --- NEW: remember mouse position (so tooltip appears under cursor) ---
-        const e = params?.event;
-        const x =
-          e?.offsetX ??
-          e?.zrX ??
-          e?.event?.offsetX ??
-          0;
-        const y =
-          e?.offsetY ??
-          e?.zrY ??
-          e?.event?.offsetY ??
-          0;
+        const tooltipData: TooltipData = {
+            value: extra.value || extra.elevators || 0,
+            floors: extra.floors || 0,
+            profit: extra.profit || 0,
+            percent: extra.percent,
+            incomeFact: extra.incomeFact,
+            expenseFact: extra.expenseFact,
+            incomeLO: extra.incomeLO,
+            expenseLO: extra.expenseLO,
+            incomeObr: extra.incomeObr,
+            expenseObr: extra.expenseObr,
+            incomeMont: extra.incomeMont,
+            expenseMont: extra.expenseMont,
+            profitPerLift: extra.profitPerLift,
+            clients: extra.clients || [],
+            cities: extra.cities || [],
+            jks: extra.jks || [],
+            statuses: extra.statuses || [],
+            objectTypes: extra.objectTypes || [],
+            years: extra.years || []
+        };
 
-        lastMousePosRef.current = { x, y };
-
-        tooltipTimeoutRef.current = setTimeout(() => {
-          const pos = lastMousePosRef.current;
-
-          instance.dispatchAction({
-            type: 'showTip',
-            seriesIndex: params.seriesIndex,
-            dataIndex: params.dataIndex,
-
-            // --- NEW: pin tooltip to cursor ---
-            x: pos?.x,
-            y: pos?.y + 3 // чуть ниже курсора
-          });
-
-          tooltipTimeoutRef.current = null;
-        }, SHOW_DELAY);
-      }
-
-    };
-
-    const handleMouseOut = () => {
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-        tooltipTimeoutRef.current = null;
-      }
-      instance.dispatchAction({ type: 'hideTip' });
+        setActiveTooltip({ title: label, data: tooltipData });
     };
 
     instance.on('click', handleClick);
-    instance.on('mousemove', handleMouseMove);
-    instance.on('globalout', handleMouseOut); // Fires when leaving chart canvas
+    instance.on('contextmenu', handleRightClick);
 
     return () => {
       instance.off('click', handleClick);
-      instance.off('mousemove', handleMouseMove);
-      instance.off('globalout', handleMouseOut);
-      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
+      instance.off('contextmenu', handleRightClick);
     };
-  }, [sunburstRootId]);
+  }, [sunburstRootId, chartType]);
+
+  // Determine content for the middle panel
+  const panelContentHtml = React.useMemo(() => {
+      if (activeTooltip) {
+          return getTooltipHtml(activeTooltip.title, activeTooltip.data, isDarkMode, activeMetric);
+      }
+      
+      if (globalStats) {
+          return getTooltipHtml("Общая статистика", globalStats, isDarkMode, activeMetric);
+      }
+
+      return `<div style="padding: 20px; text-align: center; color: #888;">Нет данных</div>`;
+  }, [activeTooltip, globalStats, isDarkMode, activeMetric]);
 
   return (
     <div className="bg-white dark:bg-[#151923] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden p-5 flex flex-col gap-2 w-full relative group">
 
-      {/* Header Controls */}
       <HeaderControls
         colorMode={colorMode}
         setColorMode={setColorMode}
@@ -339,70 +341,53 @@ const ElevatorsByLiterGeneralChart: React.FC<ElevatorsByLiterGeneralChartProps> 
       />
 
       {/* Main Content Area */}
-      <div className="h-[580px] w-full flex flex-row relative">
+      <div className="flex h-[550px] relative">
+        
+        {/* Left Side List */}
+        <SideList
+          citySummary={citySummary}
+          totalValue={totalValue}
+          expandedCity={expandedCity}
+          toggleCity={toggleCity}
+          expandedJK={expandedJK}
+          toggleJK={toggleJK}
+          onHoverItem={handleItemHover}
+          onLeaveItem={handleItemLeave}
+          onHoverData={handleTooltipUpdate}
+          colorMode={colorMode}
+          activeMetric={activeMetric}
+        />
 
-        {/* Side List (Only for Sunburst) */}
-        {chartType === 'sunburst' && (
-          <SideList
-            citySummary={citySummary}
-            totalValue={totalValue}
-            expandedCity={expandedCity}
-            toggleCity={toggleCity}
-            expandedJK={expandedJK}
-            toggleJK={toggleJK}
-            onHoverItem={handleItemHover}
-            onLeaveItem={handleItemLeave}
-            colorMode={colorMode}
-            activeMetric={activeMetric}
-          />
-        )}
+        {/* Central Info Panel (Fixed) */}
+        <div className="w-[300px] border-r border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-[#0b0f19]/30 flex flex-col relative shrink-0">
+            <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
+               <div 
+                  className="bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-200 dark:border-white/5 p-3 min-h-[200px]"
+                  dangerouslySetInnerHTML={{ __html: panelContentHtml }}
+               />
+            </div>
+        </div>
 
-        {/* Chart */}
-        <div className="flex-1 h-full min-w-0">
+        {/* Right Chart Area */}
+        <div 
+            className="flex-1 min-w-0 relative"
+            onContextMenu={(e) => e.preventDefault()} // Prevent browser menu on container
+        >
           <EChartComponent
             ref={chartRef}
             options={option}
             theme={isDarkMode ? 'dark' : 'light'}
             height="100%"
-            merge={true}
           />
+          
+          {/* Overlay Hint if needed */}
+          {chartData.length === 0 && (
+             <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                Нет данных для отображения
+             </div>
+          )}
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center px-2 pb-1 border-t border-gray-100 dark:border-white/5 pt-3">
-        {colorMode === 'status' ? (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-xs">
-              <div
-                className="w-2.5 h-2.5 rounded-full shadow-sm"
-                style={{ backgroundColor: STATUS_COLORS.yes }}
-              />
-              <span className="text-gray-600 dark:text-gray-400 font-bold">Сдан (Да)</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs">
-              <div
-                className="w-2.5 h-2.5 rounded-full shadow-sm"
-                style={{ backgroundColor: STATUS_COLORS.no }}
-              />
-              <span className="text-gray-600 dark:text-gray-400 font-bold">Не сдан / В работе</span>
-            </div>
-          </div>
-        ) : (
-          chartType === 'bar' &&
-          uniqueJKs.length > 0 &&
-          uniqueJKs.map((jk, idx) => (
-            <div key={jk} className="flex items-center gap-1.5 text-[10px]">
-              <div
-                className="w-2.5 h-2.5 rounded-full shadow-sm shrink-0"
-                style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-              />
-              <span className="text-gray-600 dark:text-gray-400 font-bold whitespace-nowrap">
-                {jk}
-              </span>
-            </div>
-          ))
-        )}
       </div>
     </div>
   );
