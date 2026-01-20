@@ -100,7 +100,7 @@ const FinanceTab: React.FC<FinanceTabProps> = ({ isDarkMode }) => {
     const base =
       "sticky top-[60px] z-40 flex flex-col items-start gap-1 " +
       "transition-all duration-700 ease-in-out origin-top-left " +
-      "w-[250px] max-w-[250px] box-border overflow-visible"; // <-- важно
+      "w-[300px] max-w-[300px] box-border overflow-visible"; // <-- важно
 
     if (!isSticky) return base;
 
