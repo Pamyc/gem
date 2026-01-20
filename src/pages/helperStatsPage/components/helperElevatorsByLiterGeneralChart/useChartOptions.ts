@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { SEPARATOR, ROOT_ID, ChartType, TooltipData, MetricKey } from './types';
 import { formatLargeNumber } from '../../../../utils/formatUtils';
@@ -14,37 +13,37 @@ interface UseChartOptionsProps {
 
 // Helper to render a text field with expand logic if too many items
 const renderTextList = (label: string, items: string[]) => {
-    if (!items || items.length === 0) return '';
-    
-    // Sort and remove duplicates (just in case)
-    const unique = Array.from(new Set(items)).filter(Boolean).sort();
-    
-    if (unique.length === 0) return '';
+  if (!items || items.length === 0) return '';
 
-    // Apply specific coloring for Status values
-    const formattedItems = unique.map(item => {
-        if (item === 'В работе') return `<span style="color: #ef4444;">${item}</span>`;
-        if (item === 'Сдан') return `<span style="color: #22c55e;">${item}</span>`;
-        return item;
-    });
+  // Sort and remove duplicates (just in case)
+  const unique = Array.from(new Set(items)).filter(Boolean).sort();
 
-    const labelStyle = 'color: #94a3b8; font-size: 13px; font-weight: 500; min-width: 80px;';
-    const valueStyle = 'color: #fff; font-size: 13px; font-weight: 600; text-align: right;';
-    const rowStyle = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 2px; gap: 10px;';
+  if (unique.length === 0) return '';
 
-    const maxItems = 2;
-    const isExpandable = unique.length > maxItems;
+  // Apply specific coloring for Status values
+  const formattedItems = unique.map(item => {
+    if (item === 'В работе') return `<span style="color: #ef4444;">${item}</span>`;
+    if (item === 'Сдан') return `<span style="color: #22c55e;">${item}</span>`;
+    return item;
+  });
 
-    let content = '';
+  const labelStyle = 'color: #94a3b8; font-size: 13px; font-weight: 500; min-width: 80px;';
+  const valueStyle = 'color: #fff; font-size: 13px; font-weight: 600; text-align: right;';
+  const rowStyle = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 2px; gap: 10px;';
 
-    if (isExpandable) {
-        // Show first 2 + details
-        const visible = formattedItems.slice(0, maxItems).join(', ');
-        const hidden = formattedItems.join(', '); // All items for expanded view
-        const remainingCount = unique.length - maxItems;
-        
-        // We use <details> native HTML element for interactivity inside tooltip
-        content = `
+  const maxItems = 2;
+  const isExpandable = unique.length > maxItems;
+
+  let content = '';
+
+  if (isExpandable) {
+    // Show first 2 + details
+    const visible = formattedItems.slice(0, maxItems).join(', ');
+    const hidden = formattedItems.join(', '); // All items for expanded view
+    const remainingCount = unique.length - maxItems;
+
+    // We use <details> native HTML element for interactivity inside tooltip
+    content = `
             <details style="width: 100%;">
                 <summary style="cursor: pointer; outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
                     <span style="text-align: right; color: #fff; font-weight: 600;">${visible}, ... <span style="color: #a78bfa; font-size: 11px;">(+${remainingCount})</span></span>
@@ -54,11 +53,11 @@ const renderTextList = (label: string, items: string[]) => {
                 </div>
             </details>
         `;
-    } else {
-        content = `<span>${formattedItems.join(', ')}</span>`;
-    }
+  } else {
+    content = `<span>${formattedItems.join(', ')}</span>`;
+  }
 
-    return `
+  return `
         <div style="${rowStyle}">
             <span style="${labelStyle}">${label}:</span>
             <div style="${valueStyle}; flex: 1;">${content}</div>
@@ -68,19 +67,19 @@ const renderTextList = (label: string, items: string[]) => {
 
 // --- SINGLE SOURCE OF TRUTH FOR TOOLTIP HTML ---
 export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boolean, activeMetric: MetricKey) => {
-  const textColor = '#ffffff'; 
+  const textColor = '#ffffff';
   const labelColor = '#94a3b8'; // Slate-400
   const valColor = '#ffffff';
   const percentColor = '#a78bfa'; // Light Violet
-  
+
   // Format helpers
   const fmt = (n?: number) => (n !== undefined ? n.toLocaleString('ru-RU') : '0');
   const fmtMoney = (n?: number) => (n !== undefined ? n.toLocaleString('ru-RU') + ' ₽' : '0 ₽');
-  
+
   // Generic row creator
   const row = (label: string, val: string, pct?: string, arrowHtml: string = '', isPrimary: boolean = false, valueColorOverride?: string) => {
     const finalValueColor = valueColorOverride ? valueColorOverride : (isPrimary ? '#fff' : valColor);
-    
+
     return `
     <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 4px; ${isPrimary ? 'background: rgba(139, 92, 246, 0.15); padding: 4px 8px; margin: 4px -4px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);' : ''}">
       <span style="color: ${isPrimary ? '#c4b5fd' : labelColor}; font-size: ${isPrimary ? '14px' : '13px'}; font-weight: ${isPrimary ? '700' : '500'};">${label}:</span>
@@ -95,22 +94,22 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
 
   // Render a pair of values
   const renderPair = (key1: MetricKey, label1: string, val1: number | undefined, key2: MetricKey, label2: string, val2: number | undefined) => {
-      const v1 = val1 || 0;
-      const v2 = val2 || 0;
-      
-      const isIncomeHigher = v1 > v2;
-      const isExpenseHigher = v2 > v1;
+    const v1 = val1 || 0;
+    const v2 = val2 || 0;
 
-      const arrow1 = isIncomeHigher ? '<span style="color: #4ade80; margin-left: 6px; font-size: 12px;">▲</span>' : '';
-      const arrow2 = isExpenseHigher ? '<span style="color: #f87171; margin-left: 6px; font-size: 12px;">▼</span>' : '';
+    const isIncomeHigher = v1 > v2;
+    const isExpenseHigher = v2 > v1;
 
-      const color1 = isIncomeHigher ? '#4ade80' : undefined;
-      const color2 = isExpenseHigher ? '#f87171' : undefined;
+    const arrow1 = isIncomeHigher ? '<span style="color: #4ade80; margin-left: 6px; font-size: 12px;">▲</span>' : '';
+    const arrow2 = isExpenseHigher ? '<span style="color: #f87171; margin-left: 6px; font-size: 12px;">▼</span>' : '';
 
-      const isPrimary1 = activeMetric === key1;
-      const isPrimary2 = activeMetric === key2;
+    const color1 = isIncomeHigher ? '#4ade80' : undefined;
+    const color2 = isExpenseHigher ? '#f87171' : undefined;
 
-      return `
+    const isPrimary1 = activeMetric === key1;
+    const isPrimary2 = activeMetric === key2;
+
+    return `
         ${row(label1, fmtMoney(v1), undefined, arrow1, isPrimary1, color1)}
         ${row(label2, fmtMoney(v2), undefined, arrow2, isPrimary2, color2)}
       `;
@@ -121,23 +120,23 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
 
   // --- Logic to reorder items based on selection ---
   const metricRows = [
-      () => row('Лифтов', fmt(data.value), activeMetric === 'value' ? data.percent : undefined, '', activeMetric === 'value'),
-      () => row('Этажей', fmt(data.floors), activeMetric === 'floors' ? data.percent : undefined, '', activeMetric === 'floors'),
-      () => row('Валовая', fmtMoney(data.profit), activeMetric === 'profit' ? data.percent : undefined, '', activeMetric === 'profit'),
-      
-      () => `
+    () => row('Лифтов', fmt(data.value), activeMetric === 'value' ? data.percent : undefined, '', activeMetric === 'value'),
+    () => row('Этажей', fmt(data.floors), activeMetric === 'floors' ? data.percent : undefined, '', activeMetric === 'floors'),
+    () => row('Валовая', fmtMoney(data.profit), activeMetric === 'profit' ? data.percent : undefined, '', activeMetric === 'profit'),
+
+    () => `
         ${divider}
         ${renderPair('incomeFact', 'Доходы (Факт)', data.incomeFact, 'expenseFact', 'Расходы (Факт)', data.expenseFact)}
       `,
-      () => `
+    () => `
         ${divider}
         ${renderPair('incomeLO', 'Доходы (ЛО)', data.incomeLO, 'expenseLO', 'Расходы (ЛО)', data.expenseLO)}
       `,
-      () => `
+    () => `
         ${divider}
         ${renderPair('incomeObr', 'Доходы (Обр.)', data.incomeObr, 'expenseObr', 'Расходы (Обр.)', data.expenseObr)}
       `,
-      () => `
+    () => `
         ${divider}
         ${renderPair('incomeMont', 'Доходы (Монтаж)', data.incomeMont, 'expenseMont', 'Расходы (Монтаж)', data.expenseMont)}
       `
@@ -147,22 +146,22 @@ export const getTooltipHtml = (title: string, data: TooltipData, isDarkMode: boo
   const remainingRows: (() => string)[] = [];
 
   const isMetricInBlock = (blockIndex: number, metric: MetricKey) => {
-      if (blockIndex === 0 && metric === 'value') return true;
-      if (blockIndex === 1 && metric === 'floors') return true;
-      if (blockIndex === 2 && metric === 'profit') return true;
-      if (blockIndex === 3 && (metric === 'incomeFact' || metric === 'expenseFact')) return true;
-      if (blockIndex === 4 && (metric === 'incomeLO' || metric === 'expenseLO')) return true;
-      if (blockIndex === 5 && (metric === 'incomeObr' || metric === 'expenseObr')) return true;
-      if (blockIndex === 6 && (metric === 'incomeMont' || metric === 'expenseMont')) return true;
-      return false;
+    if (blockIndex === 0 && metric === 'value') return true;
+    if (blockIndex === 1 && metric === 'floors') return true;
+    if (blockIndex === 2 && metric === 'profit') return true;
+    if (blockIndex === 3 && (metric === 'incomeFact' || metric === 'expenseFact')) return true;
+    if (blockIndex === 4 && (metric === 'incomeLO' || metric === 'expenseLO')) return true;
+    if (blockIndex === 5 && (metric === 'incomeObr' || metric === 'expenseObr')) return true;
+    if (blockIndex === 6 && (metric === 'incomeMont' || metric === 'expenseMont')) return true;
+    return false;
   };
 
   metricRows.forEach((renderFn, idx) => {
-      if (isMetricInBlock(idx, activeMetric)) {
-          primaryHtml = renderFn(); 
-      } else {
-          remainingRows.push(renderFn);
-      }
+    if (isMetricInBlock(idx, activeMetric)) {
+      primaryHtml = renderFn();
+    } else {
+      remainingRows.push(renderFn);
+    }
   });
 
   // Text metadata section
@@ -238,9 +237,9 @@ export const useChartOptions = ({
     const selectedJK = jkPart ? jkPart.split(':')[1] : null;
 
     return chartData.filter(item => {
-        if (selectedCity && item.cityName !== selectedCity) return false;
-        if (selectedJK && item.jkName !== selectedJK) return false;
-        return true;
+      if (selectedCity && item.cityName !== selectedCity) return false;
+      if (selectedJK && item.jkName !== selectedJK) return false;
+      return true;
     });
   }, [chartData, sunburstRootId]);
 
@@ -251,70 +250,78 @@ export const useChartOptions = ({
     };
 
     // Enhanced tooltip config with interaction enabled
+    // triggerOn: 'none' allows manual triggering via dispatchAction in the main component
     const tooltipCommon = {
-        trigger: 'item',
-        enterable: true, // IMPORTANT: Allows mouse to enter the tooltip for scrolling/clicking
-        appendToBody: true, // Prevents z-index clipping
-        backgroundColor: 'rgba(30, 41, 59, 0.98)', 
-        borderColor: '#334155',
-        textStyle: { color: '#f8fafc' },
-        padding: 12,
-        extraCssText: 'box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6); border-radius: 16px; backdrop-filter: blur(10px); z-index: 99999; pointer-events: auto;',
-        confine: true, 
+      trigger: 'item',
+      triggerOn: 'none',
+      enterable: true, // IMPORTANT: Allows mouse to enter the tooltip for scrolling/clicking
+      appendToBody: true, // Prevents z-index clipping
+      backgroundColor: 'rgba(30, 41, 59, 0.98)',
+      borderColor: '#334155',
+      textStyle: { color: '#f8fafc' },
+      padding: 12,
+      extraCssText: 'box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6); border-radius: 16px; backdrop-filter: blur(10px); z-index: 99999; pointer-events: auto;',
+      confine: true,
+      position: (point: number[]) => {
+        // point = [x, y] — точка, которую мы даём через dispatchAction showTip
+        return [point[0], point[1] + 12];
+      },
+
+      showDelay: 0 // Manual handling via setTimeout in component
     };
 
     const formatTooltip = (params: any) => {
-        // Handle axis trigger (array of params) or single item
-        const p = Array.isArray(params) ? params[0] : params;
-        
-        // Safety check for p and p.data
-        if (!p || !p.data) return '';
+      // Handle axis trigger (array of params) or single item
+      const p = Array.isArray(params) ? params[0] : params;
 
-        // Handle Sunburst root skipping
-        if (p.data.id === sunburstRootId) return '';
-        
-        let label = '';
-        let extra: any = {};
+      // Safety check for p and p.data
+      if (!p || !p.data) return '';
 
-        // Determine source of data (Sunburst node vs Bar item)
-        if (p.seriesType === 'sunburst') {
-            const parts = p.name.split(SEPARATOR);
-            label = parts[parts.length - 1];
-            extra = p.data.data || {};
-        } else {
-            // Bar chart
-            const data = p.data;
-            label = `${data.cityName} / ${data.jkName} / ${data.literName}`;
-            extra = data; // Bar data structure is flat
-        }
+      // Handle Sunburst root skipping
+      if (p.data.id === sunburstRootId) return '';
 
-        const tooltipData: TooltipData = {
-            value: extra.value || extra.elevators || 0, // Fallback logic
-            floors: extra.floors || 0,
-            profit: extra.profit || 0,
-            
-            percent: extra.percent,
-            
-            incomeFact: extra.incomeFact,
-            expenseFact: extra.expenseFact,
-            incomeLO: extra.incomeLO,
-            expenseLO: extra.expenseLO,
-            incomeObr: extra.incomeObr,
-            expenseObr: extra.expenseObr,
-            incomeMont: extra.incomeMont,
-            expenseMont: extra.expenseMont,
-            profitPerLift: extra.profitPerLift,
+      let label = '';
+      let extra: any = {};
 
-            // Text Arrays
-            clients: extra.clients || [],
-            cities: extra.cities || [],
-            jks: extra.jks || [],
-            statuses: extra.statuses || [],
-            objectTypes: extra.objectTypes || [],
-            years: extra.years || []
-        };
+      // Determine source of data (Sunburst node vs Bar item)
+      if (p.seriesType === 'sunburst') {
+        const parts = p.name.split(SEPARATOR);
+        label = parts[parts.length - 1];
+        extra = p.data.data || {};
+      } else {
+        // Bar chart
+        const data = p.data;
+        label = `${data.cityName} / ${data.jkName} / ${data.literName}`;
+        extra = data; // Bar data structure is flat
+      }
 
-        return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
+      const tooltipData: TooltipData = {
+        value: extra.value || extra.elevators || 0, // Fallback logic
+        floors: extra.floors || 0,
+        profit: extra.profit || 0,
+
+        percent: extra.percent,
+
+        incomeFact: extra.incomeFact,
+        expenseFact: extra.expenseFact,
+        incomeLO: extra.incomeLO,
+        expenseLO: extra.expenseLO,
+        incomeObr: extra.incomeObr,
+        expenseObr: extra.expenseObr,
+        incomeMont: extra.incomeMont,
+        expenseMont: extra.expenseMont,
+        profitPerLift: extra.profitPerLift,
+
+        // Text Arrays
+        clients: extra.clients || [],
+        cities: extra.cities || [],
+        jks: extra.jks || [],
+        statuses: extra.statuses || [],
+        objectTypes: extra.objectTypes || [],
+        years: extra.years || []
+      };
+
+      return getTooltipHtml(label, tooltipData, isDarkMode, activeMetric);
     };
 
     // --- SUNBURST CONFIG ---
@@ -394,11 +401,11 @@ export const useChartOptions = ({
     const dataForBar = visibleBarData;
     const dataCount = dataForBar.length;
     const dynamicLabelFontSize = dataCount < 9 ? 23 : dataCount < 15 ? 14 : dataCount < 30 ? 11 : 9;
-    
+
     const xLabels = dataForBar.map(i => {
-        if (viewLevel === 'jk') return i.literName;
-        if (viewLevel === 'city') return `${i.jkName} / ${i.literName}`;
-        return i.name;
+      if (viewLevel === 'jk') return i.literName;
+      if (viewLevel === 'city') return `${i.jkName} / ${i.literName}`;
+      return i.name;
     });
 
     return {
@@ -429,10 +436,10 @@ export const useChartOptions = ({
       yAxis: {
         show: true,
         type: 'value',
-        axisLabel: { 
-            color: isDarkMode ? '#94a3b8' : '#64748b', 
-            fontSize: 10,
-            formatter: (value: number) => formatLargeNumber(value)
+        axisLabel: {
+          color: isDarkMode ? '#94a3b8' : '#64748b',
+          fontSize: 10,
+          formatter: (value: number) => formatLargeNumber(value)
         },
         splitLine: { lineStyle: { color: isDarkMode ? '#334155' : '#e2e8f0', type: 'dashed' } }
       },
