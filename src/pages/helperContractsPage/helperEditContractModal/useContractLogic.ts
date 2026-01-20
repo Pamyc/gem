@@ -44,7 +44,10 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
   const loadTransactions = async (contractId: number) => {
       if (!contractId) return;
       try {
-          const sql = `SELECT * FROM contract_transactions WHERE contract_id = ${contractId}`;
+          // Используем floor, чтобы найти транзакции, привязанные к "телу" договора (целое число)
+          const baseId = Math.floor(contractId);
+          // Транзакции могут быть привязаны как к X (8001), так и к X.999. Ищем по диапазону для надежности
+          const sql = `SELECT * FROM contract_transactions WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1}`;
           const res = await executeDbQuery(sql);
           if (res.ok && res.data) {
               const grouped: Record<string, Transaction[]> = {};
@@ -75,16 +78,9 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
   const loadLiters = async (contractId: number, currentRecordId?: number) => {
       if (!contractId) return;
       try {
-          // Используем диапазон для поиска всех записей группы (например, 1004, 1004.001, 1004.002)
-          // Ищем всё, что >= contractId и < (contractId + 1)
           const baseId = Math.floor(contractId);
           
-          // Обновленная логика:
-          // 1. Ищем по диапазону ID группы.
-          // 2. Фильтруем только записи, являющиеся литерами (is_separate_liter = true).
-          // 3. НЕ исключаем текущую запись (currentRecordId), чтобы одиночный литер тоже был в списке.
           let sql = `SELECT id, liter, elevators_count, floors_count FROM data_contracts WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1} AND is_separate_liter = true`;
-          
           sql += ` ORDER BY id ASC`;
 
           const res = await executeDbQuery(sql);
@@ -98,8 +94,6 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               }));
               setLiters(mappedLiters);
           } else {
-              // Если это редактирование и литеров нет - показываем пустой список (а не дефолтный),
-              // чтобы пользователь не думал, что создался новый литер.
               setLiters([]);
           }
       } catch (e) {
@@ -123,13 +117,11 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
 
                   let cid = data.contract_id;
                   
-                  // Если contract_id нет в данных (например, не пришел с грида), попробуем достать актуальный из БД по ID записи
                   if (!cid && data.id) {
                       try {
                           const res = await executeDbQuery(`SELECT contract_id FROM data_contracts WHERE id = ${data.id}`);
                           if (res.ok && res.data && res.data.length > 0) {
                               cid = res.data[0].contract_id;
-                              // Обновим formData, чтобы при сохранении ID был
                               setFormData(prev => ({ ...prev, contract_id: cid }));
                           }
                       } catch (e) {
@@ -137,13 +129,10 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
                       }
                   }
 
-                  // Загружаем связанные данные, если нашли ID контракта
                   if (cid) {
                       await loadTransactions(cid);
                       await loadLiters(cid, data.id);
                   } else {
-                      // Fallback: если contract_id нет даже в БД, значит это "одинокая" запись.
-                      // Показываем пустой список литеров (так как сама запись - это и есть объект).
                       setLiters([]);
                   }
               } else {
@@ -156,7 +145,6 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
                       elevators_count: 0,
                       floors_count: 0
                   });
-                  // Для нового договора сразу предлагаем 1 литер
                   setLiters([{ name: 'Литер 1', elevators: 0, floors: 0 }]);
               }
           };
@@ -173,7 +161,6 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
                  res.data.forEach((r: any) => {
                      let field = '';
                      
-                     // Mapping dictionary categories to DB fields
                      if (r.category === 'region') field = 'region';
                      if (r.category === 'client') field = 'client_name';
                      if (r.category === 'object_type') field = 'object_type';
@@ -246,45 +233,124 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
       setPreviewSql(`UPDATE data_contracts SET\n  ${setClause}\nWHERE id = ${formData.id || 'NEW'};`);
   }, [formData]);
 
+  // --- ЛОГИКА СОХРАНЕНИЯ СПРАВОЧНИКОВ ---
+  const updateDictionaries = async () => {
+      const categoriesToCheck = [
+          { field: 'region', cat: 'region' },
+          { field: 'city', cat: 'city' },
+          { field: 'client_name', cat: 'client' },
+          { field: 'object_type', cat: 'object_type' },
+          { field: 'housing_complex', cat: 'jk' }
+      ];
+
+      for (const item of categoriesToCheck) {
+          const val = formData[item.field];
+          if (val && typeof val === 'string' && val.trim() !== '') {
+              const cleanVal = val.trim().replace(/'/g, "''");
+              // Проверяем наличие
+              const checkSql = `SELECT id FROM app_dictionaries WHERE category = '${item.cat}' AND value = '${cleanVal}'`;
+              const checkRes = await executeDbQuery(checkSql);
+              
+              // Если нет - вставляем
+              if (!checkRes.data || checkRes.data.length === 0) {
+                  const insertSql = `INSERT INTO app_dictionaries (category, value, is_active) VALUES ('${item.cat}', '${cleanVal}', true)`;
+                  await executeDbQuery(insertSql);
+              }
+          }
+      }
+  };
+
+  // --- ЛОГИКА ГЕНЕРАЦИИ ID ---
+  const generateContractId = async (cityName: string): Promise<number> => {
+      if (!cityName) {
+          // Если город не указан, берем дефолтный диапазон (например, 90000)
+          return Math.floor(Date.now() / 1000); 
+      }
+
+      const cleanCity = cityName.trim().replace(/'/g, "''");
+
+      // 1. Ищем базовый индекс города
+      let baseIndex = 0;
+      const baseSql = `SELECT code FROM app_dictionaries WHERE category = 'city_base_index' AND value = '${cleanCity}'`;
+      const baseRes = await executeDbQuery(baseSql);
+
+      if (baseRes.data && baseRes.data.length > 0) {
+          baseIndex = Number(baseRes.data[0].code);
+      } else {
+          // 2. Города нет, создаем новый индекс
+          const maxSql = `SELECT MAX(code) as max_code FROM app_dictionaries WHERE category = 'city_base_index'`;
+          const maxRes = await executeDbQuery(maxSql);
+          const maxCode = maxRes.data && maxRes.data[0].max_code ? Number(maxRes.data[0].max_code) : 1000;
+          
+          baseIndex = maxCode + 1000; // Шаг 1000
+
+          // Сохраняем привязку
+          const insertBaseSql = `INSERT INTO app_dictionaries (category, value, code, is_active) VALUES ('city_base_index', '${cleanCity}', ${baseIndex}, true)`;
+          await executeDbQuery(insertBaseSql);
+      }
+
+      // 3. Ищем свободный слот в диапазоне [baseIndex, baseIndex + 999]
+      const rangeStart = baseIndex;
+      const rangeEnd = baseIndex + 1000;
+      const maxIdSql = `SELECT MAX(contract_id) as max_id FROM data_contracts WHERE contract_id >= ${rangeStart} AND contract_id < ${rangeEnd}`;
+      const maxIdRes = await executeDbQuery(maxIdSql);
+      
+      let nextId = rangeStart + 1; // Default first ID (e.g. 8001)
+      
+      if (maxIdRes.data && maxIdRes.data.length > 0 && maxIdRes.data[0].max_id) {
+          const currentMax = Math.floor(Number(maxIdRes.data[0].max_id));
+          if (currentMax >= rangeStart) {
+              nextId = currentMax + 1;
+          }
+      }
+
+      return nextId;
+  };
+
   const handleSave = async () => {
       setLoading(true);
       try {
-          // 1. Calculate Base ID
-          let baseContractId = Math.floor(formData.contract_id || 0);
-          if (baseContractId === 0) {
-              baseContractId = Math.floor(Date.now() / 1000);
+          // 0. Обновляем справочники новыми значениями
+          await updateDictionaries();
+
+          let baseContractId = 0;
+
+          if (isEditMode && formData.contract_id) {
+              // Редактирование: оставляем старый ID
+              baseContractId = Math.floor(formData.contract_id);
+          } else {
+              // Создание: генерируем новый ID на основе города
+              baseContractId = await generateContractId(formData.city);
           }
 
-          // 2. Determine Scenario
-          // If liters array is empty (unlikely but safe check), treat as 1 dummy
+          // 1. Parent Contract ID is now X.999 (e.g. 8001.999)
+          const parentContractId = baseContractId + 0.999;
+          
+          // 2. Transaction Link ID is Integer X (e.g. 8001) - so they group nicely
+          const transactionLinkId = baseContractId;
+
           const effectiveLiters = liters.length === 0 ? [{name: 'Литер 1', elevators: 0, floors: 0}] : liters;
-          const litersCount = effectiveLiters.length;
-          const isSingle = litersCount === 1;
 
-          // 3. Define Main Contract ID
-          // Single (Scenario A): Integer X
-          // Group (Scenario B): X.999
-          const mainContractId = isSingle ? baseContractId : (baseContractId + 0.999);
+          // 3. Clean Old Data (Full Wipe of the range X to X+1)
+          if (isEditMode) {
+              // Only delete if editing existing ID range. 
+              // If creating new, range is supposedly empty (checked by generate logic), but safe to wipe.
+              const deleteContractsSql = `DELETE FROM data_contracts WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
+              await executeDbQuery(deleteContractsSql);
+              
+              const deleteTransactionsSql = `DELETE FROM contract_transactions WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
+              await executeDbQuery(deleteTransactionsSql);
+          }
 
-          // 4. Clear Old Data (Full Wipe of the range)
-          const deleteContractsSql = `DELETE FROM data_contracts WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
-          const deleteTransactionsSql = `DELETE FROM contract_transactions WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
-          
-          await executeDbQuery(deleteContractsSql);
-          await executeDbQuery(deleteTransactionsSql);
-
-          // 5. Insert New Records
-          
           // Helper: Generate INSERT SQL
           const generateInsert = (data: Record<string, any>) => {
-              // Exclude read-only/generated fields
               const safeData = { ...data };
               delete safeData.id;
               delete safeData.created_at;
               delete safeData.updated_at;
               delete safeData.rentability_calculated;
               delete safeData.profit_per_lift_calculated;
-              delete safeData.gross_profit; // Can be recalculated by DB, or we pass it if we trust frontend calc
+              delete safeData.gross_profit;
               
               const keys = Object.keys(safeData);
               const cols = keys.map(k => `"${k}"`).join(', ');
@@ -298,83 +364,65 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               return `INSERT INTO data_contracts (${cols}) VALUES (${vals})`;
           };
 
-          // Prepare Base Data (Common fields)
+          // Prepare Base Data
           const baseData = { ...formData };
           
-          // Ensure gross_profit is consistent if we decide to save it explicitly
+          // Gross Profit Calculation
           if (baseData.income_total_fact !== undefined && baseData.expense_total_fact !== undefined) {
               baseData.gross_profit = Number(baseData.income_total_fact) - Number(baseData.expense_total_fact);
           }
 
-          if (isSingle) {
-              // --- SCENARIO A: Single Contract ---
-              const liter = effectiveLiters[0];
-              const record = {
+          // --- INSERT PARENT RECORD (8001.999) ---
+          const totalElevators = effectiveLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
+          const totalFloors = effectiveLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
+          
+          const parentRecord = {
+              ...baseData,
+              contract_id: parentContractId, // .999
+              liter: '', // Empty for parent aggregation row
+              elevators_count: totalElevators,
+              floors_count: totalFloors,
+              no_liter_breakdown: true, // Это агрегированная запись
+              is_separate_liter: false,
+              is_total: false
+          };
+          await executeDbQuery(generateInsert(parentRecord));
+
+          // --- INSERT CHILD RECORDS (8001.001, 8001.002 ...) ---
+          for (let i = 0; i < effectiveLiters.length; i++) {
+              const liter = effectiveLiters[i];
+              // ID format: X.001, X.002 ...
+              const childId = baseContractId + (i + 1) / 1000;
+              
+              const childRecord = {
                   ...baseData,
-                  contract_id: mainContractId,
+                  contract_id: childId,
                   liter: liter.name,
                   elevators_count: liter.elevators,
                   floors_count: liter.floors,
-                  no_liter_breakdown: true,
-                  is_separate_liter: true,
+                  no_liter_breakdown: false,
+                  is_separate_liter: true, // Это отдельный литер
                   is_total: false
               };
-              await executeDbQuery(generateInsert(record));
-          } else {
-              // --- SCENARIO B: Group Contract ---
               
-              // Step 1: Parent (Aggregator)
-              const totalElevators = effectiveLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
-              const totalFloors = effectiveLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
-              
-              const parentRecord = {
-                  ...baseData,
-                  contract_id: mainContractId,
-                  liter: '', // Empty for parent
-                  elevators_count: totalElevators,
-                  floors_count: totalFloors,
-                  no_liter_breakdown: true,
-                  is_separate_liter: false,
-                  is_total: false
-              };
-              await executeDbQuery(generateInsert(parentRecord));
-
-              // Step 2: Children (Liters)
-              for (let i = 0; i < effectiveLiters.length; i++) {
-                  const liter = effectiveLiters[i];
-                  // ID format: X.001, X.002 ...
-                  const childId = baseContractId + (i + 1) / 1000;
-                  
-                  const childRecord = {
-                      ...baseData,
-                      contract_id: childId,
-                      liter: liter.name,
-                      elevators_count: liter.elevators,
-                      floors_count: liter.floors,
-                      no_liter_breakdown: false,
-                      is_separate_liter: true,
-                      is_total: false
-                  };
-                  
-                  // Clear financials for children (they are on parent)
-                  FINANCIAL_KEYWORDS.forEach(kw => {
-                      Object.keys(childRecord).forEach(key => {
-                          if (key.includes(kw)) (childRecord as any)[key] = 0;
-                      });
+              // Clear financials for children (kept only on parent)
+              FINANCIAL_KEYWORDS.forEach(kw => {
+                  Object.keys(childRecord).forEach(key => {
+                      if (key.includes(kw)) (childRecord as any)[key] = 0;
                   });
+              });
 
-                  await executeDbQuery(generateInsert(childRecord));
-              }
+              await executeDbQuery(generateInsert(childRecord));
           }
 
-          // 6. Save Transactions (Linked to MAIN Contract ID)
+          // 4. Save Transactions (Linked to Integer ID = 8001)
           for (const [type, txs] of Object.entries(transactionsMap)) {
               if (txs.length > 0) {
                   const values = txs.map(t => {
                       const val = t.value || 0;
                       const txt = (t.text || '').replace(/'/g, "''");
                       const dt = t.date || new Date().toISOString().split('T')[0];
-                      return `(${mainContractId}, '${type}', ${val}, '${txt}', '${dt}')`;
+                      return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${dt}')`;
                   }).join(', ');
                   
                   const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, date) VALUES ${values}`;
