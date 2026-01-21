@@ -7,7 +7,6 @@ export const EXCLUDED_FIELDS = [
     'updated_at', 
     'profit_per_lift_calculated', 
     'rentability_calculated',
-    'is_total',
     'no_liter_breakdown',
     'is_separate_liter'
 ];

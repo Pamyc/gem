@@ -89,7 +89,7 @@ export const DB_MAPPING = [
   { db: 'floors_count', header: 'Кол-во этажей', type: 'number' },
   
   // --- Флаги ---
-  { db: 'is_total', header: 'Итого (Да/Нет)', type: 'boolean' },
+  
   { db: 'no_liter_breakdown', header: 'Без разбивки на литеры (Да/Нет)', type: 'boolean' },
   { db: 'is_separate_liter', header: 'Отдельный литер (Да/Нет)', type: 'boolean' },
 

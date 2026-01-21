@@ -46,7 +46,6 @@ export const useComplexComparisonsDB = (city: string, year: string, region: stri
     const idxYear = headers.indexOf('Год');
     const idxElevators = headers.indexOf('Кол-во лифтов');
     const idxFloors = headers.indexOf('Кол-во этажей');
-    const idxTotal = headers.indexOf('Итого (Да/Нет)');
     const idxNoBreakdown = headers.indexOf('Без разбивки на литеры (Да/Нет)');
     const idxOneLiter = headers.indexOf('Отдельный литер (Да/Нет)');
 
@@ -60,13 +59,7 @@ export const useComplexComparisonsDB = (city: string, year: string, region: stri
     }>();
 
     sheetData.rows.forEach(row => {
-      // 1. Base Filter (аналог WHERE is_total = false)
-      // Теперь значения "Да"/"Нет", так как мы преобразовали их в DataContext
-      if (idxTotal !== -1) {
-         const val = String(row[idxTotal]).trim().toLowerCase();
-         if (val === 'да') return;
-      }
-
+      
       // 2. Context Filters
       if (region && idxRegion !== -1 && String(row[idxRegion]) !== region) return;
       if (city && idxCity !== -1 && String(row[idxCity]) !== city) return;
