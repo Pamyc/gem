@@ -82,8 +82,13 @@ export const useContractsData = () => {
             });
         }
         const cityNode = cityMap.get(city)!;
-        cityNode.totalElevators += elevators;
-        cityNode.totalFloors += floors;
+        
+        // Sum only separate liters to avoid double counting with aggregates
+        if (isSeparateLiter) {
+            cityNode.totalElevators += elevators;
+            cityNode.totalFloors += floors;
+        }
+        
         if (isContract) cityNode.totalContracts += 1;
         if (isLiterCount) cityNode.totalLiters += 1;
 
@@ -100,8 +105,13 @@ export const useContractsData = () => {
             };
             cityNode.jks.push(jkNode);
         }
-        jkNode.totalElevators += elevators;
-        jkNode.totalFloors += floors;
+        
+        // Sum only separate liters
+        if (isSeparateLiter) {
+            jkNode.totalElevators += elevators;
+            jkNode.totalFloors += floors;
+        }
+        
         if (isContract) jkNode.totalContracts += 1;
         if (isLiterCount) jkNode.totalLiters += 1;
 

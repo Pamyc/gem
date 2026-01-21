@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { executeDbQuery } from "../utils/dbGatewayApi"
 
@@ -115,6 +116,12 @@ export const DB_MAPPING = [
   { db: 'expense_install_plan', header: 'Расх. Монтаж (План)', type: 'number' },
   { db: 'expense_install_fact', header: 'Расх. Монтаж (Факт)', type: 'number' },
   
+  // New Additional fields (Replacing FOT usage)
+  { db: 'income_add_plan', header: 'Доходы Доп. (План)', type: 'number' },
+  { db: 'income_add_fact', header: 'Доходы Доп. (Факт)', type: 'number' },
+  { db: 'expense_add_plan', header: 'Расходы Доп. (План)', type: 'number' },
+  { db: 'expense_add_fact', header: 'Расходы Доп. (Факт)', type: 'number' },
+
   { db: 'expense_fot_fact', header: 'Расходы ФОТ', type: 'number' },
 
   // --- Расчетные (обычно read-only, но пусть будут в маппинге) ---
