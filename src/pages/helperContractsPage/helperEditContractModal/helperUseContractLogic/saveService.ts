@@ -49,6 +49,7 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         // Cleanup generated/meta fields
         delete safeData.id;
         delete safeData.is_total;
+        delete safeData.expense_fot_fact;
         delete safeData.created_at;
         delete safeData.updated_at;
         delete safeData.rentability_calculated;
