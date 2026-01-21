@@ -84,8 +84,7 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         elevators_count: totalElevators,
         floors_count: totalFloors,
         no_liter_breakdown: true, // Это агрегированная запись
-        is_separate_liter: false,
-        is_total: false
+        is_separate_liter: false
     };
     
     // Explicitly add gross_profit to parent record for DB insertion
@@ -108,8 +107,7 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
             elevators_count: liter.elevators,
             floors_count: liter.floors,
             no_liter_breakdown: false,
-            is_separate_liter: true, // Это отдельный литер
-            is_total: false
+            is_separate_liter: true
         };
         
         // Clear financials for children (kept only on parent)
