@@ -203,6 +203,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
 
   const fieldsToExcludeFromUI = [
       ...EXCLUDED_FIELDS,
+      'is_total', 
       'no_liter_breakdown', 
       'is_separate_liter',
       'created_by', 'updated_by', 'created_at', 'updated_at' // Exclude from general input generation
