@@ -1,10 +1,9 @@
 
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DB_MAPPING } from '../../../../contexts/DataContext';
 import { EXCLUDED_FIELDS, FINANCIAL_KEYWORDS } from '../constants';
 import { LiterItem, Transaction, UseContractLogicProps } from './types';
-import { loadTransactionsFromDb, loadLitersFromDb, fetchDictionaryOptions, fetchContractIdByDbId } from './dataService';
+import { loadTransactionsFromDb, loadLitersFromDb, fetchExistingContractData, fetchContractIdByDbId } from './dataService';
 import { executeSave } from './saveService';
 
 export * from './types';
@@ -16,8 +15,10 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
       { name: 'Литер 1', elevators: 0, floors: 0 }
   ]);
   const [fieldCurrencies, setFieldCurrencies] = useState<Record<string, string>>({});
-  const [optionsMap, setOptionsMap] = useState<Record<string, string[]>>({});
   const [previewSql, setPreviewSql] = useState<string>('');
+
+  // "Сырые" данные всех контрактов для построения динамических фильтров
+  const [contractRows, setContractRows] = useState<any[]>([]);
 
   // Хранилище транзакций
   const [transactionsMap, setTransactionsMap] = useState<Record<string, Transaction[]>>({});
@@ -76,14 +77,53 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
 
           initData();
           
-          // Загрузка справочников
-          fetchDictionaryOptions().then(map => setOptionsMap(map));
+          // Загрузка "живых" данных для фильтров вместо словарей
+          fetchExistingContractData().then(rows => setContractRows(rows));
       }
   }, [isOpen, nodeData]);
 
   const handleChange = (key: string, value: any) => {
       setFormData(prev => ({ ...prev, [key]: value }));
   };
+
+  // --- Логика умной фильтрации (Cascading) ---
+  // Поля, которые участвуют в зависимостях
+  const dependencyFields = ['region', 'city', 'housing_complex', 'client_name', 'object_type'];
+
+  const getFilteredOptions = useCallback((targetField: string): string[] => {
+      if (!contractRows.length || !dependencyFields.includes(targetField)) return [];
+
+      // Фильтруем строки, совпадающие с текущим выбором в форме (кроме самого целевого поля)
+      const matches = contractRows.filter(row => {
+          for (const key of dependencyFields) {
+              // Пропускаем само поле, для которого ищем опции (чтобы не сузить выбор до самого себя)
+              if (key === targetField) continue;
+              
+              const formValue = formData[key];
+              const rowValue = row[key];
+
+              // Если в форме значение выбрано, оно должно совпадать со строкой в данных
+              if (formValue && typeof formValue === 'string' && formValue.trim() !== '') {
+                  // Сравниваем мягко (trim)
+                  if (!rowValue || String(rowValue).trim() !== String(formValue).trim()) {
+                      return false;
+                  }
+              }
+          }
+          return true;
+      });
+
+      // Извлекаем уникальные значения для целевого поля
+      const uniqueValues = new Set<string>();
+      matches.forEach(row => {
+          const val = row[targetField];
+          if (val && typeof val === 'string' && val.trim() !== '') {
+              uniqueValues.add(val.trim());
+          }
+      });
+
+      return Array.from(uniqueValues).sort();
+  }, [contractRows, formData]);
 
   const handleTransactionChange = (fieldKey: string, newTransactions: Transaction[]) => {
       setTransactionsMap(prev => ({
@@ -97,10 +137,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
           const nextData = { ...prev, [fieldKey]: newSum };
           
           // Recalculate Totals
-          // Sum up components: equip + frame + install + add
           const components = ['equip', 'frame', 'install', 'add'];
           
-          // Helper to get value (checking if it's the current field being updated or from existing data)
           const getVal = (key: string) => key === fieldKey ? newSum : (Number(nextData[key]) || 0);
 
           nextData.income_total_plan = components.reduce((sum, c) => sum + getVal(`income_${c}_plan`), 0);
@@ -108,7 +146,6 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
           nextData.expense_total_plan = components.reduce((sum, c) => sum + getVal(`expense_${c}_plan`), 0);
           nextData.expense_total_fact = components.reduce((sum, c) => sum + getVal(`expense_${c}_fact`), 0);
           
-          // Recalculate Gross Profit
           nextData.gross_profit = nextData.income_total_fact - nextData.expense_total_fact;
           
           return nextData;
@@ -179,7 +216,11 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
     loading,
     liters,
     fieldCurrencies,
-    optionsMap,
+    // optionsMap заменен на динамический getFilteredOptions, но мы можем просто экспортировать метод
+    // или вернуть пустой optionsMap, чтобы не ломать структуру, но лучше передать функцию.
+    // Для совместимости с компонентом (который ждет optionsMap), мы будем передавать "options" прямо в InputField в JSX
+    optionsMap: {}, // Deprecated in favor of getFilteredOptions
+    getFilteredOptions, // New dynamic getter
     generalFields,
     isEditMode,
     previewSql,

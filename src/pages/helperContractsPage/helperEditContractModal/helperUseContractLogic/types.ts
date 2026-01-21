@@ -11,6 +11,7 @@ export interface Transaction {
   date: string;
   value: number;
   text: string;
+  subcategory?: string; // Новое поле
 }
 
 export interface UseContractLogicProps {

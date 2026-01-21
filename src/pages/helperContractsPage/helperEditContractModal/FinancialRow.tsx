@@ -46,6 +46,7 @@ const FinancialRow: React.FC<FinancialRowProps> = ({
             onChange={() => {}} // Disabled direct change
             transactions={transactionsMap[planKey]}
             onTransactionsChange={(txs) => onTransactionChange && onTransactionChange(planKey, txs)}
+            transactionType={planKey} // Pass type for filtering subcategories
             className="w-full bg-transparent border-b border-dashed border-rose-200 dark:border-rose-800 focus:border-rose-500 px-1 py-0.5 text-xs font-bold text-rose-600 dark:text-rose-400 outline-none text-right placeholder-rose-200 dark:placeholder-rose-900 transition-all cursor-pointer"
             placeholder="0"
             label={`${label} (План)`}
@@ -64,6 +65,7 @@ const FinancialRow: React.FC<FinancialRowProps> = ({
             onChange={() => {}} // Disabled direct change
             transactions={transactionsMap[factKey]}
             onTransactionsChange={(txs) => onTransactionChange && onTransactionChange(factKey, txs)}
+            transactionType={factKey} // Pass type for filtering subcategories
             className="w-full bg-transparent border-b border-dashed border-indigo-200 dark:border-indigo-800 focus:border-indigo-500 px-1 py-0.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 outline-none text-right placeholder-indigo-200 dark:placeholder-indigo-900 transition-all cursor-pointer"
             placeholder="0"
             label={`${label} (Факт)`}

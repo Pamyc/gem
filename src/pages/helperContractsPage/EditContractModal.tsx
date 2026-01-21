@@ -25,7 +25,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     loading,
     liters,
     fieldCurrencies,
-    optionsMap,
+    getFilteredOptions, // Используем новую функцию
     generalFields,
     isEditMode,
     previewSql,
@@ -76,7 +76,8 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                                         isFinancial={false}
                                         currency={fieldCurrencies[f.db] || '₽'}
                                         onCurrencyChange={handleCurrencyChange}
-                                        options={optionsMap[f.db]} 
+                                        // Передаем динамически отфильтрованные опции
+                                        options={getFilteredOptions(f.db)} 
                                     />
                                 ))}
                             </div>

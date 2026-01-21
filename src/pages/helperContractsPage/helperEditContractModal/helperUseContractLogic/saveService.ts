@@ -2,7 +2,7 @@
 import { executeDbQuery } from '../../../../utils/dbGatewayApi';
 import { FINANCIAL_KEYWORDS } from '../constants';
 import { LiterItem, Transaction } from './types';
-import { updateDictionaries, generateContractId } from './businessLogic';
+import { generateContractId } from './businessLogic';
 
 interface ExecuteSaveParams {
     formData: Record<string, any>;
@@ -12,8 +12,7 @@ interface ExecuteSaveParams {
 }
 
 export const executeSave = async ({ formData, liters, transactionsMap, isEditMode }: ExecuteSaveParams) => {
-    // 0. Обновляем справочники новыми значениями
-    await updateDictionaries(formData);
+    // 0. Справочники больше не обновляем (только индексы городов внутри generateContractId при необходимости)
 
     let baseContractId = 0;
 
@@ -132,11 +131,13 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
             const values = txs.map(t => {
                 const val = t.value || 0;
                 const txt = (t.text || '').replace(/'/g, "''");
+                const subcat = (t.subcategory || '').replace(/'/g, "''"); // Safe subcategory
                 const dt = t.date || new Date().toISOString().split('T')[0];
-                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${dt}')`;
+                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}')`;
             }).join(', ');
             
-            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, date) VALUES ${values}`;
+            // Updated SQL to include subcategory
+            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date) VALUES ${values}`;
             await executeDbQuery(insertSql);
         }
     }

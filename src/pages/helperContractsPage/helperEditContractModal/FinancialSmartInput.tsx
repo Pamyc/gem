@@ -1,14 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Hash, FileText, Plus, X, Trash2 } from 'lucide-react';
+import { Hash, FileText, Plus, X, Trash2, Tag, ChevronDown } from 'lucide-react';
 import { formatMoney, cleanMoneyInput } from './constants';
 import { Transaction } from './useContractLogic';
+import { fetchSubcategories } from './helperUseContractLogic/dataService';
 
 interface FinancialSmartInputProps {
   value: any; // Отображаемое значение (сумма)
-  onChange: (value: any) => void; // Для обратной совместимости (можно оставить пустым или логировать)
+  onChange: (value: any) => void; // Для обратной совместимости
   transactions?: Transaction[]; // Список транзакций из родителя
   onTransactionsChange?: (txs: Transaction[]) => void; // Коллбэк изменения списка
+  transactionType?: string; // Тип транзакции для фильтрации подкатегорий
   placeholder?: string;
   className?: string;
   label?: string;
@@ -16,9 +18,10 @@ interface FinancialSmartInputProps {
 
 const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({ 
   value, 
-  onChange, // deprecated in favor of transaction logic but kept for interface compat
+  onChange, 
   transactions = [],
   onTransactionsChange,
+  transactionType = '',
   placeholder = "0", 
   className = "",
   label = "Детализация"
@@ -31,6 +34,18 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newAmount, setNewAmount] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newSubcategory, setNewSubcategory] = useState('');
+  
+  // Options for subcategory
+  const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
+  const [showSubOptions, setShowSubOptions] = useState(false);
+
+  // Load options when popover opens
+  useEffect(() => {
+      if (isOpen && transactionType) {
+          fetchSubcategories(transactionType).then(opts => setSubcategoryOptions(opts));
+      }
+  }, [isOpen, transactionType]);
 
   // Formatting date (YYYY-MM-DD -> DD.MM.YYYY)
   const formatDateDisplay = (isoDate: string) => {
@@ -73,7 +88,8 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
         id: Date.now(), // Temp ID
         date: newDate,
         value: amountNum,
-        text: newDesc || 'Комментарий'
+        text: newDesc || 'Комментарий',
+        subcategory: newSubcategory || '' // Сохраняем подкатегорию
     };
 
     onTransactionsChange([...transactions, newTx]);
@@ -81,6 +97,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
     // Reset Form
     setNewAmount('');
     setNewDesc('');
+    setNewSubcategory('');
   };
 
   // Handle Delete Transaction
@@ -96,13 +113,6 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
   const handleOpen = () => {
       if (containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
-          setCoords({
-              top: rect.bottom + 5,
-              left: rect.left - (380 - rect.width), // Align right edge approximately if wide, or just adjust logic
-              width: 380 
-          });
-          // Better positioning logic: try to align right edge of dropdown with right edge of input
-          // Or just fixed width centered. Let's align right for financial inputs usually on the right.
           const leftPos = rect.right - 380;
           setCoords({
               top: rect.bottom + 5,
@@ -160,7 +170,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                                 <tr>
                                     <th className="px-3 py-2">Дата</th>
                                     <th className="px-3 py-2 text-right">Сумма</th>
-                                    <th className="px-3 py-2">Инфо</th>
+                                    <th className="px-3 py-2">Раздел</th>
                                     <th className="px-1 py-2"></th>
                                 </tr>
                             </thead>
@@ -173,8 +183,11 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                                         <td className="px-3 py-2 text-xs font-bold text-gray-800 dark:text-white text-right">
                                             {formatMoney(t.value)}
                                         </td>
-                                        <td className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px]" title={t.text}>
-                                            {t.text}
+                                        <td className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
+                                            <div className="flex flex-col">
+                                                <span className="text-gray-800 dark:text-gray-200">{t.subcategory}</span>
+                                                <span className="text-[9px] opacity-70">{t.text}</span>
+                                            </div>
                                         </td>
                                         <td className="px-1 py-2 text-right">
                                             <button 
@@ -194,8 +207,9 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                 {/* Add New Record Form */}
                 <div className="p-3 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#151923]">
                     <div className="text-[10px] font-bold text-gray-400 uppercase mb-2">Новая запись</div>
+                    
+                    {/* Row 1: Date & Amount */}
                     <div className="grid grid-cols-[90px_1fr] gap-2 mb-2">
-                        {/* Date */}
                         <div className="relative bg-white dark:bg-[#0b0f19] border border-gray-200 dark:border-white/10 rounded-lg flex items-center px-2">
                             <input 
                                 type="date" 
@@ -204,7 +218,6 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                                 className="w-full bg-transparent text-xs outline-none text-gray-700 dark:text-gray-300 font-mono"
                             />
                         </div>
-                        {/* Amount */}
                         <div className="relative bg-white dark:bg-[#0b0f19] border border-gray-200 dark:border-white/10 rounded-lg flex items-center px-2 py-1.5 focus-within:border-emerald-500 transition-colors">
                             <Hash size={12} className="text-gray-400 mr-2 shrink-0" />
                             <input 
@@ -216,8 +229,49 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                             />
                         </div>
                     </div>
+
+                    {/* Row 2: Subcategory (Dynamic Dropdown) */}
+                    <div className="relative mb-2">
+                        <div className="relative flex items-center bg-white dark:bg-[#0b0f19] border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1.5 focus-within:border-indigo-500 transition-colors">
+                            <Tag size={12} className="text-gray-400 mr-2 shrink-0" />
+                            <input 
+                                type="text" 
+                                value={newSubcategory}
+                                onChange={(e) => {
+                                    setNewSubcategory(e.target.value);
+                                    setShowSubOptions(true);
+                                }}
+                                onFocus={() => setShowSubOptions(true)}
+                                onBlur={() => setTimeout(() => setShowSubOptions(false), 200)}
+                                placeholder="Категория (например: Доставка)"
+                                className="w-full bg-transparent text-xs outline-none text-gray-700 dark:text-gray-300"
+                            />
+                            {subcategoryOptions.length > 0 && (
+                                <ChevronDown size={12} className="text-gray-400 ml-1 cursor-pointer" onClick={() => setShowSubOptions(!showSubOptions)} />
+                            )}
+                        </div>
+                        
+                        {/* Options List */}
+                        {showSubOptions && subcategoryOptions.length > 0 && (
+                            <div className="absolute z-10 bottom-full left-0 w-full mb-1 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-lg shadow-lg max-h-32 overflow-y-auto custom-scrollbar">
+                                {subcategoryOptions.filter(o => o.toLowerCase().includes(newSubcategory.toLowerCase())).map((opt, i) => (
+                                    <div 
+                                        key={i}
+                                        className="px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 cursor-pointer"
+                                        onClick={() => {
+                                            setNewSubcategory(opt);
+                                            setShowSubOptions(false);
+                                        }}
+                                    >
+                                        {opt}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Row 3: Comment & Add */}
                     <div className="flex gap-2">
-                        {/* Description */}
                         <div className="relative flex-1 bg-white dark:bg-[#0b0f19] border border-gray-200 dark:border-white/10 rounded-lg flex items-center px-2 py-1.5 focus-within:border-emerald-500 transition-colors">
                             <FileText size={12} className="text-gray-400 mr-2 shrink-0" />
                             <input 
@@ -228,7 +282,6 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                                 className="w-full bg-transparent text-xs outline-none text-gray-700 dark:text-gray-300"
                             />
                         </div>
-                        {/* Add Button */}
                         <button 
                             onClick={handleAdd}
                             disabled={!newAmount || Number(cleanMoneyInput(newAmount)) <= 0}

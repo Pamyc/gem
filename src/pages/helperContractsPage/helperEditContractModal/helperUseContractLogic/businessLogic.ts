@@ -1,31 +1,7 @@
 
 import { executeDbQuery } from '../../../../utils/dbGatewayApi';
 
-export const updateDictionaries = async (formData: Record<string, any>) => {
-  const categoriesToCheck = [
-      { field: 'region', cat: 'region' },
-      { field: 'city', cat: 'city' },
-      { field: 'client_name', cat: 'client' },
-      { field: 'object_type', cat: 'object_type' },
-      { field: 'housing_complex', cat: 'jk' }
-  ];
-
-  for (const item of categoriesToCheck) {
-      const val = formData[item.field];
-      if (val && typeof val === 'string' && val.trim() !== '') {
-          const cleanVal = val.trim().replace(/'/g, "''");
-          // Проверяем наличие
-          const checkSql = `SELECT id FROM app_dictionaries WHERE category = '${item.cat}' AND value = '${cleanVal}'`;
-          const checkRes = await executeDbQuery(checkSql);
-          
-          // Если нет - вставляем
-          if (!checkRes.data || checkRes.data.length === 0) {
-              const insertSql = `INSERT INTO app_dictionaries (category, value, is_active) VALUES ('${item.cat}', '${cleanVal}', true)`;
-              await executeDbQuery(insertSql);
-          }
-      }
-  }
-};
+// Функция updateDictionaries удалена согласно новому ТЗ (отказ от статических справочников)
 
 export const generateContractId = async (cityName: string): Promise<number> => {
   if (!cityName) {
@@ -50,7 +26,7 @@ export const generateContractId = async (cityName: string): Promise<number> => {
       
       baseIndex = maxCode + 1000; // Шаг 1000
 
-      // Сохраняем привязку
+      // Сохраняем привязку (это единственное исключение для использования app_dictionaries)
       const insertBaseSql = `INSERT INTO app_dictionaries (category, value, code, is_active) VALUES ('city_base_index', '${cleanCity}', ${baseIndex}, true)`;
       await executeDbQuery(insertBaseSql);
   }

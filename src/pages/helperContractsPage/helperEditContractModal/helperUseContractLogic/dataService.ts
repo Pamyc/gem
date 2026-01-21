@@ -17,7 +17,8 @@ export const loadTransactionsFromDb = async (contractId: number) => {
           id: row.id,
           date: row.date ? String(row.date).split('T')[0] : new Date().toISOString().split('T')[0],
           value: Number(row.value),
-          text: row.text || ''
+          text: row.text || '',
+          subcategory: row.subcategory || '' // Загружаем подкатегорию
         });
       });
       
@@ -58,30 +59,41 @@ export const loadLitersFromDb = async (contractId: number): Promise<LiterItem[]>
   return [];
 };
 
-export const fetchDictionaryOptions = async () => {
-  const sql = "SELECT category, value FROM app_dictionaries WHERE is_active = true ORDER BY sort_order ASC";
+// Загрузка уникальных комбинаций данных для живых фильтров
+export const fetchExistingContractData = async () => {
+  // Выбираем только те поля, которые участвуют в автодополнении
+  const sql = `
+    SELECT DISTINCT 
+      region, 
+      city, 
+      housing_complex, 
+      client_name, 
+      object_type 
+    FROM data_contracts
+    WHERE no_liter_breakdown = false
+  `;
+  
   const res = await executeDbQuery(sql);
   
   if (res.ok && res.data) {
-    const map: Record<string, string[]> = {};
-    res.data.forEach((r: any) => {
-      let field = '';
-      if (r.category === 'region') field = 'region';
-      if (r.category === 'client') field = 'client_name';
-      if (r.category === 'object_type') field = 'object_type';
-      if (r.category === 'jk') field = 'housing_complex';
-      if (r.category === 'city_base_index' || r.category === 'city') field = 'city';
-      
-      if (field) {
-        if (!map[field]) map[field] = [];
-        if (!map[field].includes(r.value)) {
-           map[field].push(r.value);
-        }
-      }
-    });
-    return map;
+    return res.data;
   }
-  return {};
+  return [];
+};
+
+// Получение списка существующих подкатегорий для конкретного типа транзакции
+export const fetchSubcategories = async (transactionType: string): Promise<string[]> => {
+    if (!transactionType) return [];
+    try {
+        const sql = `SELECT DISTINCT subcategory FROM contract_transactions WHERE type = '${transactionType}' AND subcategory IS NOT NULL AND subcategory != '' ORDER BY subcategory ASC LIMIT 50`;
+        const res = await executeDbQuery(sql);
+        if (res.ok && res.data) {
+            return res.data.map((r: any) => r.subcategory);
+        }
+    } catch (e) {
+        console.error("Error fetching subcategories:", e);
+    }
+    return [];
 };
 
 export const fetchContractIdByDbId = async (dbId: number) => {

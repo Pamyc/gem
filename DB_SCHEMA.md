@@ -39,6 +39,7 @@
 | **updated_at** | `timestamp` | NULL `[now()]` |
 | **created_by** | `character varying(255)` | NULL |
 | **updated_by** | `character varying(255)` | NULL |
+| **subcategory** | `character varying(255)` | NULL |
 
 ### Индексы
 *   **PRIMARY KEY**: `id`
