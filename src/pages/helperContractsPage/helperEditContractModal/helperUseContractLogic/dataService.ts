@@ -1,4 +1,5 @@
 
+
 import { executeDbQuery } from '../../../../utils/dbGatewayApi';
 import { Transaction, LiterItem } from './types';
 
@@ -18,7 +19,8 @@ export const loadTransactionsFromDb = async (contractId: number) => {
           date: row.date ? String(row.date).split('T')[0] : new Date().toISOString().split('T')[0],
           value: Number(row.value),
           text: row.text || '',
-          subcategory: row.subcategory || '' // Загружаем подкатегорию
+          subcategory: row.subcategory || '',
+          createdBy: row.created_by || '' // Map created_by from DB
         });
       });
       

@@ -130,6 +130,12 @@ export const DB_MAPPING = [
 
   // --- Служебные 2 ---
   { db: 'contract_id', header: 'contract_id', type: 'number' },
+
+  // --- Аудит ---
+  { db: 'created_by', header: 'Создал', type: 'string' },
+  { db: 'updated_by', header: 'Обновил', type: 'string' },
+  { db: 'created_at', header: 'Дата создания', type: 'string' },
+  { db: 'updated_at', header: 'Дата обновления', type: 'string' },
 ];
 
 export interface DataStore {

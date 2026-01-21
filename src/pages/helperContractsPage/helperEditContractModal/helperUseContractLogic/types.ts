@@ -1,4 +1,5 @@
 
+
 export interface LiterItem {
   id?: number;
   name: string;
@@ -11,7 +12,8 @@ export interface Transaction {
   date: string;
   value: number;
   text: string;
-  subcategory?: string; // Новое поле
+  subcategory?: string; 
+  createdBy?: string; // New field for audit
 }
 
 export interface UseContractLogicProps {
@@ -19,4 +21,5 @@ export interface UseContractLogicProps {
   nodeData?: any;
   onSuccess: () => void;
   onClose: () => void;
+  user?: any; // Pass user object
 }

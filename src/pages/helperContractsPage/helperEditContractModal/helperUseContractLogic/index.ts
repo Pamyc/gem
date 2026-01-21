@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from 'react';
 import { DB_MAPPING } from '../../../../contexts/DataContext';
 import { EXCLUDED_FIELDS, FINANCIAL_KEYWORDS } from '../constants';
@@ -8,7 +9,7 @@ import { executeSave } from './saveService';
 
 export * from './types';
 
-export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseContractLogicProps) => {
+export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }: UseContractLogicProps) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [liters, setLiters] = useState<LiterItem[]>([
@@ -66,6 +67,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
                   setFormData({
                       city: '',
                       housing_complex: '',
+                      is_handed_over: false,
                       contract_id: 0, 
                       year: new Date().getFullYear(),
                       elevators_count: 0,
@@ -186,7 +188,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
               formData,
               liters,
               transactionsMap,
-              isEditMode
+              isEditMode,
+              username: user?.username || user?.name || 'Unknown'
           });
           onSuccess();
           onClose();
@@ -202,7 +205,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
       ...EXCLUDED_FIELDS,
       'is_total', 
       'no_liter_breakdown', 
-      'is_separate_liter'
+      'is_separate_liter',
+      'created_by', 'updated_by', 'created_at', 'updated_at' // Exclude from general input generation
   ];
 
   const generalFields = DB_MAPPING.filter(m => 
@@ -216,11 +220,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose }: UseCo
     loading,
     liters,
     fieldCurrencies,
-    // optionsMap заменен на динамический getFilteredOptions, но мы можем просто экспортировать метод
-    // или вернуть пустой optionsMap, чтобы не ломать структуру, но лучше передать функцию.
-    // Для совместимости с компонентом (который ждет optionsMap), мы будем передавать "options" прямо в InputField в JSX
-    optionsMap: {}, // Deprecated in favor of getFilteredOptions
-    getFilteredOptions, // New dynamic getter
+    optionsMap: {}, 
+    getFilteredOptions, 
     generalFields,
     isEditMode,
     previewSql,

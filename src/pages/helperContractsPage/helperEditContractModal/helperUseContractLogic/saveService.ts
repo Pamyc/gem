@@ -1,4 +1,5 @@
 
+
 import { executeDbQuery } from '../../../../utils/dbGatewayApi';
 import { FINANCIAL_KEYWORDS } from '../constants';
 import { LiterItem, Transaction } from './types';
@@ -9,11 +10,11 @@ interface ExecuteSaveParams {
     liters: LiterItem[];
     transactionsMap: Record<string, Transaction[]>;
     isEditMode: boolean;
+    username?: string; // Author
 }
 
-export const executeSave = async ({ formData, liters, transactionsMap, isEditMode }: ExecuteSaveParams) => {
-    // 0. Справочники больше не обновляем (только индексы городов внутри generateContractId при необходимости)
-
+export const executeSave = async ({ formData, liters, transactionsMap, isEditMode, username }: ExecuteSaveParams) => {
+    const author = username || 'Unknown';
     let baseContractId = 0;
 
     if (isEditMode && formData.contract_id) {
@@ -52,6 +53,16 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         delete safeData.rentability_calculated;
         delete safeData.profit_per_lift_calculated;
         delete safeData.gross_profit; // It will be recalculated in baseData if needed or passed explicitly
+        
+        // Audit Fields
+        safeData.updated_by = author;
+        if (!isEditMode) {
+            safeData.created_by = author;
+        } else {
+            // Keep original creator if possible, but since we delete and re-insert child rows, we might lose it if not passed in formData.
+            // Ideally formData should have created_by loaded from DB. If empty, we set it to current user.
+            if (!safeData.created_by) safeData.created_by = author;
+        }
         
         const keys = Object.keys(safeData);
         const cols = keys.map(k => `"${k}"`).join(', ');
@@ -131,11 +142,15 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
                 const txt = (t.text || '').replace(/'/g, "''");
                 const subcat = (t.subcategory || '').replace(/'/g, "''"); // Safe subcategory
                 const dt = t.date || new Date().toISOString().split('T')[0];
-                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}')`;
+                // For new txs, use current user. For existing, keep old author if available?
+                // Actually, existing txs are deleted and re-inserted. So we lose original author unless we preserve it in `t`.
+                // `loadTransactionsFromDb` loads `created_by` into `t.createdBy`.
+                const txAuthor = t.createdBy || author;
+                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}')`;
             }).join(', ');
             
-            // Updated SQL to include subcategory
-            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date) VALUES ${values}`;
+            // Updated SQL to include subcategory and created_by
+            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by) VALUES ${values}`;
             await executeDbQuery(insertSql);
         }
     }

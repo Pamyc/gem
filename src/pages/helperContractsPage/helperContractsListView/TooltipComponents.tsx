@@ -45,7 +45,7 @@ export const DelayedTooltipWrapper: React.FC<{
     return (
         <div 
             ref={triggerRef}
-            className="relative inline-block"
+            className="relative w-fit inline-block"
             onMouseEnter={handleMouseEnter} 
             onMouseLeave={handleMouseLeave}
         >

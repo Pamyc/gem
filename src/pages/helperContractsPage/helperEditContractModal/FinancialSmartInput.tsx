@@ -1,6 +1,7 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Hash, FileText, Plus, X, Trash2, Tag, ChevronDown } from 'lucide-react';
+import { Hash, FileText, Plus, X, Trash2, Tag, ChevronDown, User } from 'lucide-react';
 import { formatMoney, cleanMoneyInput } from './constants';
 import { Transaction } from './useContractLogic';
 import { fetchSubcategories } from './helperUseContractLogic/dataService';
@@ -90,6 +91,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
         value: amountNum,
         text: newDesc || 'Комментарий',
         subcategory: newSubcategory || '' // Сохраняем подкатегорию
+        // CreatedBy will be set on saveService, or we can assume 'Me' for new ones visually
     };
 
     onTransactionsChange([...transactions, newTx]);
@@ -113,11 +115,11 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
   const handleOpen = () => {
       if (containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
-          const leftPos = rect.right - 380;
+          const leftPos = rect.right - 500;
           setCoords({
               top: rect.bottom + 5,
               left: leftPos > 0 ? leftPos : rect.left, 
-              width: 380
+              width: 500
           });
       }
       setIsOpen(true);
@@ -168,7 +170,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-gray-50 dark:bg-white/5 text-[10px] text-gray-400 uppercase font-bold sticky top-0">
                                 <tr>
-                                    <th className="px-3 py-2">Дата</th>
+                                    <th className="px-3 py-2">Дата / Автор</th>
                                     <th className="px-3 py-2 text-right">Сумма</th>
                                     <th className="px-3 py-2">Раздел</th>
                                     <th className="px-1 py-2"></th>
@@ -178,7 +180,12 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                                 {transactions.map((t, idx) => (
                                     <tr key={idx} className="group hover:bg-gray-50 dark:hover:bg-white/5">
                                         <td className="px-3 py-2 text-xs font-mono text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                            {formatDateDisplay(t.date)}
+                                            <div>{formatDateDisplay(t.date)}</div>
+                                            {t.createdBy && (
+                                                <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-0.5">
+                                                    <User size={8} /> {t.createdBy}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-xs font-bold text-gray-800 dark:text-white text-right">
                                             {formatMoney(t.value)}
@@ -209,7 +216,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                     <div className="text-[10px] font-bold text-gray-400 uppercase mb-2">Новая запись</div>
                     
                     {/* Row 1: Date & Amount */}
-                    <div className="grid grid-cols-[90px_1fr] gap-2 mb-2">
+                    <div className="grid grid-cols-[120px_1fr] gap-2 mb-2">
                         <div className="relative bg-white dark:bg-[#0b0f19] border border-gray-200 dark:border-white/10 rounded-lg flex items-center px-2">
                             <input 
                                 type="date" 

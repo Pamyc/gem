@@ -207,7 +207,7 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
                             {/* Expanded Metrics Header (Visible only when expanded) */}
                             {isExpanded && (
                                 <DelayedTooltipWrapper content={<CityTooltipContent city={city} />}>
-                                    <div className="flex flex-wrap gap-4 mt-1 px-1">
+                                    <div className="flex w-fit flex-wrap gap-4 mt-1 px-1">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] text-gray-400 uppercase font-bold tracking-wider">ЖК</span>
                                             <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{city.jks.length}</span>

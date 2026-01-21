@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Info, Coins, Terminal } from 'lucide-react';
 
@@ -37,7 +38,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     handleSave,
     transactionsMap,
     handleTransactionChange 
-  } = useContractLogic({ isOpen, nodeData, onSuccess, onClose });
+  } = useContractLogic({ isOpen, nodeData, onSuccess, onClose, user });
 
   if (!isOpen) return null;
 
@@ -104,9 +105,6 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                                 </div>
                                 <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Финансы (Общие)</h4>
                             </div>
-                            <div className="text-[10px] text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded">
-                                Заполняется только для договора
-                            </div>
                         </div>
 
                         {/* New Financial Section Component */}
@@ -137,7 +135,17 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                 </div>
             )}
 
-            <ModalFooter loading={loading} onClose={onClose} onSave={handleSave} />
+            <ModalFooter 
+                loading={loading} 
+                onClose={onClose} 
+                onSave={handleSave} 
+                auditInfo={{
+                    createdBy: formData.created_by,
+                    createdAt: formData.created_at,
+                    updatedBy: formData.updated_by,
+                    updatedAt: formData.updated_at
+                }}
+            />
         </div>
     </div>
   );
