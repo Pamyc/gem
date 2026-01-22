@@ -92,18 +92,23 @@ const AppContent: React.FC = () => {
 
     // Скрываем спец-страницы для всех, кроме '1' (Super Admin)
     if (user?.username !== '1') {
-      return items.filter(item => 
-        item.id !== 'constructor' && 
-        item.id !== 'card-constructor' &&
-        item.id !== 'filter-test' &&
-        item.id !== 'example2' &&
-        item.id !== 'diagram3d' &&
-        item.id !== 'test-embed' &&
-        item.id !== 'db-gateway' &&
-        item.id !== 'crud' &&
-        item.id !== 'top-ten' &&
-        item.id !== 'contracts' // Скрываем Договора для обычных юзеров
-      );
+      return items.filter(item => {
+        // Разрешаем contracts для Павла
+        if (user?.username === 'pavel' && item.id === 'contracts') return true;
+
+        return (
+          item.id !== 'constructor' && 
+          item.id !== 'card-constructor' &&
+          item.id !== 'filter-test' &&
+          item.id !== 'example2' &&
+          item.id !== 'diagram3d' &&
+          item.id !== 'test-embed' &&
+          item.id !== 'db-gateway' &&
+          item.id !== 'crud' &&
+          item.id !== 'top-ten' &&
+          item.id !== 'contracts' // Скрываем Договора для остальных
+        );
+      });
     }
 
     return items;
@@ -111,6 +116,9 @@ const AppContent: React.FC = () => {
 
   // Защита роута: если пользователь на запрещенной вкладке -> редирект
   useEffect(() => {
+    // Исключение для Павла и contracts
+    if (user?.username === 'pavel' && activeTab === 'contracts') return;
+
     const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed', 'db-gateway', 'crud', 'top-ten', 'contracts'];
     if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
       setActiveTab('stats');
@@ -136,8 +144,9 @@ const AppContent: React.FC = () => {
           {activeTab === 'stats' && <StatsPage isDarkMode={isDarkMode} />}
           {activeTab === 'home' && <HomePage />}
           
-          {/* Рендерим админские страницы только если пользователь имеет доступ */}
-          {activeTab === 'contracts' && user.username === '1' && <ContractsPage isDarkMode={isDarkMode} />}
+          {/* Рендерим админские страницы только если пользователь имеет доступ (либо 1, либо Pavel для contracts) */}
+          {activeTab === 'contracts' && (user.username === '1' || user.username === 'pavel') && <ContractsPage isDarkMode={isDarkMode} />}
+          
           {activeTab === 'top-ten' && user.username === '1' && <TopTenPage isDarkMode={isDarkMode} />}
           {activeTab === 'constructor' && user.username === '1' && <ConstructorPage isDarkMode={isDarkMode}  />}
           {activeTab === 'card-constructor' && user.username === '1' && <CardConstructorPage isDarkMode={isDarkMode} />}

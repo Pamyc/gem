@@ -13,6 +13,7 @@ export interface User {
 export const HARDCODED_USERS: User[] = [
   { id: '0', username: '1', password: '1', name: 'Super Admin', role: 'admin' }, // Скрытый супер-админ (Updated)
   { id: '1', username: 'admin', password: 'admin', name: 'Администратор', role: 'admin' },
+  { id: '2', username: 'pavel', password: 'pavel', name: 'Павел', role: 'admin' },
 ];
 
 interface AuthContextType {
@@ -59,8 +60,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  // Фильтруем список для отображения в таблице (скрываем integrat/1)
-  const visibleUsers = HARDCODED_USERS.filter(u => u.username !== 'integrat');
+  // Фильтруем список для отображения в таблице (скрываем integrat и 1)
+  const visibleUsers = HARDCODED_USERS.filter(u => u.username !== 'pavel' && u.username !== '1');
 
   return (
     <AuthContext.Provider value={{ user, login, logout, usersList: visibleUsers }}>
