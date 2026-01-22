@@ -9,7 +9,12 @@ export const EXCLUDED_FIELDS = [
     'rentability_calculated',
     'is_total',
     'no_liter_breakdown',
-    'is_separate_liter'
+    'is_separate_liter',
+    'gross_profit',
+    'income_total_plan',
+    'income_total_fact',
+    'expense_total_plan',
+    'expense_total_fact'
 ];
 
 // Поля, которые считаются финансовыми (для правой колонки)

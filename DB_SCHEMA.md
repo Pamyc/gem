@@ -35,11 +35,11 @@
 | **value** | `numeric(15,2)` | Сумма / Значение |
 | **text** | `text` | Описание (NULL) |
 | **date** | `date` | Дата транзакции (INDEX) |
+| **subcategory** | `character varying(255)` | Подкатегория (NULL) |
 | **created_at** | `timestamp` | NULL `[now()]` |
 | **updated_at** | `timestamp` | NULL `[now()]` |
 | **created_by** | `character varying(255)` | NULL |
 | **updated_by** | `character varying(255)` | NULL |
-| **subcategory** | `character varying(255)` | NULL |
 
 ### Индексы
 *   **PRIMARY KEY**: `id`
@@ -48,7 +48,7 @@
 *   **INDEX**: `date`
 
 ### Триггеры
-1.  **trg_calc_financials** (`AFTER DELETE OR INSERT OR UPDATE`): Пересчет финансовых итогов в родительской таблице.
+1.  **trg_calc_financials** (`AFTER DELETE OR INSERT OR UPDATE`): Вызывает функцию `update_contract_financials` для пересчета итогов в `data_contracts`.
 2.  **update_contract_transactions_modtime** (`BEFORE UPDATE`): Автоматическое обновление поля `updated_at`.
 
 ---
@@ -87,21 +87,22 @@
 | **income_add_fact** | `numeric(15,2)` | Доходы Доп. Факт `[0]` |
 | **expense_add_plan** | `numeric(15,2)` | Расходы Доп. План `[0]` |
 | **expense_add_fact** | `numeric(15,2)` | Расходы Доп. Факт `[0]` |
-| **income_total_plan** | `numeric(15,2)` | Итого Доходы План `[0]` |
-| **income_total_fact** | `numeric(15,2)` | Итого Доходы Факт `[0]` |
-| **expense_total_plan** | `numeric(15,2)` | Итого Расходы План `[0]` |
-| **expense_total_fact** | `numeric(15,2)` | Итого Расходы Факт `[0]` |
-| **gross_profit** | `numeric(15,2)` | Валовая прибыль `[0]` |
+| **income_total_plan** | `numeric(15,2)` | Итого Доходы План `[0]` (Обновляется триггером) |
+| **income_total_fact** | `numeric(15,2)` | Итого Доходы Факт `[0]` (Обновляется триггером) |
+| **expense_total_plan** | `numeric(15,2)` | Итого Расходы План `[0]` (Обновляется триггером) |
+| **expense_total_fact** | `numeric(15,2)` | Итого Расходы Факт `[0]` (Обновляется триггером) |
+| **gross_profit** | `numeric(15,2)` | Валовая прибыль `[0]` (Обновляется триггером) |
+| **rentability_calculated** | `numeric(5,2)` | Generated (STORED): Рентабельность % |
+| **profit_per_lift_calculated** | `numeric(15,2)` | Generated (STORED): Прибыль на лифт |
 | **contract_id** | `numeric` | ID контракта (NULL) |
 | **created_at** | `timestamp` | NULL `[now()]` |
-| **rentability_calculated** | `numeric(5,2)` | Generated: `WHEN ((no_liter_breakdown = true) AND (income_total_fact > 0)) THEN ((gross_profit / income_total_fact) * 100)` |
-| **profit_per_lift_calculated** | `numeric(15,2)` | Generated: `WHEN (elevators_count > 0) THEN (gross_profit / elevators_count)` |
 | **updated_at** | `timestamp` | NULL `[now()]` |
 | **created_by** | `character varying(255)` | NULL |
 | **updated_by** | `character varying(255)` | NULL |
 
 ### Индексы
 *   **PRIMARY KEY**: `id`
+*   **INDEX**: `contract_id`
 
 ### Триггеры
 1.  **update_data_contracts_modtime** (`BEFORE UPDATE`): Автоматическое обновление поля `updated_at`.
@@ -121,3 +122,11 @@
 
 ### Индексы
 *   **PRIMARY KEY**: `id`
+
+---
+
+## Хранимые процедуры и функции
+
+1.  **update_modified_column**: Обновляет поле `updated_at` текущим временем.
+2.  **trg_calc_financials_fn**: Обновляет конкретное поле факта в `data_contracts` при изменении транзакции.
+3.  **update_contract_financials**: Комплексная функция. Обновляет конкретное поле факта и пересчитывает все итоговые суммы (Total Fact, Gross Profit) в `data_contracts`.

@@ -50,9 +50,17 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         delete safeData.is_total;
         delete safeData.expense_fot_fact;
         delete safeData.updated_at;
+        
+        // Calculated / Generated fields
         delete safeData.rentability_calculated;
         delete safeData.profit_per_lift_calculated;
-        delete safeData.gross_profit; // Добавим явно, если нужно
+        
+        // Trigger managed fields (must NOT be inserted manually)
+        delete safeData.gross_profit;
+        delete safeData.income_total_plan;
+        delete safeData.income_total_fact;
+        delete safeData.expense_total_plan;
+        delete safeData.expense_total_fact;
         
         // Поля аудита
         safeData.updated_by = author;
@@ -81,11 +89,6 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
 
     // Подготовка базовых данных
     const baseData = { ...formData };
-    
-    // Расчет валовой прибыли
-    if (baseData.income_total_fact !== undefined && baseData.expense_total_fact !== undefined) {
-        baseData.gross_profit = Number(baseData.income_total_fact) - Number(baseData.expense_total_fact);
-    }
 
     // 3. Вставка РОДИТЕЛЬСКОЙ записи (X.999)
     const totalElevators = effectiveLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
@@ -99,10 +102,6 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         no_liter_breakdown: true,
         is_separate_liter: false
     };
-    
-    if (baseData.gross_profit !== undefined) {
-        (parentRecord as any).gross_profit = baseData.gross_profit;
-    }
 
     sqlBatch.push(generateInsertSql(parentRecord));
 
@@ -128,6 +127,8 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
             });
         });
         
+        // Remove calculated fields explicitly from children data object before generation 
+        // (though generateInsertSql handles it, better safe for logic flow)
         delete (childRecord as any).gross_profit;
 
         sqlBatch.push(generateInsertSql(childRecord));
