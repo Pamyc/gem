@@ -60,7 +60,7 @@ const LitersList: React.FC<LitersListProps> = ({
                             type="number" 
                             value={liter.elevators}
                             onChange={(e) => onUpdate(idx, 'elevators', e.target.value)}
-                            className="bg-gray-50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-black/20 focus:border-indigo-500 border rounded px-2 py-1.5 text-xs outline-none transition-all text-center"
+                            className="bg-gray-50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-black/20 focus:border-indigo-500 border rounded px-2 py-1.5 text-xs outline-none transition-all text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                             min="0"
                         />
@@ -68,7 +68,7 @@ const LitersList: React.FC<LitersListProps> = ({
                             type="number" 
                             value={liter.floors}
                             onChange={(e) => onUpdate(idx, 'floors', e.target.value)}
-                            className="bg-gray-50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-black/20 focus:border-indigo-500 border rounded px-2 py-1.5 text-xs outline-none transition-all text-center"
+                            className="bg-gray-50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-black/20 focus:border-indigo-500 border rounded px-2 py-1.5 text-xs outline-none transition-all text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                             min="0"
                         />

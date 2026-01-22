@@ -115,7 +115,7 @@ const InputField: React.FC<InputFieldProps> = ({
                     value={displayVal} 
                     onChange={field.type === 'number' ? handleNumberChange : (e) => onChange(field.db, e.target.value)}
                     min={field.type === 'number' ? "0" : undefined}
-                    className={`w-full bg-transparent border-b focus:border-indigo-500 px-2 py-1 text-sm font-medium text-gray-900 dark:text-white outline-none transition-all focus:bg-gray-50 dark:focus:bg-white/5 rounded-t ${
+                    className={`w-full bg-transparent border-b focus:border-indigo-500 px-2 py-1 text-sm font-medium text-gray-900 dark:text-white outline-none transition-all focus:bg-gray-50 dark:focus:bg-white/5 rounded-t [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none  ${
                         hasError ? 'border-red-300 placeholder-red-300' : 'border-transparent hover:border-gray-200 dark:hover:border-white/10'
                     }`}
                     placeholder={hasError ? "Обязательное поле" : "Пусто"}
