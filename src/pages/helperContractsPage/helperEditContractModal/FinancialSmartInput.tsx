@@ -121,8 +121,8 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                     value: amountNum,
                     text: newDesc || '',
                     subcategory: newSubcategory || '',
-                    // Keep original createdBy/createdAt
-                    // Update timestamp handled by DB usually, but for local visual we can set updatedBy to 'Me' if we tracked user
+                    // Update timestamp on modification
+                    updatedAt: new Date().toISOString()
                 };
             }
             return t;
@@ -137,7 +137,8 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
             value: amountNum,
             text: newDesc || '',
             subcategory: newSubcategory || '',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
         // Add to TOP or BOTTOM? Usually bottom for history, but top for visibility.
         // Let's stick to array order (append).

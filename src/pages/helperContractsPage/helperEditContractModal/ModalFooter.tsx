@@ -20,7 +20,7 @@ const ModalFooter: React.FC<ModalFooterProps> = ({ loading, onClose, onSave, aud
       if (!dateStr) return '';
       try {
           const d = new Date(dateStr);
-          return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+          return d.toLocaleDateString('ru-RU', { timeZone: 'UTC' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
       } catch (e) {
           return dateStr;
       }

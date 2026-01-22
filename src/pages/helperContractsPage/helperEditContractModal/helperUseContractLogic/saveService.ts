@@ -49,7 +49,6 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         delete safeData.id;
         delete safeData.is_total;
         delete safeData.expense_fot_fact;
-        delete safeData.created_at;
         delete safeData.updated_at;
         delete safeData.rentability_calculated;
         delete safeData.profit_per_lift_calculated;
@@ -143,10 +142,14 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
                 const subcat = (t.subcategory || '').replace(/'/g, "''");
                 const dt = t.date || new Date().toISOString().split('T')[0];
                 const txAuthor = t.createdBy || author;
-                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}')`;
+                const createdAt = t.createdAt || new Date().toISOString();
+                // Используем сохраненный updatedAt или текущее время если его нет
+                const updatedAt = t.updatedAt || new Date().toISOString();
+                
+                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}', '${createdAt}', '${updatedAt}')`;
             }).join(', ');
             
-            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by) VALUES ${values};`;
+            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by, created_at, updated_at) VALUES ${values};`;
             sqlBatch.push(insertSql);
         }
     }
