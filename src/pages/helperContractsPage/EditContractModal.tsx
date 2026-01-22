@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Info, Coins, Terminal } from 'lucide-react';
 
@@ -26,7 +25,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     loading,
     liters,
     fieldCurrencies,
-    getFilteredOptions, // Используем новую функцию
+    getFilteredOptions,
     generalFields,
     isEditMode,
     previewSql,
@@ -37,18 +36,38 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     updateLiter,
     handleSave,
     transactionsMap,
-    handleTransactionChange 
+    handleTransactionChange,
+    showValidationErrors,
+    isDirty // Получаем статус изменений
   } = useContractLogic({ isOpen, nodeData, onSuccess, onClose, user });
+
+  // Обертка для проверки перед закрытием
+  const handleCloseAttempt = () => {
+    if (isDirty) {
+      const confirmed = window.confirm("У вас есть несохраненные изменения. Вы уверены, что хотите закрыть окно?");
+      if (confirmed) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-        <div className="bg-white dark:bg-[#151923] w-full max-w-5xl rounded-3xl shadow-2xl border border-gray-200 dark:border-white/10 flex flex-col overflow-hidden max-h-[90vh]">
+    <div 
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        onMouseDown={handleCloseAttempt} // Закрытие по клику на фон
+    >
+        <div 
+            className="bg-white dark:bg-[#151923] w-full max-w-5xl rounded-3xl shadow-2xl border border-gray-200 dark:border-white/10 flex flex-col overflow-hidden max-h-[90vh]"
+            onMouseDown={(e) => e.stopPropagation()} // Блокируем всплытие клика из контента
+        >
             
             <ModalHeader 
                 formData={formData} 
-                onClose={onClose} 
+                onClose={handleCloseAttempt} 
                 title={isEditMode ? `Редактирование: ${formData.housing_complex || 'Договор'}` : "Создание нового договора"} 
             />
             
@@ -77,8 +96,8 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                                         isFinancial={false}
                                         currency={fieldCurrencies[f.db] || '₽'}
                                         onCurrencyChange={handleCurrencyChange}
-                                        // Передаем динамически отфильтрованные опции
-                                        options={getFilteredOptions(f.db)} 
+                                        options={getFilteredOptions(f.db)}
+                                        showValidationErrors={showValidationErrors}
                                     />
                                 ))}
                             </div>
@@ -137,7 +156,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
 
             <ModalFooter 
                 loading={loading} 
-                onClose={onClose} 
+                onClose={handleCloseAttempt} 
                 onSave={handleSave} 
                 auditInfo={{
                     createdBy: formData.created_by,

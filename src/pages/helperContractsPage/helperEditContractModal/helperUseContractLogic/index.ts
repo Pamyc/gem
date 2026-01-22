@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect, useCallback } from 'react';
 import { DB_MAPPING } from '../../../../contexts/DataContext';
 import { EXCLUDED_FIELDS, FINANCIAL_KEYWORDS } from '../constants';
@@ -17,6 +16,12 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
   ]);
   const [fieldCurrencies, setFieldCurrencies] = useState<Record<string, string>>({});
   const [previewSql, setPreviewSql] = useState<string>('');
+  
+  // Состояние для отображения ошибок валидации
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  // Состояние "Грязная форма"
+  const [isDirty, setIsDirty] = useState(false);
 
   // "Сырые" данные всех контрактов для построения динамических фильтров
   const [contractRows, setContractRows] = useState<any[]>([]);
@@ -30,6 +35,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
   useEffect(() => {
       if (isOpen) {
           setTransactionsMap({}); // Сброс
+          setShowValidationErrors(false); // Сброс ошибок
+          setIsDirty(false); // Сброс флага изменений
 
           const initData = async () => {
               if (nodeData && nodeData.fullData) {
@@ -84,8 +91,27 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
       }
   }, [isOpen, nodeData]);
 
+  // Защита от закрытия вкладки при несохраненных данных
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ''; // Стандартное требование браузеров
+      }
+    };
+
+    if (isOpen) {
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDirty, isOpen]);
+
   const handleChange = (key: string, value: any) => {
       setFormData(prev => ({ ...prev, [key]: value }));
+      setIsDirty(true);
   };
 
   // --- Логика умной фильтрации (Cascading) ---
@@ -95,6 +121,20 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
   const getFilteredOptions = useCallback((targetField: string): string[] => {
       if (!contractRows.length || !dependencyFields.includes(targetField)) return [];
 
+      // --- НОВОЕ: Исключение для Клиента и Типа объекта ---
+      // Если запрашиваем список для этих полей, игнорируем фильтры (показываем всё, что есть в базе)
+      if (targetField === 'client_name' || targetField === 'object_type') {
+          const allValues = new Set<string>();
+          contractRows.forEach(row => {
+              const val = row[targetField];
+              if (val && typeof val === 'string' && val.trim() !== '') {
+                  allValues.add(val.trim());
+              }
+          });
+          return Array.from(allValues).sort();
+      }
+      // -----------------------------------------------------
+      
       // Фильтруем строки, совпадающие с текущим выбором в форме (кроме самого целевого поля)
       const matches = contractRows.filter(row => {
           for (const key of dependencyFields) {
@@ -128,6 +168,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
   }, [contractRows, formData]);
 
   const handleTransactionChange = (fieldKey: string, newTransactions: Transaction[]) => {
+      setIsDirty(true);
       setTransactionsMap(prev => ({
           ...prev,
           [fieldKey]: newTransactions
@@ -156,14 +197,22 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
 
   const handleCurrencyChange = (key: string, value: string) => {
       setFieldCurrencies(prev => ({ ...prev, [key]: value }));
+      setIsDirty(true);
   };
 
-  const addLiter = () => setLiters([...liters, { name: `Литер ${liters.length + 1}`, elevators: 0, floors: 0 }]);
-  const removeLiter = (idx: number) => setLiters(liters.filter((_, i) => i !== idx));
+  const addLiter = () => {
+      setLiters([...liters, { name: `Литер ${liters.length + 1}`, elevators: 0, floors: 0 }]);
+      setIsDirty(true);
+  };
+  const removeLiter = (idx: number) => {
+      setLiters(liters.filter((_, i) => i !== idx));
+      setIsDirty(true);
+  };
   const updateLiter = (idx: number, field: keyof LiterItem, value: any) => {
       const newLiters = [...liters];
       newLiters[idx] = { ...newLiters[idx], [field]: value };
       setLiters(newLiters);
+      setIsDirty(true);
       
       const totalElevators = newLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
       const totalFloors = newLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
@@ -182,6 +231,32 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
   }, [formData]);
 
   const handleSave = async () => {
+      setShowValidationErrors(true);
+
+      // --- ВАЛИДАЦИЯ ОБЯЗАТЕЛЬНЫХ ПОЛЕЙ ---
+      const requiredFields = [
+          { key: 'region', label: 'Регион' },
+          { key: 'city', label: 'Город' },
+          { key: 'housing_complex', label: 'ЖК' },
+          { key: 'liter', label: 'Литер' },
+          { key: 'object_type', label: 'Тип объекта' },
+          { key: 'client_name', label: 'Клиент' },
+          { key: 'year', label: 'Год' }
+      ];
+
+      const missing = requiredFields.filter(f => !formData[f.key] || String(formData[f.key]).trim() === '');
+      
+      if (missing.length > 0) {
+          alert(`Пожалуйста, заполните обязательные поля:\n- ${missing.map(f => f.label).join('\n- ')}`);
+          return;
+      }
+
+      if (!liters || liters.length === 0 || liters.some(l => !l.name.trim())) {
+          alert('Добавьте хотя бы один литер с названием.');
+          return;
+      }
+      // -------------------------------------
+      
       setLoading(true);
       try {
           await executeSave({
@@ -191,6 +266,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
               isEditMode,
               username: user?.username || user?.name || 'Unknown'
           });
+          
+          setIsDirty(false); // Сбрасываем флаг перед закрытием
           onSuccess();
           onClose();
       } catch (err) {
@@ -226,6 +303,8 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
     isEditMode,
     previewSql,
     transactionsMap,
+    showValidationErrors, 
+    isDirty, // Экспортируем флаг
     handleChange,
     handleTransactionChange,
     handleCurrencyChange,

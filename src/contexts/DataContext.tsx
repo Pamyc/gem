@@ -77,11 +77,11 @@ export const DB_MAPPING = [
   { db: 'id', header: 'id', type: 'number' },
 
   // --- Основные данные ---
+  { db: 'region', header: 'Регион', type: 'string' },
   { db: 'city', header: 'Город', type: 'string' },
   { db: 'housing_complex', header: 'ЖК', type: 'string' },
   { db: 'liter', header: 'Литер', type: 'string' },
   { db: 'is_handed_over', header: 'Сдан да/нет', type: 'boolean' },
-  { db: 'region', header: 'Регион', type: 'string' },
   { db: 'object_type', header: 'Тип объекта', type: 'string' },
   { db: 'client_name', header: 'Клиент', type: 'string' },
   { db: 'year', header: 'Год', type: 'number' },

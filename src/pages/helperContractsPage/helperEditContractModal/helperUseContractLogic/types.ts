@@ -1,5 +1,4 @@
 
-
 export interface LiterItem {
   id?: number;
   name: string;
@@ -14,6 +13,9 @@ export interface Transaction {
   text: string;
   subcategory?: string; 
   createdBy?: string; // New field for audit
+  updatedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UseContractLogicProps {

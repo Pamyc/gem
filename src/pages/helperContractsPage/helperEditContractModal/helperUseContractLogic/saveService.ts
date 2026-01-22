@@ -1,5 +1,4 @@
 
-
 import { executeDbQuery } from '../../../../utils/dbGatewayApi';
 import { FINANCIAL_KEYWORDS } from '../constants';
 import { LiterItem, Transaction } from './types';
@@ -17,6 +16,7 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
     const author = username || 'Unknown';
     let baseContractId = 0;
 
+    // 1. Получаем ID (асинхронно, до начала транзакции)
     if (isEditMode && formData.contract_id) {
         // Редактирование: оставляем старый ID
         baseContractId = Math.floor(formData.contract_id);
@@ -25,28 +25,27 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         baseContractId = await generateContractId(formData.city);
     }
 
-    // 1. Parent Contract ID is now X.999 (e.g. 8001.999)
     const parentContractId = baseContractId + 0.999;
-    
-    // 2. Transaction Link ID is Integer X (e.g. 8001) - so they group nicely
     const transactionLinkId = baseContractId;
-
     const effectiveLiters = liters.length === 0 ? [{name: 'Литер 1', elevators: 0, floors: 0}] : liters;
 
-    // 3. Clean Old Data (Full Wipe of the range X to X+1)
+    // --- БУФЕР SQL КОМАНД ---
+    const sqlBatch: string[] = [];
+    
+    // Открываем транзакцию
+    sqlBatch.push('BEGIN;');
+
+    // 2. Удаление старых данных (только при редактировании)
     if (isEditMode) {
-        // Only delete if editing existing ID range. 
-        const deleteContractsSql = `DELETE FROM data_contracts WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
-        await executeDbQuery(deleteContractsSql);
-        
-        const deleteTransactionsSql = `DELETE FROM contract_transactions WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1}`;
-        await executeDbQuery(deleteTransactionsSql);
+        // Удаляем диапазон ID текущего договора
+        sqlBatch.push(`DELETE FROM data_contracts WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1};`);
+        sqlBatch.push(`DELETE FROM contract_transactions WHERE contract_id >= ${baseContractId} AND contract_id < ${baseContractId + 1};`);
     }
 
-    // Helper: Generate INSERT SQL
-    const generateInsert = (data: Record<string, any>) => {
+    // Хелпер: Генерация строки INSERT SQL
+    const generateInsertSql = (data: Record<string, any>) => {
         const safeData = { ...data };
-        // Cleanup generated/meta fields
+        // Очистка мета-полей
         delete safeData.id;
         delete safeData.is_total;
         delete safeData.expense_fot_fact;
@@ -54,15 +53,13 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         delete safeData.updated_at;
         delete safeData.rentability_calculated;
         delete safeData.profit_per_lift_calculated;
-        delete safeData.gross_profit; // It will be recalculated in baseData if needed or passed explicitly
+        delete safeData.gross_profit; // Добавим явно, если нужно
         
-        // Audit Fields
+        // Поля аудита
         safeData.updated_by = author;
         if (!isEditMode) {
             safeData.created_by = author;
         } else {
-            // Keep original creator if possible, but since we delete and re-insert child rows, we might lose it if not passed in formData.
-            // Ideally formData should have created_by loaded from DB. If empty, we set it to current user.
             if (!safeData.created_by) safeData.created_by = author;
         }
         
@@ -70,47 +67,49 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
         const cols = keys.map(k => `"${k}"`).join(', ');
         const vals = keys.map(k => {
             const val = safeData[k];
+
+            if (val === 'Да') return 'true';
+            if (val === 'Нет') return 'false';
+
             if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`;
             if (val === undefined || val === null) return 'NULL';
             if (typeof val === 'boolean') return val ? 'true' : 'false';
             return val;
         }).join(', ');
-        return `INSERT INTO data_contracts (${cols}) VALUES (${vals})`;
+        
+        return `INSERT INTO data_contracts (${cols}) VALUES (${vals});`;
     };
 
-    // Prepare Base Data
+    // Подготовка базовых данных
     const baseData = { ...formData };
     
-    // Gross Profit Calculation
+    // Расчет валовой прибыли
     if (baseData.income_total_fact !== undefined && baseData.expense_total_fact !== undefined) {
         baseData.gross_profit = Number(baseData.income_total_fact) - Number(baseData.expense_total_fact);
     }
 
-    // --- INSERT PARENT RECORD (8001.999) ---
+    // 3. Вставка РОДИТЕЛЬСКОЙ записи (X.999)
     const totalElevators = effectiveLiters.reduce((sum, l) => sum + Number(l.elevators || 0), 0);
     const totalFloors = effectiveLiters.reduce((sum, l) => sum + Number(l.floors || 0), 0);
     
     const parentRecord = {
         ...baseData,
-        contract_id: parentContractId, // .999
-        liter: '', // Empty for parent aggregation row
+        contract_id: parentContractId,
         elevators_count: totalElevators,
         floors_count: totalFloors,
-        no_liter_breakdown: true, // Это агрегированная запись
+        no_liter_breakdown: true,
         is_separate_liter: false
     };
     
-    // Explicitly add gross_profit to parent record for DB insertion
     if (baseData.gross_profit !== undefined) {
         (parentRecord as any).gross_profit = baseData.gross_profit;
     }
 
-    await executeDbQuery(generateInsert(parentRecord));
+    sqlBatch.push(generateInsertSql(parentRecord));
 
-    // --- INSERT CHILD RECORDS (8001.001, 8001.002 ...) ---
+    // 4. Вставка ДОЧЕРНИХ записей (литеров)
     for (let i = 0; i < effectiveLiters.length; i++) {
         const liter = effectiveLiters[i];
-        // ID format: X.001, X.002 ...
         const childId = baseContractId + (i + 1) / 1000;
         
         const childRecord = {
@@ -123,37 +122,42 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
             is_separate_liter: true
         };
         
-        // Clear financials for children (kept only on parent)
+        // Очищаем финансы у детей (храним только в родителе)
         FINANCIAL_KEYWORDS.forEach(kw => {
             Object.keys(childRecord).forEach(key => {
                 if (key.includes(kw)) (childRecord as any)[key] = 0;
             });
         });
         
-        // Remove calculated fields from object before generating insert
         delete (childRecord as any).gross_profit;
 
-        await executeDbQuery(generateInsert(childRecord));
+        sqlBatch.push(generateInsertSql(childRecord));
     }
 
-    // 4. Save Transactions (Linked to Integer ID = 8001)
+    // 5. Вставка ТРАНЗАКЦИЙ
     for (const [type, txs] of Object.entries(transactionsMap)) {
         if (txs.length > 0) {
             const values = txs.map(t => {
                 const val = t.value || 0;
                 const txt = (t.text || '').replace(/'/g, "''");
-                const subcat = (t.subcategory || '').replace(/'/g, "''"); // Safe subcategory
+                const subcat = (t.subcategory || '').replace(/'/g, "''");
                 const dt = t.date || new Date().toISOString().split('T')[0];
-                // For new txs, use current user. For existing, keep old author if available?
-                // Actually, existing txs are deleted and re-inserted. So we lose original author unless we preserve it in `t`.
-                // `loadTransactionsFromDb` loads `created_by` into `t.createdBy`.
                 const txAuthor = t.createdBy || author;
                 return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}')`;
             }).join(', ');
             
-            // Updated SQL to include subcategory and created_by
-            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by) VALUES ${values}`;
-            await executeDbQuery(insertSql);
+            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by) VALUES ${values};`;
+            sqlBatch.push(insertSql);
         }
     }
+
+    // Фиксация транзакции
+    sqlBatch.push('COMMIT;');
+
+    // 6. Выполнение единого пакетного запроса
+    // Объединяем команды через перевод строки (pg драйвер обработает их последовательно в одной сессии)
+    const finalSql = sqlBatch.join('\n');
+    
+    // console.log("Executing Transaction Batch:", finalSql); // For debug
+    await executeDbQuery(finalSql);
 };
