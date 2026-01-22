@@ -79,17 +79,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
       
       {isOpen && (inputValue || filteredOptions.length > 0) && (
         <div className="absolute z-[50] top-full left-0 w-full mt-1 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
-            
-            {/* Пункт добавления нового, если введен текст и его нет в точном совпадении */}
-            {inputValue && !options.includes(inputValue) && (
-                <button
-                    onClick={handleAddNew}
-                    className="w-full text-left px-3 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors flex items-center gap-2 border-b border-gray-100 dark:border-white/5"
-                >
-                    <Plus size={12} />
-                    Добавить "{inputValue}"
-                </button>
-            )}
 
             {filteredOptions.map((opt, idx) => (
                 <button
