@@ -106,8 +106,8 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
     const amountNum = parseFloat(cleanMoneyInput(newAmount));
     
     // Validation: Only positive numbers
-    if (isNaN(amountNum) || amountNum < 0) {
-        alert("Сумма должна быть положительным числом");
+    if (isNaN(amountNum)) {
+        alert("Введите корректное число");
         return;
     }
 
@@ -335,7 +335,7 @@ const FinancialSmartInput: React.FC<FinancialSmartInputProps> = ({
                         </div>
                         <button 
                             onClick={handleSave}
-                            disabled={!newAmount || Number(cleanMoneyInput(newAmount)) <= 0}
+                            disabled={!newAmount || isNaN(Number(cleanMoneyInput(newAmount)))}
                             className={`${editingId !== null ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1`}
                         >
                             {editingId !== null ? <Check size={14} /> : <Plus size={16} />}

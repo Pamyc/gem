@@ -147,10 +147,10 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
                 // Используем сохраненный updatedAt или текущее время если его нет
                 const updatedAt = t.updatedAt || new Date().toISOString();
                 
-                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}', '${createdAt}', '${updatedAt}')`;
+                return `(${transactionLinkId}, '${type}', ${val}, '${txt}', '${subcat}', '${dt}', '${txAuthor}', '${author}', '${createdAt}', '${updatedAt}')`;
             }).join(', ');
             
-            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by, created_at, updated_at) VALUES ${values};`;
+            const insertSql = `INSERT INTO contract_transactions (contract_id, type, value, text, subcategory, date, created_by, updated_by, created_at, updated_at) VALUES ${values};`;
             sqlBatch.push(insertSql);
         }
     }
