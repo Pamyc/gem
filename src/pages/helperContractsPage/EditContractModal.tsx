@@ -42,8 +42,8 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     isDirty 
   } = useContractLogic({ isOpen, nodeData, onSuccess, onClose, user });
 
-  // Обертка для проверки перед закрытием
-  const handleCloseAttempt = () => {
+  // Обертка для проверки перед закрытием (для клика по фону)
+  const handleBackdropClick = () => {
     if (isDirty) {
       const confirmed = window.confirm("У вас есть несохраненные изменения. Вы уверены, что хотите закрыть окно?");
       if (confirmed) {
@@ -59,7 +59,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
   return (
     <div 
         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-        onMouseDown={handleCloseAttempt} // Закрытие по клику на фон
+        onMouseDown={handleBackdropClick} // Закрытие по клику на фон
     >
         <div 
             className="bg-white dark:bg-[#151923] w-full max-w-5xl rounded-3xl shadow-2xl border border-gray-200 dark:border-white/10 flex flex-col overflow-hidden max-h-[90vh]"
@@ -68,11 +68,12 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
             
             <ModalHeader 
                 formData={formData} 
-                onClose={handleCloseAttempt} 
+                onClose={onClose} // Передаем сырой onClose, хедер сам решит когда его вызывать
                 title={isEditMode ? `Редактирование: ${formData.housing_complex || 'Договор'}` : "Создание нового договора"} 
+                isDirty={isDirty}
             />
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 [scrollbar-gutter:stable]">
                 <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-8">
                     
                     {/* Left Column: General & Liters */}
@@ -157,9 +158,9 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
 
             <ModalFooter 
                 loading={loading} 
-                onClose={handleCloseAttempt} 
+                onClose={handleBackdropClick} // Для кнопки Отмена в футере используем логику с confirm
                 onSave={handleSave} 
-                onDelete={isEditMode ? handleDelete : undefined} // Only show delete for existing contracts
+                onDelete={isEditMode ? handleDelete : undefined} 
                 auditInfo={{
                     createdBy: formData.created_by,
                     createdAt: formData.created_at,

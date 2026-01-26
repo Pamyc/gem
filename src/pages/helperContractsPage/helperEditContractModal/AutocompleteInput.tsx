@@ -8,6 +8,7 @@ interface AutocompleteInputProps {
   options: string[];
   placeholder?: string;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({ 
@@ -15,7 +16,8 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   onChange, 
   options = [], 
   placeholder,
-  type = 'text'
+  type = 'text',
+  inputMode
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value ? String(value) : '');
@@ -70,6 +72,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     <div className="relative w-full" ref={wrapperRef}>
       <input 
         type={type}
+        inputMode={inputMode}
         value={inputValue}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
