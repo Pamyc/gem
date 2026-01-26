@@ -95,6 +95,7 @@ const AppContent: React.FC = () => {
       return items.filter(item => {
         // Разрешаем contracts для Павла
         if (user?.username === 'pavel' && item.id === 'contracts') return true;
+        if (user?.username === 'admin' && item.id === 'contracts') return true;
 
         return (
           item.id !== 'constructor' && 
@@ -118,6 +119,7 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     // Исключение для Павла и contracts
     if (user?.username === 'pavel' && activeTab === 'contracts') return;
+    if (user?.username === 'admin' && activeTab === 'contracts') return;
 
     const restrictedTabs = ['constructor', 'card-constructor', 'filter-test', 'example2', 'diagram3d', 'test-embed', 'db-gateway', 'crud', 'top-ten', 'contracts'];
     if (restrictedTabs.includes(activeTab) && user?.username !== '1') {
@@ -145,7 +147,7 @@ const AppContent: React.FC = () => {
           {activeTab === 'home' && <HomePage />}
           
           {/* Рендерим админские страницы только если пользователь имеет доступ (либо 1, либо Pavel для contracts) */}
-          {activeTab === 'contracts' && (user.username === '1' || user.username === 'pavel') && <ContractsPage isDarkMode={isDarkMode} />}
+          {activeTab === 'contracts' && (user.username === '1' || user.username === 'pavel'|| user.username === 'admin') && <ContractsPage isDarkMode={isDarkMode} />}
           
           {activeTab === 'top-ten' && user.username === '1' && <TopTenPage isDarkMode={isDarkMode} />}
           {activeTab === 'constructor' && user.username === '1' && <ConstructorPage isDarkMode={isDarkMode}  />}
