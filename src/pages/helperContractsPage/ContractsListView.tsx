@@ -9,10 +9,14 @@ import {
   ArrowUpFromLine, 
   Layers,
   FileSignature,
-  Building2
+  Building2,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
 import { useDataStore } from '../../contexts/DataContext';
 import EditContractModal from './EditContractModal';
+import { executeDbQuery } from '../../utils/dbGatewayApi';
 
 // Imported modular components and hooks
 import { LiterNode, CityNode } from './helperContractsListView/types';
@@ -42,6 +46,10 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
   // Modal State
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Group Deletion State
+  const [deletingGroup, setDeletingGroup] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // --- Dynamic Ordering ---
   const orderedData = useMemo(() => {
@@ -116,6 +124,50 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
       }
   };
 
+  // --- Delete Logic ---
+  const handleDeleteGroup = async (e: React.MouseEvent, type: 'city' | 'jk', name: string, parentName?: string) => {
+      e.stopPropagation();
+      
+      const confirmId = type === 'city' ? `city-${name}` : `jk-${parentName}-${name}`;
+      
+      if (confirmDeleteId !== confirmId) {
+          setConfirmDeleteId(confirmId);
+          return;
+      }
+
+      setDeletingGroup(confirmId);
+      
+      try {
+          const cleanName = name.replace(/'/g, "''");
+          const field = type === 'city' ? 'city' : 'housing_complex';
+          
+          const sql = `
+            BEGIN;
+            DELETE FROM contract_transactions WHERE contract_id IN (SELECT contract_id FROM data_contracts WHERE "${field}" = '${cleanName}');
+            DELETE FROM data_contracts WHERE "${field}" = '${cleanName}';
+            COMMIT;
+          `;
+          
+          await executeDbQuery(sql);
+          await refreshData();
+          
+          setConfirmDeleteId(null);
+          // Collapse if deleted
+          if (type === 'city') setExpandedCities({});
+          if (type === 'jk' && parentName) setExpandedJKs(prev => ({ ...prev, [`${parentName}-${name}`]: false }));
+
+      } catch (err: any) {
+          alert(`Ошибка при удалении ${type === 'city' ? 'города' : 'ЖК'}: ${err.message}`);
+      } finally {
+          setDeletingGroup(null);
+      }
+  };
+
+  const cancelDelete = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setConfirmDeleteId(null);
+  };
+
   if (isLoading) {
       return (
           <div className="flex flex-col items-center justify-center h-96 gap-4 text-indigo-500">
@@ -139,6 +191,9 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {orderedData.map((city: CityNode) => {
                 const isExpanded = !!expandedCities[city.name];
+                const cityDeleteId = `city-${city.name}`;
+                const isDeleting = deletingGroup === cityDeleteId;
+                const showConfirm = confirmDeleteId === cityDeleteId;
                 
                 return (
                     <div 
@@ -150,29 +205,60 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
                         className={`
                             bg-white dark:bg-[#1e293b] rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm overflow-hidden transition-all duration-300
                             ${isExpanded ? 'col-span-full ring-2 ring-indigo-500/20 shadow-xl z-10' : 'hover:-translate-y-1 hover:shadow-md'}
+                            ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
                         `}
                     >
                         {/* City Header */}
                         <div 
                             onClick={() => toggleCity(city.name)}
                             className={`
-                                px-5 py-4 flex flex-col gap-3 cursor-pointer transition-colors relative
+                                px-5 py-4 flex flex-col gap-3 cursor-pointer transition-colors relative group/city
                                 ${isExpanded ? 'bg-indigo-50/50 dark:bg-indigo-500/10 border-b border-indigo-100 dark:border-white/5' : 'hover:bg-gray-50 dark:hover:bg-white/5 h-full'}
                             `}
                         >
                             {/* Top Row: Icon + Name + Arrow */}
-                            <div className="flex items-start justify-between w-full">
-                                <div className="flex items-center gap-3">
+                            <div className="flex items-start justify-between w-full relative">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className={`
                                         w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors
                                         ${isExpanded ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'}
                                     `}>
                                         <MapPin size={20} />
                                     </div>
-                                    <div>
-                                        <h3 className={`text-lg font-bold leading-tight ${isExpanded ? 'text-indigo-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                                            {city.name}
-                                        </h3>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className={`text-lg font-bold leading-tight truncate ${isExpanded ? 'text-indigo-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'}`}>
+                                                {city.name}
+                                            </h3>
+                                            
+                                            {/* Delete Group Button (City) */}
+                                            {showConfirm ? (
+                                                <div className="flex items-center gap-1 ml-2 animate-in fade-in zoom-in duration-200">
+                                                    <span className="text-[10px] font-bold text-red-500 uppercase mr-1">Удалить?</span>
+                                                    <button 
+                                                        onClick={(e) => handleDeleteGroup(e, 'city', city.name)}
+                                                        className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                                        disabled={isDeleting}
+                                                    >
+                                                        {isDeleting ? <Loader2 size={12} className="animate-spin"/> : <Check size={12}/>}
+                                                    </button>
+                                                    <button 
+                                                        onClick={cancelDelete}
+                                                        className="p-1 bg-gray-200 dark:bg-white/20 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-white/30 transition-colors"
+                                                    >
+                                                        <X size={12}/>
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={(e) => handleDeleteGroup(e, 'city', city.name)}
+                                                    className={`p-1.5 text-gray-300 hover:text-red-500 rounded transition-all opacity-0 group-hover/city:opacity-100 ${isExpanded ? 'opacity-100' : ''}`}
+                                                    title="Удалить город и все вложенные данные"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
                                         
                                         {/* Collapsed Metrics (Visible only when NOT expanded) */}
                                         {!isExpanded && (
@@ -248,6 +334,9 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
                                     {city.jks.map((jk) => {
                                         const jkUniqueId = `${city.name}-${jk.name}`;
                                         const isJKExpanded = !!expandedJKs[jkUniqueId];
+                                        const jkDeleteId = `jk-${city.name}-${jk.name}`;
+                                        const showJKConfirm = confirmDeleteId === jkDeleteId;
+                                        const isJKDeleting = deletingGroup === jkDeleteId;
 
                                         return (
                                             <div 
@@ -255,6 +344,7 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
                                                 className={`
                                                     bg-white dark:bg-[#151923] rounded-xl border transition-all duration-300 overflow-hidden flex flex-col
                                                     ${isJKExpanded ? 'border-indigo-200 dark:border-indigo-500/30 shadow-md ring-1 ring-indigo-500/10' : 'border-gray-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-indigo-500/30'}
+                                                    ${isJKDeleting ? 'opacity-50 pointer-events-none' : ''}
                                                 `}
                                                 id={`jk-${jkUniqueId}`}
                                             >
@@ -268,16 +358,49 @@ const ContractsListView: React.FC<ContractsListViewProps> = ({ isDarkMode }) => 
                                                             <Building size={16} />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <div className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate" title={jk.name}>{jk.name}</div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate" title={jk.name}>{jk.name}</div>
+                                                                {/* Delete Group Button (JK) */}
+                                                                {showJKConfirm ? (
+                                                                    <div 
+                                                                        className="flex items-center gap-1 ml-auto animate-in fade-in zoom-in duration-200"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <button 
+                                                                            onClick={(e) => handleDeleteGroup(e, 'jk', jk.name, city.name)}
+                                                                            className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                                                            disabled={isJKDeleting}
+                                                                        >
+                                                                            {isJKDeleting ? <Loader2 size={12} className="animate-spin"/> : <Check size={12}/>}
+                                                                        </button>
+                                                                        <button 
+                                                                            onClick={cancelDelete}
+                                                                            className="p-1 bg-gray-200 dark:bg-white/20 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-white/30 transition-colors"
+                                                                        >
+                                                                            <X size={12}/>
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button 
+                                                                        onClick={(e) => handleDeleteGroup(e, 'jk', jk.name, city.name)}
+                                                                        className="p-1 text-gray-300 hover:text-red-500 rounded transition-all opacity-0 group-hover/jkheader:opacity-100"
+                                                                        title="Удалить ЖК и все договоры"
+                                                                    >
+                                                                        <Trash2 size={12} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                             
-                                                            <DelayedTooltipWrapper content={<JKTooltipContent jk={jk} />}>
-                                                                <div className="flex gap-2 text-[10px] text-gray-400 mt-0.5 font-medium overflow-hidden">
-                                                                    <span className="flex items-center gap-1 text-indigo-500 whitespace-nowrap"><FileSignature size={8}/> {jk.totalContracts}</span>
-                                                                    <span className="flex items-center gap-1 text-orange-500 whitespace-nowrap"><Building2 size={8}/> {jk.totalLiters}</span>
-                                                                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 whitespace-nowrap"><ArrowUpFromLine size={8}/> {jk.totalElevators}</span>
-                                                                    <span className="flex items-center gap-1 text-fuchsia-600 dark:text-fuchsia-400 whitespace-nowrap"><Layers size={8}/> {jk.totalFloors}</span>
-                                                                </div>
-                                                            </DelayedTooltipWrapper>
+                                                            {!showJKConfirm && (
+                                                                <DelayedTooltipWrapper content={<JKTooltipContent jk={jk} />}>
+                                                                    <div className="flex gap-2 text-[10px] text-gray-400 mt-0.5 font-medium overflow-hidden">
+                                                                        <span className="flex items-center gap-1 text-indigo-500 whitespace-nowrap"><FileSignature size={8}/> {jk.totalContracts}</span>
+                                                                        <span className="flex items-center gap-1 text-orange-500 whitespace-nowrap"><Building2 size={8}/> {jk.totalLiters}</span>
+                                                                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 whitespace-nowrap"><ArrowUpFromLine size={8}/> {jk.totalElevators}</span>
+                                                                        <span className="flex items-center gap-1 text-fuchsia-600 dark:text-fuchsia-400 whitespace-nowrap"><Layers size={8}/> {jk.totalFloors}</span>
+                                                                    </div>
+                                                                </DelayedTooltipWrapper>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     

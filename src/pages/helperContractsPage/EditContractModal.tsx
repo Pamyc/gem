@@ -35,10 +35,11 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
     removeLiter,
     updateLiter,
     handleSave,
+    handleDelete, // Import delete handler
     transactionsMap,
     handleTransactionChange,
     showValidationErrors,
-    isDirty // Получаем статус изменений
+    isDirty 
   } = useContractLogic({ isOpen, nodeData, onSuccess, onClose, user });
 
   // Обертка для проверки перед закрытием
@@ -158,6 +159,7 @@ const EditContractModal: React.FC<EditContractModalProps> = ({ isOpen, onClose, 
                 loading={loading} 
                 onClose={handleCloseAttempt} 
                 onSave={handleSave} 
+                onDelete={isEditMode ? handleDelete : undefined} // Only show delete for existing contracts
                 auditInfo={{
                     createdBy: formData.created_by,
                     createdAt: formData.created_at,

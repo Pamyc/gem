@@ -4,7 +4,7 @@ import { DB_MAPPING } from '../../../../contexts/DataContext';
 import { EXCLUDED_FIELDS, FINANCIAL_KEYWORDS } from '../constants';
 import { LiterItem, Transaction, UseContractLogicProps } from './types';
 import { loadTransactionsFromDb, loadLitersFromDb, fetchExistingContractData, fetchContractIdByDbId } from './dataService';
-import { executeSave } from './saveService';
+import { executeSave, executeDeleteContract } from './saveService';
 
 export * from './types';
 
@@ -230,6 +230,21 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
       setPreviewSql(`UPDATE data_contracts SET\n  ${setClause}\nWHERE id = ${formData.id || 'NEW'};`);
   }, [formData]);
 
+  const handleDelete = async () => {
+      if (!formData.contract_id) return;
+      setLoading(true);
+      try {
+          await executeDeleteContract(formData.contract_id);
+          setIsDirty(false); // Сброс, чтобы не было алерта при закрытии
+          onSuccess();
+          onClose();
+      } catch (e: any) {
+          alert("Ошибка при удалении: " + (e.message || e));
+      } finally {
+          setLoading(false);
+      }
+  };
+
   const handleSave = async () => {
       setShowValidationErrors(true);
 
@@ -311,6 +326,7 @@ export const useContractLogic = ({ isOpen, nodeData, onSuccess, onClose, user }:
     addLiter,
     removeLiter,
     updateLiter,
-    handleSave
+    handleSave,
+    handleDelete
   };
 };

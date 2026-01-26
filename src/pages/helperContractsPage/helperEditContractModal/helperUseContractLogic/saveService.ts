@@ -165,3 +165,15 @@ export const executeSave = async ({ formData, liters, transactionsMap, isEditMod
     // console.log("Executing Transaction Batch:", finalSql); // For debug
     await executeDbQuery(finalSql);
 };
+
+export const executeDeleteContract = async (contractId: number) => {
+    const baseId = Math.floor(contractId);
+    
+    const sql = `
+        BEGIN;
+        DELETE FROM contract_transactions WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1};
+        DELETE FROM data_contracts WHERE contract_id >= ${baseId} AND contract_id < ${baseId + 1};
+        COMMIT;
+    `;
+    return await executeDbQuery(sql);
+};
